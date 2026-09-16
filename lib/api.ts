@@ -1409,6 +1409,32 @@ export async function dashboardNacionalAdmin(token: string): Promise<FilaVentaNa
   return cuerpo as FilaVentaNacional[];
 }
 
+/** RF-017 -- una fila por boleto, con las discrepancias ya calculadas por el backend. */
+export interface FilaConciliacion {
+  boletoId: string;
+  codigoQr: string;
+  estadoBoleto: string;
+  compraId: string;
+  cooperativaNombre: string;
+  creadoEn: string;
+  estadoPago: string | null;
+  montoPago: number | null;
+  estadoRegistroTasa: string | null;
+  codigoTasa: string | null;
+  estadosComprobanteElectronico: string[] | null;
+  discrepancias: string[];
+}
+
+export async function conciliacionAdmin(token: string): Promise<FilaConciliacion[]> {
+  const res = await fetch(`${API_URL}/admin/reportes/conciliacion`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo cargar el reporte de conciliación.");
+  return cuerpo as FilaConciliacion[];
+}
+
 export interface DatosNuevoPuntoOperacion {
   tipo: string;
   nombre: string;
