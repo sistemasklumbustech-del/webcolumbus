@@ -398,6 +398,11 @@ function FormularioIngreso() {
               Contraseña
             </label>
             <CampoPassword id="login-password" value={password} onChange={setPassword} />
+            <p className="mt-1.5 text-right">
+              <Link href="/recuperar-password" className="text-xs font-semibold text-brand hover:underline">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </p>
           </div>
 
           {error && <p className="text-sm font-medium text-red-600">{error}</p>}

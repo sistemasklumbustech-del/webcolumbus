@@ -1224,6 +1224,39 @@ export type RespuestaLogin =
   | { requiereConfigurar2fa: true; tokenTemporal: string }
   | { requiere2fa: true; tokenTemporal: string };
 
+export async function solicitarResetPassword(correo: string): Promise<{ ok: true }> {
+  const res = await fetch(`${API_URL}/auth/solicitar-reset`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ correo }),
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo enviar el correo de recuperación.");
+  return cuerpo;
+}
+
+export async function restablecerPassword(token: string, passwordNueva: string): Promise<{ ok: true }> {
+  const res = await fetch(`${API_URL}/auth/restablecer-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, passwordNueva }),
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo restablecer la contraseña.");
+  return cuerpo;
+}
+
+export async function verificarCorreo(token: string): Promise<{ ok: true }> {
+  const res = await fetch(`${API_URL}/auth/verificar-correo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo verificar el correo.");
+  return cuerpo;
+}
+
 export async function login(correo: string, password: string): Promise<RespuestaLogin> {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
