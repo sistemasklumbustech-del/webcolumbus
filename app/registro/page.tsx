@@ -21,6 +21,7 @@ function FormularioRegistro() {
   const [telefono, setTelefono] = useState("");
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
+  const [aceptoTerminos, setAceptoTerminos] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
 
@@ -35,6 +36,10 @@ function FormularioRegistro() {
       setError("El WhatsApp debe tener exactamente 10 dígitos.");
       return;
     }
+    if (!aceptoTerminos) {
+      setError("Debes aceptar los Términos y Condiciones para continuar.");
+      return;
+    }
     setCargando(true);
     try {
       const { accessToken } = await registrar({
@@ -44,6 +49,7 @@ function FormularioRegistro() {
         apellidos,
         cedula,
         telefono,
+        aceptoTerminos,
       });
       guardarToken(accessToken);
       const volverA = searchParams.get("volverA");
@@ -151,6 +157,22 @@ id="registro-correo"
             </label>
             <CampoPassword id="registro-password" value={password} onChange={setPassword} />
           </div>
+
+          <label htmlFor="registro-terminos" className="flex items-start gap-2 text-sm text-brand-dark/70">
+            <input
+              id="registro-terminos"
+              type="checkbox"
+              checked={aceptoTerminos}
+              onChange={(e) => setAceptoTerminos(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-brand-light text-brand focus:ring-brand-medium"
+            />
+            <span>
+              Acepto los{" "}
+              <Link href="/terminos" target="_blank" className="font-semibold text-brand hover:underline">
+                Términos y Condiciones
+              </Link>
+            </span>
+          </label>
 
           {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 

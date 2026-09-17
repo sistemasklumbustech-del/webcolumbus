@@ -112,6 +112,9 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   // Item 31, Fase 7 (11-ago-2026) -- compra como invitado (sin cuenta).
   const [telefonoContacto, setTelefonoContacto] = useState("");
   const [correoContacto, setCorreoContacto] = useState("");
+  // RF-024 -- solo se pide a quien compra como invitado; quien ya
+  // tiene cuenta aceptó al registrarse.
+  const [aceptoTerminos, setAceptoTerminos] = useState(false);
 
   useEffect(() => {
     const token = tokenValido();
@@ -163,6 +166,10 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
       setError("Los metodos de pago manuales todavia requieren una cuenta -- crea una gratis o paga con tarjeta.");
       return;
     }
+    if (!token && !aceptoTerminos) {
+      setError("Debes aceptar los Términos y Condiciones para continuar.");
+      return;
+    }
     // Fase 7-item29 (07-ago-2026) -- validacion de menor de edad, ahora
     // por cada pasajero del arreglo, no solo uno.
     for (const p of pasajerosData) {
@@ -206,6 +213,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           token ? undefined : telefonoContacto.trim() || undefined,
           token ? undefined : correoContacto.trim() || undefined,
           sesionInvitadoId,
+          token ? undefined : aceptoTerminos,
         );
         setResultado(resp);
         if (resp.estado === "rechazado") {
@@ -718,6 +726,21 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     placeholder="tu@correo.com"
                   />
                 </div>
+                <label htmlFor="checkout-invitado-terminos" className="flex items-start gap-2 text-sm text-brand-dark/70">
+                  <input
+                    id="checkout-invitado-terminos"
+                    type="checkbox"
+                    checked={aceptoTerminos}
+                    onChange={(e) => setAceptoTerminos(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-brand-dark/20 text-brand focus:ring-brand-medium"
+                  />
+                  <span>
+                    Acepto los{" "}
+                    <Link href="/terminos" target="_blank" className="font-semibold text-brand hover:underline">
+                      Términos y Condiciones
+                    </Link>
+                  </span>
+                </label>
               </div>
             )}
             {error && (

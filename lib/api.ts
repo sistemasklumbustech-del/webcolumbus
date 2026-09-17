@@ -1188,6 +1188,7 @@ export async function crearCompra(
   telefonoContacto?: string,
   correoContacto?: string,
   sesionInvitadoId?: string,
+  aceptoTerminos?: boolean,
 ): Promise<ResultadoCompra> {
   const res = await fetch(`${API_URL}/compras`, {
     method: "POST",
@@ -1202,6 +1203,7 @@ export async function crearCompra(
       telefonoContacto,
       correoContacto,
       sesionInvitadoId,
+      aceptoTerminos,
     }),
   });
   const cuerpo = await res.json();
@@ -1329,6 +1331,22 @@ export async function recuperarCon2fa(
   return cuerpo;
 }
 
+export interface VersionTerminos {
+  id: string;
+  version: string;
+  contenido: string;
+  vigenteDesde: string;
+}
+
+export async function obtenerTerminosVigente(): Promise<VersionTerminos> {
+  const res = await fetch(`${API_URL}/terminos/vigente`, { cache: "no-store" });
+  const cuerpo = await res.json();
+  if (!res.ok) {
+    throw new Error(cuerpo?.message ?? "No se pudo obtener los Términos y Condiciones.");
+  }
+  return cuerpo;
+}
+
 export async function registrar(datos: {
   correo: string;
   password: string;
@@ -1336,6 +1354,7 @@ export async function registrar(datos: {
   apellidos: string;
   cedula: string;
   telefono: string;
+  aceptoTerminos: boolean;
 }): Promise<{ accessToken: string }> {
   const res = await fetch(`${API_URL}/auth/registro`, {
     method: "POST",
