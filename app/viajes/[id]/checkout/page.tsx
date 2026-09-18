@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect, use as usePromise } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { crearCompra, listarMisCreditos, obtenerMapaAsientos, iniciarPagoManual, subirComprobantePago, listarMetodosPagoPorViaje, type ResultadoCompra, type MiCredito, type MapaAsientos, type MetodoPagoDisponible, type TipoMetodoPago, type PasajeroCompraInput } from "@/lib/api";
+import { crearCompra, cotizarCompra, listarMisCreditos, obtenerMapaAsientos, iniciarPagoManual, subirComprobantePago, listarMetodosPagoPorViaje, type ResultadoCompra, type Cotizacion, type MiCredito, type MapaAsientos, type MetodoPagoDisponible, type TipoMetodoPago, type PasajeroCompraInput } from "@/lib/api";
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
 import { CodigoQr } from "@/components/CodigoQr";
 
@@ -112,6 +112,14 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   // Item 31, Fase 7 (11-ago-2026) -- compra como invitado (sin cuenta).
   const [telefonoContacto, setTelefonoContacto] = useState("");
   const [correoContacto, setCorreoContacto] = useState("");
+  // RF-003 -- revisión con desglose exacto antes de disparar el cobro real.
+  const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
+  const [pendiente, setPendiente] = useState<{
+    token: string | null;
+    sesionInvitadoId?: string;
+    idempotencyKey: string;
+    pasajeros: PasajeroCompraInput[];
+  } | null>(null);
   // RF-024 -- solo se pide a quien compra como invitado; quien ya
   // tiene cuenta aceptó al registrarse.
   const [aceptoTerminos, setAceptoTerminos] = useState(false);
@@ -150,7 +158,15 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
     );
   }
 
-  async function pagar(e: React.FormEvent) {
+  /**
+   * RF-003 (hallazgo real, 17-sep-2026): antes esta función cobraba
+   * directo -- un solo clic en "Pagar y confirmar" disparaba el cobro
+   * real sin ningún paso intermedio de revisión. Ahora solo COTIZA
+   * (misma llamada real que usaría el cobro, sin crear ninguna
+   * compra) y abre el modal de revisión -- el cobro real solo ocurre
+   * si el usuario confirma explícitamente ahí (ver confirmarPago).
+   */
+  async function revisarCompra(e: React.FormEvent) {
     e.preventDefault();
     // Item 31, Fase 7 (11-ago-2026) -- compra como invitado: ya NO se
     // exige iniciar sesion para pagar. Sin token, hace falta al menos
@@ -204,6 +220,23 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
               }
             : undefined,
       }));
+      const cot = await cotizarCompra(pasajeros, token, sesionInvitadoId);
+      setCotizacion(cot);
+      setPendiente({ token, sesionInvitadoId, idempotencyKey, pasajeros });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo calcular el total.");
+    } finally {
+      setProcesando(false);
+    }
+  }
+
+  /** Se llama solo desde el modal de revisión, tras confirmación explícita del usuario. */
+  async function confirmarPago() {
+    if (!pendiente) return;
+    const { token, sesionInvitadoId, idempotencyKey, pasajeros } = pendiente;
+    setProcesando(true);
+    setError(null);
+    try {
       if (metodoElegido === "tarjeta") {
         const resp = await crearCompra(
           pasajeros,
@@ -229,6 +262,8 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
         const resp = await iniciarPagoManual(token!, pasajeros, metodoElegido, idempotencyKey);
         setPagoManual({ compraId: resp.compraId });
       }
+      setCotizacion(null);
+      setPendiente(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo completar la compra.");
     } finally {
@@ -449,7 +484,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
               ? `Asiento ${numerosAsiento[0]}`
               : `${numerosAsiento.length} asientos: ${numerosAsiento.join(", ")}`}
         </p>
-        <form onSubmit={pagar} className="mt-6 space-y-6">
+        <form onSubmit={revisarCompra} className="mt-6 space-y-6">
           {pasajerosData.map((p, indice) => (
             <div
               key={p.numeroAsiento}
@@ -761,11 +796,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
               disabled={procesando}
               className="w-full rounded-lg bg-brand-amber px-6 py-3 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
             >
-              {procesando
-                ? "Procesando..."
-                : metodoElegido === "tarjeta"
-                  ? "Pagar y confirmar"
-                  : "Continuar"}
+              {procesando ? "Calculando..." : "Revisar y pagar"}
             </button>
             <p className="text-center text-xs text-brand-dark/40">
               Pago de prueba — todavía no está conectada una pasarela real.
@@ -773,6 +804,59 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           </div>
         </form>
       </div>
+
+      {cotizacion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="font-display text-lg font-bold text-brand-dark">Revisa antes de pagar</h2>
+            <p className="mt-1 text-sm text-brand-dark/70">
+              Método: {metodoElegido === "tarjeta" ? "Tarjeta" : metodoElegido === "transferencia_bancaria" ? "Transferencia" : metodoElegido === "deuna" ? "DeUna" : "PayPhone"}
+            </p>
+            <div className="mt-3 space-y-1 rounded-lg bg-brand-light/30 px-4 py-3 text-sm">
+              <div className="flex justify-between text-brand-dark/70">
+                <span>Tarifas</span>
+                <span>${cotizacion.montoTarifasCooperativa.toFixed(2)}</span>
+              </div>
+              {cotizacion.montoTasaTerminal > 0 && (
+                <div className="flex justify-between text-brand-dark/70">
+                  <span>Tasa de terminal</span>
+                  <span>${cotizacion.montoTasaTerminal.toFixed(2)}</span>
+                </div>
+              )}
+              {cotizacion.montoCargoPlataforma > 0 && (
+                <div className="flex justify-between text-brand-dark/70">
+                  <span>Cargo de plataforma</span>
+                  <span>${cotizacion.montoCargoPlataforma.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t border-brand-dark/10 pt-1 font-semibold text-brand-dark">
+                <span>Total a pagar</span>
+                <span>${cotizacion.montoTotal.toFixed(2)}</span>
+              </div>
+            </div>
+            {error && <p className="mt-2 text-sm font-medium text-red-600">{error}</p>}
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => {
+                  setCotizacion(null);
+                  setPendiente(null);
+                }}
+                disabled={procesando}
+                className="flex-1 rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarPago}
+                disabled={procesando}
+                className="flex-1 rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-60"
+              >
+                {procesando ? "Procesando..." : "Confirmar y pagar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

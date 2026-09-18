@@ -1042,6 +1042,44 @@ export async function listarViajesCoop(token: string): Promise<ViajeCoopResumen[
   return cuerpo as ViajeCoopResumen[];
 }
 
+/**
+ * Venta presencial en ventanilla (17-sep-2026) -- para el pasajero que
+ * llega sin celular y sin cuenta al mostrador. El vendedor bloquea el
+ * asiento con su propia cuenta (bloquearAsiento, mismo endpoint que
+ * cualquier pasajero) antes de llamar esto -- confirma al instante,
+ * sin paso de comprobante.
+ */
+export async function cotizarVentanillaCoop(
+  token: string,
+  pasajeros: PasajeroCompraInput[],
+): Promise<Cotizacion> {
+  const res = await fetch(`${API_URL}/coop/ventanilla/cotizar`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ pasajeros }),
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo calcular el total.");
+  return cuerpo;
+}
+
+export async function venderEnVentanillaCoop(
+  token: string,
+  pasajeros: PasajeroCompraInput[],
+  tipoMetodoPago: "efectivo" | "tarjeta_fisica" | "transferencia_bancaria",
+  telefonoContacto?: string,
+  correoContacto?: string,
+): Promise<{ compraId: string; boletos: BoletoEmitido[] }> {
+  const res = await fetch(`${API_URL}/coop/ventanilla/vender`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ pasajeros, tipoMetodoPago, telefonoContacto, correoContacto }),
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo completar la venta.");
+  return cuerpo;
+}
+
 export async function crearViajeCoop(
   token: string,
   datos: {
@@ -1177,6 +1215,46 @@ export interface ResultadoCompra {
   creditoAplicado?: number;
   ivaTotal?: number;
   ivaVisible?: boolean;
+}
+
+export interface Cotizacion {
+  desglose: {
+    viajeId: string;
+    numeroAsiento: string;
+    cooperativaId: string;
+    precioPagado: number;
+    tasaTerminal: number;
+    cargoPlataforma: number;
+    ivaMonto: number;
+    ivaVisible: boolean;
+    esVip: boolean;
+  }[];
+  montoTarifasCooperativa: number;
+  montoTasaTerminal: number;
+  montoCargoPlataforma: number;
+  montoImpuestos: number;
+  montoTotal: number;
+}
+
+/** RF-003 -- desglose real antes de pagar, sin crear ninguna compra. */
+export async function cotizarCompra(
+  pasajeros: PasajeroCompraInput[],
+  token: string | null,
+  sesionInvitadoId?: string,
+): Promise<Cotizacion> {
+  const res = await fetch(`${API_URL}/compras/cotizar`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ pasajeros, sesionInvitadoId }),
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) {
+    throw new Error(cuerpo?.message ?? "No se pudo calcular el total.");
+  }
+  return cuerpo;
 }
 
 /** Item 31, Fase 7 (11-ago-2026) -- compra como invitado: token puede ser null, y entonces se exige telefonoContacto o correoContacto. */

@@ -28,6 +28,7 @@ const ENLACES = [
   { href: "/panel-empresa/unidades", etiqueta: "Unidades", icono: IconoUnidades },
   { href: "/panel-empresa/personal", etiqueta: "Personal", icono: IconoPersonal, soloAdmin: true },
   { href: "/panel-empresa/viajes", etiqueta: "Viajes", icono: IconoViajes },
+  { href: "/panel-empresa/vender", etiqueta: "Vender boleto", icono: IconoVender },
   { href: "/panel-empresa/validar-qr", etiqueta: "Validar boleto", icono: IconoValidar },
   { href: "/panel-empresa/pagos-pendientes", etiqueta: "Pagos pendientes", icono: IconoPagos, soloAdmin: true },
   { href: "/panel-empresa/solicitudes-factura", etiqueta: "Facturas", icono: IconoFacturas, soloAdmin: true },
@@ -79,6 +80,15 @@ function IconoViajes({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="3" y="4" width="18" height="17" rx="2" />
       <path d="M3 9h18M8 2v4M16 2v4" />
+    </svg>
+  );
+}
+function IconoVender({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path d="M3 10h18" />
+      <path d="M7 15h4" />
     </svg>
   );
 }
