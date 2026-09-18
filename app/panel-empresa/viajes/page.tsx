@@ -15,7 +15,7 @@ import {
   type UnidadResumen,
   type ViajeCoopResumen,
 } from "@/lib/api";
-import { obtenerToken } from "@/lib/auth";
+import { obtenerToken, decodificarToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
 
 const ESTADO_ESTILO: Record<string, string> = {
@@ -258,6 +258,7 @@ function BotonCancelarViaje({
 function MenuAccionesViaje({
   viaje,
   unidadesActivas,
+  esAdmin,
   onEditado,
   onCambiado,
   onCancelado,
@@ -265,6 +266,7 @@ function MenuAccionesViaje({
 }: {
   viaje: ViajeCoopResumen;
   unidadesActivas: UnidadResumen[];
+  esAdmin: boolean;
   onEditado: () => void;
   onCambiado: () => void;
   onCancelado: (boletosCancelados: number) => void;
@@ -306,7 +308,7 @@ function MenuAccionesViaje({
           >
             Ver pasajeros
           </Link>
-          {viaje.estado === "programado" && (
+          {esAdmin && viaje.estado === "programado" && (
             <>
               <div className="border-t border-black/5 pt-2">
                 <BotonEditarViaje viaje={viaje} onEditado={onEditado} onError={onError} />
@@ -414,6 +416,13 @@ export default function ViajesPage() {
   }
 
   const faltaConfigurar = rutas !== null && unidades !== null && (rutas.length === 0 || unidades.length === 0);
+  // Hallazgo real, 18-sep-2026: POST /coop/viajes es admin_cooperativa
+  // solamente (el vendedor puede VER viajes para vender, pero no
+  // programarlos) -- esta pantalla mostraba el formulario de crear
+  // viaje a cualquiera con acceso a la página, y un vendedor se
+  // encontraba con un "Forbidden resource" recién al enviar.
+  const token = obtenerToken();
+  const esAdmin = token ? decodificarToken(token)?.rol === "admin_cooperativa" : false;
 
   return (
     <div className="space-y-6">
@@ -432,13 +441,14 @@ export default function ViajesPage() {
         </div>
       )}
 
-      {faltaConfigurar && (
+      {esAdmin && faltaConfigurar && (
         <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 ring-1 ring-amber-100">
           Antes de crear un viaje necesitas al menos una ruta y una unidad — revisa las pestañas
           &quot;Rutas&quot; y &quot;Unidades&quot;.
         </div>
       )}
 
+      {esAdmin && (
       <form
         onSubmit={crear}
         className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-5 lg:items-end"
@@ -553,6 +563,7 @@ id="viaje-fecha"
         </button>
         {errorForm && <p className="lg:col-span-5 text-sm font-medium text-red-600">{errorForm}</p>}
       </form>
+      )}
 
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
         <div className="border-b border-black/5 px-6 py-4">
@@ -608,6 +619,7 @@ id="viaje-fecha"
                     <MenuAccionesViaje
                       viaje={v}
                       unidadesActivas={(unidades ?? []).filter((u) => u.activo)}
+                      esAdmin={esAdmin}
                       onEditado={() => {
                         setMensajeExito("Viaje actualizado.");
                         cargarTodo();

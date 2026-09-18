@@ -1995,6 +1995,7 @@ export interface PasajeroDeViaje {
   tipoTarifa: string;
   esMenorEdad: boolean;
   estadoBoleto: string;
+  codigoQr: string;
 }
 
 export async function listarPasajerosDeViajeCoop(

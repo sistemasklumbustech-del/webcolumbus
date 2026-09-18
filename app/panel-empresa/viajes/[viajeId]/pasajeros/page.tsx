@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { listarPasajerosDeViajeCoop, type PasajeroDeViaje } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
+import { CodigoQr } from "@/components/CodigoQr";
 
 const ETIQUETA_TARIFA: Record<string, string> = {
   adulto: "Adulto",
@@ -29,6 +30,11 @@ export default function ManifiestoViajePage() {
   const params = useParams<{ viajeId: string }>();
   const [pasajeros, setPasajeros] = useState<PasajeroDeViaje[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Hallazgo real, 18-sep-2026: no había forma de recuperar el QR de
+  // una venta ya hecha (ej. reimprimir para el pasajero, o revisar un
+  // reclamo) -- solo se veía una vez, en la pantalla de confirmación
+  // del momento de la compra.
+  const [pasajeroConQrAbierto, setPasajeroConQrAbierto] = useState<PasajeroDeViaje | null>(null);
 
   useEffect(() => {
     const token = obtenerToken();
@@ -75,6 +81,7 @@ export default function ManifiestoViajePage() {
                 <th className="px-6 py-3">Documento</th>
                 <th className="px-6 py-3">Tarifa</th>
                 <th className="px-6 py-3">Estado</th>
+                <th className="px-6 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
@@ -98,12 +105,39 @@ export default function ManifiestoViajePage() {
                       {ETIQUETA_ESTADO[p.estadoBoleto] ?? p.estadoBoleto}
                     </span>
                   </td>
+                  <td className="px-6 py-3 text-right">
+                    <button
+                      onClick={() => setPasajeroConQrAbierto(p)}
+                      className="text-xs font-semibold text-brand hover:underline"
+                    >
+                      Ver QR
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {pasajeroConQrAbierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl">
+            <p className="font-display text-sm font-bold text-brand-dark">
+              Asiento {pasajeroConQrAbierto.numeroAsiento} — {pasajeroConQrAbierto.nombreCompleto}
+            </p>
+            <div className="mt-3">
+              <CodigoQr valor={pasajeroConQrAbierto.codigoQr} />
+            </div>
+            <button
+              onClick={() => setPasajeroConQrAbierto(null)}
+              className="mt-4 w-full rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
