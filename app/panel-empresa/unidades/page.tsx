@@ -15,7 +15,7 @@ import {
   type Amenidad,
   type DistribucionAsientos,
 } from "@/lib/api";
-import { obtenerToken } from "@/lib/auth";
+import { obtenerToken, decodificarToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
 
 function BotonEstadoUnidad({
@@ -258,6 +258,13 @@ export default function UnidadesPage() {
     }
   }
 
+  // Hallazgo real, 18-sep-2026: crear/editar tipos de vehículo y
+  // unidades es admin_cooperativa solamente en el backend -- el
+  // vendedor solo tiene los GET (listar). Mismo criterio que en
+  // Rutas y Viajes.
+  const token = obtenerToken();
+  const esAdmin = token ? decodificarToken(token)?.rol === "admin_cooperativa" : false;
+
   return (
     <div className="space-y-8">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
@@ -280,6 +287,7 @@ export default function UnidadesPage() {
       <section className="space-y-4">
         <h2 className="font-display text-lg font-bold text-brand-dark">Tipos de vehículo</h2>
 
+        {esAdmin && (
         <form
           onSubmit={crearTipo}
           className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-4 sm:items-end"
@@ -478,6 +486,7 @@ export default function UnidadesPage() {
             )}
           </div>
         </form>
+        )}
 
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
           {tipos !== null && tipos.length === 0 && (
@@ -537,6 +546,7 @@ export default function UnidadesPage() {
       <section className="space-y-4">
         <h2 className="font-display text-lg font-bold text-brand-dark">Unidades</h2>
 
+        {esAdmin && (
         <form
           onSubmit={crearUnidad}
           className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
@@ -601,6 +611,7 @@ export default function UnidadesPage() {
             <p className="sm:col-span-2 lg:col-span-4 text-sm font-medium text-red-600">{errorUnidad}</p>
           )}
         </form>
+        )}
 
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
           {unidades !== null && unidades.length === 0 && (
@@ -625,14 +636,24 @@ export default function UnidadesPage() {
                     <td className="px-6 py-3 text-brand-dark/70">{u.identificadorOperativo}</td>
                     <td className="px-6 py-3 text-brand-dark/70">{u.tipoVehiculoNombre}</td>
                     <td className="px-6 py-3">
-                      <BotonEstadoUnidad
-                        unidad={u}
-                        onCambiado={() => {
-                          setMensajeExito(u.activo ? "Unidad desactivada." : "Unidad activada.");
-                          cargarTodo();
-                        }}
-                        onError={setMensajeError}
-                      />
+                      {esAdmin ? (
+                        <BotonEstadoUnidad
+                          unidad={u}
+                          onCambiado={() => {
+                            setMensajeExito(u.activo ? "Unidad desactivada." : "Unidad activada.");
+                            cargarTodo();
+                          }}
+                          onError={setMensajeError}
+                        />
+                      ) : (
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            u.activo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {u.activo ? "Activa" : "Inactiva"}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}

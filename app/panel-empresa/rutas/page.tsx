@@ -19,7 +19,7 @@ import {
   type ResultadoCancelacionMasiva,
   type ParadaResumen,
 } from "@/lib/api";
-import { obtenerToken } from "@/lib/auth";
+import { obtenerToken, decodificarToken } from "@/lib/auth";
 import { SelectorCiudad } from "@/components/SelectorCiudad";
 import { Toast } from "@/components/Toast";
 
@@ -254,6 +254,14 @@ export default function RutasPage() {
     }
   }
 
+  // Hallazgo real, 18-sep-2026: todo lo de esta página (crear ruta,
+  // horarios recurrentes, cancelación masiva, paradas) es
+  // admin_cooperativa solamente en el backend -- el vendedor solo
+  // tiene GET /coop/rutas (listar). Se oculta el formulario de crear
+  // y la columna de gestión, misma solución que en Viajes.
+  const token = obtenerToken();
+  const esAdmin = token ? decodificarToken(token)?.rol === "admin_cooperativa" : false;
+
   return (
     <div className="space-y-6">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
@@ -265,6 +273,7 @@ export default function RutasPage() {
         </p>
       </div>
 
+      {esAdmin && (
       <form
         onSubmit={crear}
         className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
@@ -310,6 +319,7 @@ export default function RutasPage() {
           <p className="sm:col-span-2 lg:col-span-4 text-sm font-medium text-red-600">{errorForm}</p>
         )}
       </form>
+      )}
 
       {error && (
         <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
@@ -337,7 +347,7 @@ export default function RutasPage() {
                 <th className="px-6 py-3">Ruta</th>
                 <th className="px-6 py-3">Trayecto</th>
                 <th className="px-6 py-3 text-right">Precio base</th>
-                <th className="px-6 py-3 text-right">Acciones</th>
+                {esAdmin && <th className="px-6 py-3 text-right">Acciones</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
@@ -355,6 +365,7 @@ export default function RutasPage() {
                         r.precioBaseReferencia,
                       )}
                     </td>
+                    {esAdmin && (
                     <td className="px-6 py-3 text-right">
                       <button
                         type="button"
@@ -364,9 +375,10 @@ export default function RutasPage() {
                         {rutaExpandida === r.id ? "Ocultar" : "Gestionar"}
                       </button>
                     </td>
+                    )}
                   </tr>
 
-                  {rutaExpandida === r.id && (
+                  {esAdmin && rutaExpandida === r.id && (
                     <tr key={`${r.id}-panel`}>
                       <td colSpan={4} className="bg-brand-light/20 px-6 py-6">
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
