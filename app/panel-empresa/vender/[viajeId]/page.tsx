@@ -321,6 +321,9 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
                   className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
                 />
               </div>
+              <p className="-mt-1 text-xs text-brand-dark/50">
+                Cédula solo para números ecuatorianos. Turistas y extranjeros: elige Pasaporte.
+              </p>
               <select
                 value={p.tipoTarifa}
                 onChange={(e) => actualizarPasajero(p.numeroAsiento, { tipoTarifa: e.target.value as DatosPasajeroVentanilla["tipoTarifa"] })}

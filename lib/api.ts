@@ -1461,6 +1461,25 @@ export interface CooperativaResumen {
   estado: string;
 }
 
+/** RF-035 -- suspender ('suspendida') o reactivar ('aprobada') una cooperativa; queda auditado. */
+export async function cambiarEstadoCooperativaAdmin(
+  token: string,
+  id: string,
+  estado: "aprobada" | "suspendida",
+  motivo?: string,
+): Promise<void> {
+  const res = await fetch(`${API_URL}/admin/cooperativas/${id}/estado`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ estado, motivo: motivo?.trim() || undefined }),
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo cambiar el estado de la cooperativa.");
+  }
+}
+
 export async function listarCooperativasAdmin(token: string): Promise<CooperativaResumen[]> {
   const res = await fetch(`${API_URL}/admin/cooperativas`, {
     headers: { Authorization: `Bearer ${token}` },

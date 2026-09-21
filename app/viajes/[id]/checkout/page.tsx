@@ -543,6 +543,9 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   <option value="cedula">Cédula</option>
                   <option value="pasaporte">Pasaporte</option>
                 </select>
+                <p className="mt-1 text-xs text-brand-dark/50">
+                  Cédula solo para números ecuatorianos. Turistas y extranjeros: elige Pasaporte.
+                </p>
               </div>
               <div>
                 <label htmlFor={`checkout-documento-${indice}`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">

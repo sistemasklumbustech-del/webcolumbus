@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   listarCooperativasAdmin,
   crearCooperativaAdmin,
+  cambiarEstadoCooperativaAdmin,
   type CooperativaResumen,
 } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
@@ -11,15 +12,17 @@ import { Toast } from "@/components/Toast";
 import { CampoPassword } from "@/components/CampoPassword";
 
 const ETIQUETA_ESTADO: Record<string, string> = {
-  aprobada: "Aprobada",
-  pendiente: "Pendiente",
+  aprobada: "Habilitada",
+  pendiente_revision: "Pendiente de revisión",
   suspendida: "Suspendida",
+  dada_de_baja: "Dada de baja",
 };
 
 const COLOR_ESTADO: Record<string, string> = {
   aprobada: "bg-emerald-100 text-emerald-700",
-  pendiente: "bg-amber-100 text-amber-700",
+  pendiente_revision: "bg-amber-100 text-amber-700",
   suspendida: "bg-red-100 text-red-700",
+  dada_de_baja: "bg-slate-200 text-slate-600",
 };
 
 export default function CooperativasAdminPage() {
@@ -38,10 +41,36 @@ export default function CooperativasAdminPage() {
   const [passwordUsuario, setPasswordUsuario] = useState("");
   const [nombreUsuario, setNombreUsuario] = useState("");
 
+  // Suspender / reactivar (RF-035): confirmacion en un modal, con motivo opcional.
+  const [cambio, setCambio] = useState<{ cooperativa: CooperativaResumen; estado: "aprobada" | "suspendida" } | null>(null);
+  const [motivoCambio, setMotivoCambio] = useState("");
+  const [aplicandoCambio, setAplicandoCambio] = useState(false);
+
   const [guardando, setGuardando] = useState(false);
   const [errorForm, setErrorForm] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
   const [mensajeError, setMensajeError] = useState<string | null>(null);
+
+  async function confirmarCambioEstado() {
+    const token = obtenerToken();
+    if (!token || !cambio) return;
+    setAplicandoCambio(true);
+    try {
+      await cambiarEstadoCooperativaAdmin(token, cambio.cooperativa.id, cambio.estado, motivoCambio);
+      setMensajeExito(
+        cambio.estado === "suspendida"
+          ? `"${cambio.cooperativa.nombreComercial}" quedó suspendida: ya no aparece en búsquedas ni puede vender.`
+          : `"${cambio.cooperativa.nombreComercial}" quedó habilitada de nuevo.`,
+      );
+      setCambio(null);
+      setMotivoCambio("");
+      cargar();
+    } catch (err) {
+      setMensajeError(err instanceof Error ? err.message : "No se pudo cambiar el estado.");
+    } finally {
+      setAplicandoCambio(false);
+    }
+  }
 
   function cargar() {
     const token = obtenerToken();
@@ -274,6 +303,7 @@ export default function CooperativasAdminPage() {
               <tr>
                 <th className="px-6 py-3">Nombre comercial</th>
                 <th className="px-6 py-3">Estado</th>
+                <th className="px-6 py-3 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
@@ -287,12 +317,79 @@ export default function CooperativasAdminPage() {
                       {ETIQUETA_ESTADO[c.estado] ?? c.estado}
                     </span>
                   </td>
+                  <td className="px-6 py-3 text-right">
+                    {c.estado === "aprobada" && (
+                      <button
+                        onClick={() => setCambio({ cooperativa: c, estado: "suspendida" })}
+                        className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50"
+                      >
+                        Suspender
+                      </button>
+                    )}
+                    {(c.estado === "suspendida" || c.estado === "pendiente_revision") && (
+                      <button
+                        onClick={() => setCambio({ cooperativa: c, estado: "aprobada" })}
+                        className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                      >
+                        {c.estado === "suspendida" ? "Reactivar" : "Aprobar"}
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {cambio && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onMouseDown={() => setCambio(null)}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <h2 className="font-display text-lg font-bold text-brand-dark">
+              {cambio.estado === "suspendida" ? "Suspender cooperativa" : "Habilitar cooperativa"}
+            </h2>
+            <p className="mt-1 text-sm text-brand-dark/70">{cambio.cooperativa.nombreComercial}</p>
+            <p className="mt-3 rounded-lg bg-brand-light/30 px-3 py-2 text-sm text-brand-dark/80">
+              {cambio.estado === "suspendida"
+                ? "Dejará de aparecer en las búsquedas y no podrá vender boletos (ni en línea ni en ventanilla). Su historial y los boletos ya vendidos no se tocan. Se puede reactivar cuando quieras."
+                : "Volverá a aparecer en las búsquedas y podrá vender boletos."}
+            </p>
+            <label htmlFor="motivo-cambio-estado" className="mt-4 mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              Motivo (opcional, queda en la auditoría)
+            </label>
+            <textarea
+              id="motivo-cambio-estado"
+              value={motivoCambio}
+              onChange={(e) => setMotivoCambio(e.target.value)}
+              rows={2}
+              className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            />
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setCambio(null)}
+                disabled={aplicandoCambio}
+                className="flex-1 rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarCambioEstado}
+                disabled={aplicandoCambio}
+                className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-60 ${
+                  cambio.estado === "suspendida" ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"
+                }`}
+              >
+                {aplicandoCambio ? "Guardando..." : cambio.estado === "suspendida" ? "Sí, suspender" : "Sí, habilitar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
