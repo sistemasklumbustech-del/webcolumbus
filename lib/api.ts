@@ -1030,6 +1030,8 @@ export interface ViajeCoopResumen {
   estado: string;
   unidadPlaca: string;
   tipoVehiculoNombre: string;
+  conductorId: string | null;
+  conductorNombre: string | null;
 }
 
 export async function listarViajesCoop(token: string): Promise<ViajeCoopResumen[]> {
@@ -1090,6 +1092,7 @@ export async function crearViajeCoop(
     horaLlegadaEstimada?: string;
     recargoVip?: number;
     precioBase: number;
+    conductorId?: string;
   },
 ): Promise<{ id: string }> {
   const res = await fetch(`${API_URL}/coop/viajes`, {
@@ -2075,6 +2078,24 @@ export async function editarViajeCoop(
   if (!res.ok) {
     const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
     throw new Error(mensaje ?? "No se pudo editar el viaje.");
+  }
+}
+
+/** conductorId null = quitar el conductor asignado. */
+export async function asignarConductorViajeCoop(
+  token: string,
+  viajeId: string,
+  conductorId: string | null,
+): Promise<void> {
+  const res = await fetch(`${API_URL}/coop/viajes/${viajeId}/conductor`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ conductorId }),
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo cambiar el conductor.");
   }
 }
 

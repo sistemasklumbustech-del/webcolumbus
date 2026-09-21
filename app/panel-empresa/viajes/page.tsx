@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   crearViajeCoop,
@@ -9,11 +9,14 @@ import {
   listarViajesCoop,
   cancelarViajeCoop,
   cambiarUnidadViajeCoop,
+  asignarConductorViajeCoop,
+  listarConductoresCoop,
   editarViajeCoop,
   obtenerConfiguracionVip,
   type RutaResumen,
   type UnidadResumen,
   type ViajeCoopResumen,
+  type ConductorResumen,
 } from "@/lib/api";
 import { obtenerToken, decodificarToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
@@ -29,16 +32,35 @@ function formatearDolares(monto: number) {
   return new Intl.NumberFormat("es-EC", { style: "currency", currency: "USD" }).format(monto);
 }
 
-function BotonEditarViaje({
+/**
+ * Acciones de un viaje en un modal centrado (21-sep-2026). Antes eran
+ * formularios diminutos dentro de un menu "···" colgado de la ultima
+ * fila de la tabla: en pantalla chica quedaba cortado por abajo y no
+ * se podia usar. Cada accion tiene su propia seccion con espacio real.
+ */
+function ModalAccionesViaje({
   viaje,
+  unidadesActivas,
+  conductores,
+  esAdmin,
+  onCerrar,
   onEditado,
+  onCambiado,
+  onConductor,
+  onCancelado,
   onError,
 }: {
   viaje: ViajeCoopResumen;
+  unidadesActivas: UnidadResumen[];
+  conductores: ConductorResumen[];
+  esAdmin: boolean;
+  onCerrar: () => void;
   onEditado: () => void;
+  onCambiado: () => void;
+  onConductor: () => void;
+  onCancelado: (boletosCancelados: number) => void;
   onError: (mensaje: string) => void;
 }) {
-  const [abierto, setAbierto] = useState(false);
   const horaActual = new Date(viaje.horaSalidaProgramada).toLocaleTimeString("es-EC", {
     hour: "2-digit",
     minute: "2-digit",
@@ -47,288 +69,245 @@ function BotonEditarViaje({
   });
   const [hora, setHora] = useState(horaActual);
   const [precio, setPrecio] = useState(String(viaje.precioBase));
-  const [guardando, setGuardando] = useState(false);
-
-  async function confirmar() {
-    const token = obtenerToken();
-    if (!token) return;
-    setGuardando(true);
-    try {
-      await editarViajeCoop(token, viaje.id, {
-        horaSalidaProgramada: `${viaje.fechaSalida}T${hora}:00-05:00`,
-        precioBase: Number(precio),
-      });
-      onEditado();
-      setAbierto(false);
-    } catch (err) {
-      onError(err instanceof Error ? err.message : "No se pudo editar el viaje.");
-    } finally {
-      setGuardando(false);
-    }
-  }
-
-  if (!abierto) {
-    return (
-      <button
-        onClick={() => setAbierto(true)}
-        className="text-xs font-semibold text-brand-dark/70 hover:underline"
-      >
-        Editar
-      </button>
-    );
-  }
-
-  return (
-    <div className="flex items-center justify-end gap-1">
-      <input
-id="viaje-hora"
-        type="time"
-        value={hora}
-        onChange={(e) => setHora(e.target.value)}
-        className="w-24 rounded border border-brand-light px-1.5 py-1 text-xs"
-      />
-      <input
-id="viaje-precio"
-        type="number"
-        min="0"
-        step="0.01"
-        value={precio}
-        onChange={(e) => setPrecio(e.target.value)}
-        className="w-16 rounded border border-brand-light px-1.5 py-1 text-xs"
-      />
-      <button
-        onClick={confirmar}
-        disabled={guardando}
-        className="rounded bg-brand-amber px-2 py-1 text-xs font-semibold text-brand-dark hover:brightness-95 disabled:opacity-50"
-      >
-        ✓
-      </button>
-      <button
-        onClick={() => setAbierto(false)}
-        className="rounded border border-brand-light px-2 py-1 text-xs text-brand-dark/70 hover:bg-brand-light/40"
-      >
-        ✕
-      </button>
-    </div>
-  );
-}
-
-function BotonCambiarUnidad({
-  viajeId,
-  unidades,
-  onCambiado,
-  onError,
-}: {
-  viajeId: string;
-  unidades: UnidadResumen[];
-  onCambiado: () => void;
-  onError: (mensaje: string) => void;
-}) {
-  const [abierto, setAbierto] = useState(false);
   const [unidadElegida, setUnidadElegida] = useState("");
-  const [guardando, setGuardando] = useState(false);
+  const [conductorElegido, setConductorElegido] = useState(viaje.conductorId ?? "");
+  const [confirmandoCancelar, setConfirmandoCancelar] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
 
-  async function confirmar() {
+  const editable = esAdmin && viaje.estado === "programado";
+
+  async function ejecutar(accion: (token: string) => Promise<void>, mensajeError: string) {
     const token = obtenerToken();
-    if (!token || !unidadElegida) return;
-    setGuardando(true);
+    if (!token) return;
+    setOcupado(true);
     try {
-      await cambiarUnidadViajeCoop(token, viajeId, unidadElegida);
-      onCambiado();
-      setAbierto(false);
+      await accion(token);
     } catch (err) {
-      onError(err instanceof Error ? err.message : "No se pudo cambiar la unidad.");
+      onError(err instanceof Error ? err.message : mensajeError);
     } finally {
-      setGuardando(false);
+      setOcupado(false);
     }
   }
 
-  if (!abierto) {
-    return (
-      <button
-        onClick={() => setAbierto(true)}
-        className="text-xs font-semibold text-brand-dark/70 hover:underline"
-      >
-        Cambiar unidad
-      </button>
-    );
-  }
+  const claseCampo =
+    "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+  const claseBoton =
+    "rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50";
+  const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
 
   return (
-    <div className="flex items-center justify-end gap-1">
-      <select
-id="viaje-unidad"
-        value={unidadElegida}
-        onChange={(e) => setUnidadElegida(e.target.value)}
-        className="rounded border border-brand-light px-1.5 py-1 text-xs"
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6" onMouseDown={onCerrar}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Acciones del viaje"
+        onMouseDown={(e) => e.stopPropagation()}
+        className="max-h-full w-full max-w-md space-y-5 overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
       >
-        <option value="">Elige unidad...</option>
-        {unidades.map((u) => (
-          <option key={u.id} value={u.id}>
-            {u.placa}
-          </option>
-        ))}
-      </select>
-      <button
-        onClick={confirmar}
-        disabled={guardando || !unidadElegida}
-        className="rounded bg-brand-amber px-2 py-1 text-xs font-semibold text-brand-dark hover:brightness-95 disabled:opacity-50"
-      >
-        ✓
-      </button>
-      <button
-        onClick={() => setAbierto(false)}
-        className="rounded border border-brand-light px-2 py-1 text-xs text-brand-dark/70 hover:bg-brand-light/40"
-      >
-        ✕
-      </button>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="font-display text-lg font-bold text-brand-dark">{viaje.rutaNombre}</h2>
+            <p className="text-sm text-brand-dark/70">
+              {viaje.fechaSalida} · {horaActual} · {viaje.unidadPlaca}
+            </p>
+            <p className="text-sm text-brand-dark/70">
+              Conductor: {viaje.conductorNombre ?? <span className="text-brand-dark/40">sin asignar</span>}
+            </p>
+          </div>
+          <button
+            onClick={onCerrar}
+            aria-label="Cerrar"
+            className="rounded-lg p-1.5 text-brand-dark/50 hover:bg-brand-light hover:text-brand-dark"
+          >
+            ✕
+          </button>
+        </div>
+
+        <Link
+          href={`/panel-empresa/viajes/${viaje.id}/pasajeros`}
+          className="block rounded-lg border border-brand-light px-4 py-2 text-center text-sm font-semibold text-brand hover:bg-brand-light/40"
+        >
+          Ver pasajeros y boletos
+        </Link>
+
+        {editable && (
+          <>
+            <section className="space-y-3 border-t border-black/5 pt-4">
+              <h3 className="text-sm font-bold text-brand-dark">Hora y precio</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="modal-viaje-hora" className={claseEtiqueta}>Hora de salida</label>
+                  <input id="modal-viaje-hora" type="time" value={hora} onChange={(e) => setHora(e.target.value)} className={claseCampo} />
+                </div>
+                <div>
+                  <label htmlFor="modal-viaje-precio" className={claseEtiqueta}>Precio (USD)</label>
+                  <input id="modal-viaje-precio" type="number" min="0" step="0.01" value={precio} onChange={(e) => setPrecio(e.target.value)} className={claseCampo} />
+                </div>
+              </div>
+              <button
+                disabled={ocupado}
+                className={claseBoton}
+                onClick={() =>
+                  ejecutar(async (token) => {
+                    await editarViajeCoop(token, viaje.id, {
+                      horaSalidaProgramada: `${viaje.fechaSalida}T${hora}:00-05:00`,
+                      precioBase: Number(precio),
+                    });
+                    onEditado();
+                  }, "No se pudo editar el viaje.")
+                }
+              >
+                Guardar hora y precio
+              </button>
+            </section>
+
+            <section className="space-y-3 border-t border-black/5 pt-4">
+              <h3 className="text-sm font-bold text-brand-dark">Unidad</h3>
+              <label htmlFor="modal-viaje-unidad" className={claseEtiqueta}>Cambiar por</label>
+              <select id="modal-viaje-unidad" value={unidadElegida} onChange={(e) => setUnidadElegida(e.target.value)} className={claseCampo}>
+                <option value="">Elige una unidad...</option>
+                {unidadesActivas.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.placa} — {u.tipoVehiculoNombre}
+                  </option>
+                ))}
+              </select>
+              <button
+                disabled={ocupado || !unidadElegida}
+                className={claseBoton}
+                onClick={() =>
+                  ejecutar(async (token) => {
+                    await cambiarUnidadViajeCoop(token, viaje.id, unidadElegida);
+                    onCambiado();
+                  }, "No se pudo cambiar la unidad.")
+                }
+              >
+                Cambiar unidad
+              </button>
+            </section>
+
+            <section className="space-y-3 border-t border-black/5 pt-4">
+              <h3 className="text-sm font-bold text-brand-dark">Conductor</h3>
+              <label htmlFor="modal-viaje-conductor" className={claseEtiqueta}>Asignado</label>
+              <select id="modal-viaje-conductor" value={conductorElegido} onChange={(e) => setConductorElegido(e.target.value)} className={claseCampo}>
+                <option value="">Sin conductor</option>
+                {conductores.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombreCompleto}
+                  </option>
+                ))}
+              </select>
+              <button
+                disabled={ocupado || conductorElegido === (viaje.conductorId ?? "")}
+                className={claseBoton}
+                onClick={() =>
+                  ejecutar(async (token) => {
+                    await asignarConductorViajeCoop(token, viaje.id, conductorElegido || null);
+                    onConductor();
+                  }, "No se pudo cambiar el conductor.")
+                }
+              >
+                Guardar conductor
+              </button>
+            </section>
+
+            <section className="space-y-3 border-t border-black/5 pt-4">
+              <h3 className="text-sm font-bold text-red-700">Cancelar viaje</h3>
+              {!confirmandoCancelar ? (
+                <button
+                  onClick={() => setConfirmandoCancelar(true)}
+                  className="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                >
+                  Cancelar este viaje
+                </button>
+              ) : (
+                <div className="rounded-lg bg-red-50 p-3 ring-1 ring-red-200">
+                  <p className="text-sm font-semibold text-red-800">
+                    Se cancelan también todos los boletos vendidos. ¿Confirmas?
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      disabled={ocupado}
+                      onClick={() =>
+                        ejecutar(async (token) => {
+                          const { boletosCancelados } = await cancelarViajeCoop(token, viaje.id);
+                          onCancelado(boletosCancelados);
+                        }, "No se pudo cancelar el viaje.")
+                      }
+                      className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                    >
+                      Sí, cancelar
+                    </button>
+                    <button
+                      onClick={() => setConfirmandoCancelar(false)}
+                      className="rounded-lg border border-brand-light px-4 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40"
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
-function BotonCancelarViaje({
-  viajeId,
-  onCancelado,
-  onError,
-}: {
-  viajeId: string;
-  onCancelado: (boletosCancelados: number) => void;
-  onError: (mensaje: string) => void;
-}) {
-  const [confirmando, setConfirmando] = useState(false);
-  const [cancelando, setCancelando] = useState(false);
-
-  async function confirmar() {
-    const token = obtenerToken();
-    if (!token) return;
-    setCancelando(true);
-    try {
-      const { boletosCancelados } = await cancelarViajeCoop(token, viajeId);
-      onCancelado(boletosCancelados);
-    } catch (err) {
-      onError(err instanceof Error ? err.message : "No se pudo cancelar el viaje.");
-    } finally {
-      setCancelando(false);
-      setConfirmando(false);
-    }
-  }
-
-  if (confirmando) {
-    return (
-      <div className="flex items-center justify-end gap-2">
-        <span className="text-xs text-brand-dark/70">¿Cancelar?</span>
-        <button
-          onClick={confirmar}
-          disabled={cancelando}
-          className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-        >
-          {cancelando ? "..." : "Sí"}
-        </button>
-        <button
-          onClick={() => setConfirmando(false)}
-          className="rounded-lg border border-brand-light px-2.5 py-1 text-xs text-brand-dark/70 hover:bg-brand-light/40"
-        >
-          No
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <button
-      onClick={() => setConfirmando(true)}
-      className="text-xs font-semibold text-red-600 hover:underline"
-    >
-      Cancelar viaje
-    </button>
-  );
-}
-
-/* Rediseño real Fase 1 (25-ago-2026), hallazgo real del director:
-   las 4 acciones por viaje (Ver pasajeros, Editar, Cambiar unidad,
-   Cancelar viaje) estaban siempre visibles, amontonadas en una
-   columna angosta -- se veía descuidado. Reemplazado por un menú
-   "···" (mismo patrón real de acciones de fila que usa TailAdmin),
-   colapsado por defecto -- se cierra solo al hacer clic fuera. Los
-   3 componentes reales (BotonEditarViaje, BotonCambiarUnidad,
-   BotonCancelarViaje) se reusan tal cual adentro, sin tocar su
-   lógica interna -- cuando alguno se expande a su formulario en
-   línea (ej. "Editar" abre los campos de hora/precio), el menú se
-   queda abierto para poder interactuar con ese formulario. */
+/** Boton "Gestionar" de cada fila: abre el modal de acciones del viaje. */
 function MenuAccionesViaje({
   viaje,
   unidadesActivas,
+  conductores,
   esAdmin,
   onEditado,
   onCambiado,
+  onConductor,
   onCancelado,
   onError,
 }: {
   viaje: ViajeCoopResumen;
   unidadesActivas: UnidadResumen[];
+  conductores: ConductorResumen[];
   esAdmin: boolean;
   onEditado: () => void;
   onCambiado: () => void;
+  onConductor: () => void;
   onCancelado: (boletosCancelados: number) => void;
   onError: (mensaje: string) => void;
 }) {
   const [abierto, setAbierto] = useState(false);
-  const contenedorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!abierto) return;
-    function alHacerClicFuera(e: MouseEvent) {
-      if (contenedorRef.current && !contenedorRef.current.contains(e.target as Node)) {
-        setAbierto(false);
-      }
-    }
-    document.addEventListener("mousedown", alHacerClicFuera);
-    return () => document.removeEventListener("mousedown", alHacerClicFuera);
-  }, [abierto]);
+  const cerrarYAvisar =
+    <A extends unknown[]>(fn: (...args: A) => void) =>
+    (...args: A) => {
+      setAbierto(false);
+      fn(...args);
+    };
 
   return (
-    <div ref={contenedorRef} className="relative inline-block text-left">
+    <>
       <button
-        onClick={() => setAbierto((a) => !a)}
-        aria-label="Acciones del viaje"
-        aria-expanded={abierto}
-        className="rounded-lg p-1.5 text-brand-dark/50 transition hover:bg-brand-light hover:text-brand-dark"
+        onClick={() => setAbierto(true)}
+        className="rounded-lg bg-brand-light px-3 py-1.5 text-xs font-semibold text-brand-dark transition hover:bg-brand-light/70"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <circle cx="5" cy="12" r="2" />
-          <circle cx="12" cy="12" r="2" />
-          <circle cx="19" cy="12" r="2" />
-        </svg>
+        Gestionar
       </button>
       {abierto && (
-        <div className="absolute right-0 top-full z-20 mt-1 min-w-[180px] space-y-2 rounded-xl bg-white p-3 text-left shadow-lg ring-1 ring-black/10">
-          <Link
-            href={`/panel-empresa/viajes/${viaje.id}/pasajeros`}
-            className="block text-xs font-semibold text-brand hover:underline"
-          >
-            Ver pasajeros
-          </Link>
-          {esAdmin && viaje.estado === "programado" && (
-            <>
-              <div className="border-t border-black/5 pt-2">
-                <BotonEditarViaje viaje={viaje} onEditado={onEditado} onError={onError} />
-              </div>
-              <div>
-                <BotonCambiarUnidad
-                  viajeId={viaje.id}
-                  unidades={unidadesActivas}
-                  onCambiado={onCambiado}
-                  onError={onError}
-                />
-              </div>
-              <div className="border-t border-black/5 pt-2">
-                <BotonCancelarViaje viajeId={viaje.id} onCancelado={onCancelado} onError={onError} />
-              </div>
-            </>
-          )}
-        </div>
+        <ModalAccionesViaje
+          viaje={viaje}
+          unidadesActivas={unidadesActivas}
+          conductores={conductores}
+          esAdmin={esAdmin}
+          onCerrar={() => setAbierto(false)}
+          onEditado={cerrarYAvisar(onEditado)}
+          onCambiado={cerrarYAvisar(onCambiado)}
+          onConductor={cerrarYAvisar(onConductor)}
+          onCancelado={cerrarYAvisar(onCancelado)}
+          onError={onError}
+        />
       )}
-    </div>
+    </>
   );
 }
 
@@ -336,6 +315,8 @@ export default function ViajesPage() {
   const [rutas, setRutas] = useState<RutaResumen[] | null>(null);
   const [unidades, setUnidades] = useState<UnidadResumen[] | null>(null);
   const [viajes, setViajes] = useState<ViajeCoopResumen[] | null>(null);
+  const [conductores, setConductores] = useState<ConductorResumen[]>([]);
+  const [conductorElegido, setConductorElegido] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
@@ -369,6 +350,7 @@ export default function ViajesPage() {
     // el error se descartaba en silencio) -- y solo el admin ve el
     // formulario donde se usa este valor.
     if (decodificarToken(token)?.rol === "admin_cooperativa") {
+      listarConductoresCoop(token).then(setConductores).catch(() => setConductores([]));
       obtenerConfiguracionVip(token)
         .then((cfg) => setRecargoVip(String(cfg.recargoVipDefault)))
         .catch(() => {});
@@ -404,7 +386,9 @@ export default function ViajesPage() {
         // viaje, opcional (0 si no se especifica).
         recargoVip: recargoVip ? Number(recargoVip) : undefined,
         precioBase: Number(precio),
+        conductorId: conductorElegido || undefined,
       });
+      setConductorElegido("");
       setFecha("");
       setHora("");
       setHoraLlegada("");
@@ -560,6 +544,24 @@ id="viaje-fecha"
             className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
           />
         </div>
+        <div>
+          <label htmlFor="viaje-conductor" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Conductor <span className="font-normal normal-case text-brand-dark/40">(opcional, se puede asignar después)</span>
+          </label>
+          <select
+            id="viaje-conductor"
+            value={conductorElegido}
+            onChange={(e) => setConductorElegido(e.target.value)}
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          >
+            <option value="">Sin conductor</option>
+            {conductores.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombreCompleto}
+              </option>
+            ))}
+          </select>
+        </div>
         <button
           type="submit"
           disabled={guardando || faltaConfigurar}
@@ -591,6 +593,7 @@ id="viaje-fecha"
                 <th className="px-6 py-3">Ruta</th>
                 <th className="px-6 py-3">Fecha y hora</th>
                 <th className="px-6 py-3">Unidad</th>
+                <th className="px-6 py-3">Conductor</th>
                 <th className="px-6 py-3">Estado</th>
                 <th className="px-6 py-3 text-right">Precio</th>
                 <th className="px-6 py-3"></th>
@@ -611,6 +614,9 @@ id="viaje-fecha"
                   <td className="px-6 py-3 text-brand-dark/70">
                     {v.unidadPlaca} · {v.tipoVehiculoNombre}
                   </td>
+                  <td className="px-6 py-3 text-brand-dark/70">
+                    {v.conductorNombre ?? <span className="text-brand-dark/30">Sin asignar</span>}
+                  </td>
                   <td className="px-6 py-3">
                     <span
                       className={`rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[v.estado] ?? "bg-gray-100 text-gray-600"}`}
@@ -625,6 +631,7 @@ id="viaje-fecha"
                     <MenuAccionesViaje
                       viaje={v}
                       unidadesActivas={(unidades ?? []).filter((u) => u.activo)}
+                      conductores={conductores}
                       esAdmin={esAdmin}
                       onEditado={() => {
                         setMensajeExito("Viaje actualizado.");
@@ -632,6 +639,10 @@ id="viaje-fecha"
                       }}
                       onCambiado={() => {
                         setMensajeExito("Unidad del viaje actualizada — los boletos ya vendidos no se vieron afectados.");
+                        cargarTodo();
+                      }}
+                      onConductor={() => {
+                        setMensajeExito("Conductor del viaje actualizado.");
                         cargarTodo();
                       }}
                       onCancelado={(boletosCancelados) => {
