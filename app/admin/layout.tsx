@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { VigilanteSesion } from "@/components/VigilanteSesion";
 import Image from "next/image";
 import { obtenerToken, borrarToken, decodificarToken, tokenExpirado, type PayloadToken } from "@/lib/auth";
 
@@ -163,6 +164,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-full flex-1 bg-brand-light/20">
+      <VigilanteSesion />
       {/* Sidebar -- escritorio */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-black/5 bg-white lg:flex">
         {/* Bug real encontrado al verificar con captura (25-ago-2026):

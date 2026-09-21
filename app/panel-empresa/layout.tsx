@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { VigilanteSesion } from "@/components/VigilanteSesion";
 import Image from "next/image";
 import { obtenerToken, borrarToken, decodificarToken, tokenExpirado, type PayloadToken } from "@/lib/auth";
 import { obtenerEstadoDatosCoop, type EstadoDatosCooperativa } from "@/lib/api";
@@ -201,6 +202,7 @@ export default function PanelEmpresaLayout({ children }: { children: React.React
 
   return (
     <div className="flex min-h-full flex-1 bg-brand-light/20">
+      <VigilanteSesion />
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-black/5 bg-white lg:flex">
         <div className="flex h-16 items-center gap-2 bg-brand-amber px-6">
           <Image src="/img/logo-columbus.png" alt="Columbus" width={110} height={28} priority />
