@@ -1523,6 +1523,56 @@ export async function listarPuntosOperacionAdmin(token: string): Promise<PuntoOp
   return cuerpo as PuntoOperacionResumen[];
 }
 
+/** Propuesta de una cooperativa: queda 'pendiente_revision' hasta que un admin la apruebe (13-ago-2026). */
+export async function proponerPuntoOperacionCoop(
+  token: string,
+  datos: { tipo: "oficina_agencia" | "parada_intermedia"; nombre: string; ciudad: string; provincia: string },
+): Promise<void> {
+  const res = await fetch(`${API_URL}/coop/puntos-operacion`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(datos),
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo enviar la propuesta.");
+  }
+}
+
+export interface PuntoOperacionPendiente {
+  id: string;
+  tipo: string;
+  nombre: string;
+  ciudad: string;
+  provincia: string;
+  cooperativaPropietariaNombre: string | null;
+  creadoEn: string;
+}
+
+export async function listarPuntosOperacionPendientesAdmin(token: string): Promise<PuntoOperacionPendiente[]> {
+  const res = await fetch(`${API_URL}/admin/puntos-operacion/pendientes`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar las propuestas.");
+  return cuerpo as PuntoOperacionPendiente[];
+}
+
+export async function resolverPuntoOperacionPendienteAdmin(
+  token: string,
+  id: string,
+  accion: "aprobar" | "rechazar",
+): Promise<void> {
+  const res = await fetch(`${API_URL}/admin/puntos-operacion/${id}/${accion}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo procesar la propuesta.");
+}
+
 export interface FilaVentaNacional {
   cooperativaNombre: string;
   totalVentas: number;

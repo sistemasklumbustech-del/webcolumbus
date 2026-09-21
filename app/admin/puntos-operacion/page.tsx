@@ -6,7 +6,10 @@ import {
   crearPuntoOperacionAdmin,
   actualizarPuntoOperacionAdmin,
   listarCooperativasAdmin,
+  listarPuntosOperacionPendientesAdmin,
+  resolverPuntoOperacionPendienteAdmin,
   type PuntoOperacionResumen,
+  type PuntoOperacionPendiente,
   type CooperativaResumen,
 } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
@@ -191,6 +194,8 @@ function CoordenadasEditables({
 
 export default function PuntosOperacionAdminPage() {
   const [puntos, setPuntos] = useState<PuntoOperacionResumen[] | null>(null);
+  const [pendientes, setPendientes] = useState<PuntoOperacionPendiente[]>([]);
+  const [resolviendoId, setResolviendoId] = useState<string | null>(null);
   const [cooperativas, setCooperativas] = useState<CooperativaResumen[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -218,9 +223,27 @@ export default function PuntosOperacionAdminPage() {
       .catch(() => {
         /* el desplegable de cooperativa propietaria es opcional — si falla, el campo simplemente queda vacío */
       });
+    listarPuntosOperacionPendientesAdmin(token)
+      .then(setPendientes)
+      .catch(() => setPendientes([]));
   }
 
   useEffect(cargar, []);
+
+  async function resolverPropuesta(id: string, accion: "aprobar" | "rechazar") {
+    const token = obtenerToken();
+    if (!token) return;
+    setResolviendoId(id);
+    try {
+      await resolverPuntoOperacionPendienteAdmin(token, id, accion);
+      setMensajeExito(accion === "aprobar" ? "Punto aprobado -- ya aparece en las búsquedas." : "Propuesta rechazada.");
+      cargar();
+    } catch (err) {
+      setMensajeError(err instanceof Error ? err.message : "No se pudo procesar la propuesta.");
+    } finally {
+      setResolviendoId(null);
+    }
+  }
 
   async function crear(e: React.FormEvent) {
     e.preventDefault();
@@ -266,6 +289,46 @@ export default function PuntosOperacionAdminPage() {
           Terminales, oficinas y paradas — cada terminal puede tener su propia tasa fija por pasajero (RF-FLOTA-003).
         </p>
       </div>
+
+      {pendientes.length > 0 && (
+        <div className="rounded-2xl bg-amber-50 p-6 ring-1 ring-amber-200">
+          <h2 className="font-display text-base font-bold text-amber-900">
+            Propuestas de cooperativas pendientes ({pendientes.length})
+          </h2>
+          <p className="mt-1 text-xs text-amber-800/80">
+            Un punto solo aparece en las búsquedas y en las paradas de las rutas después de aprobarlo.
+          </p>
+          <ul className="mt-4 divide-y divide-amber-200">
+            {pendientes.map((p) => (
+              <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+                <div>
+                  <p className="font-semibold text-brand-dark">{p.nombre}</p>
+                  <p className="text-xs text-brand-dark/60">
+                    {ETIQUETA_TIPO[p.tipo] ?? p.tipo} · {p.ciudad}, {p.provincia} · propone{" "}
+                    {p.cooperativaPropietariaNombre ?? "una cooperativa"}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => resolverPropuesta(p.id, "aprobar")}
+                    disabled={resolviendoId === p.id}
+                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    Aprobar
+                  </button>
+                  <button
+                    onClick={() => resolverPropuesta(p.id, "rechazar")}
+                    disabled={resolviendoId === p.id}
+                    className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+                  >
+                    Rechazar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <form
         onSubmit={crear}

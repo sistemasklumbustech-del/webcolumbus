@@ -9,6 +9,7 @@ import {
   crearHorarioRutaCoop,
   actualizarEstadoHorarioRutaCoop,
   cancelarViajesMasivoCoop,
+  proponerPuntoOperacionCoop,
   listarParadasCoop,
   agregarParadaCoop,
   eliminarParadaCoop,
@@ -72,6 +73,45 @@ export default function RutasPage() {
   const [tiempoParada, setTiempoParada] = useState("");
   const [guardandoParada, setGuardandoParada] = useState(false);
   const [errorParada, setErrorParada] = useState<string | null>(null);
+
+  // Propuesta de un punto nuevo (parada/oficina) que todavía no existe en
+  // el catálogo -- queda pendiente hasta que un admin de plataforma la
+  // apruebe, recién ahí aparece en el buscador de paradas.
+  const [proponiendo, setProponiendo] = useState(false);
+  const [propTipo, setPropTipo] = useState<"parada_intermedia" | "oficina_agencia">("parada_intermedia");
+  const [propNombre, setPropNombre] = useState("");
+  const [propCiudad, setPropCiudad] = useState("");
+  const [propProvincia, setPropProvincia] = useState("");
+  const [guardandoProp, setGuardandoProp] = useState(false);
+  const [errorProp, setErrorProp] = useState<string | null>(null);
+
+  async function enviarPropuesta(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorProp(null);
+    const token = obtenerToken();
+    if (!token || propNombre.trim().length < 3 || !propCiudad.trim() || !propProvincia.trim()) {
+      setErrorProp("Completa nombre (mínimo 3 letras), ciudad y provincia.");
+      return;
+    }
+    setGuardandoProp(true);
+    try {
+      await proponerPuntoOperacionCoop(token, {
+        tipo: propTipo,
+        nombre: propNombre.trim(),
+        ciudad: propCiudad.trim(),
+        provincia: propProvincia.trim(),
+      });
+      setMensajeExito(`Propuesta "${propNombre.trim()}" enviada -- aparecerá en el buscador cuando un administrador la apruebe.`);
+      setPropNombre("");
+      setPropCiudad("");
+      setPropProvincia("");
+      setProponiendo(false);
+    } catch (err) {
+      setErrorProp(err instanceof Error ? err.message : "No se pudo enviar la propuesta.");
+    } finally {
+      setGuardandoProp(false);
+    }
+  }
 
   function cargarParadas(rutaId: string) {
     const token = obtenerToken();
@@ -684,6 +724,86 @@ export default function RutasPage() {
                             {errorParada && (
                               <p className="mt-2 text-xs font-medium text-red-600">{errorParada}</p>
                             )}
+
+                            <div className="mt-4 border-t border-black/5 pt-3">
+                              {!proponiendo ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setProponiendo(true)}
+                                  className="text-xs font-semibold text-brand underline decoration-dotted underline-offset-2"
+                                >
+                                  ¿No encuentras la parada? Proponer un punto nuevo
+                                </button>
+                              ) : (
+                                <form onSubmit={enviarPropuesta} className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:items-end">
+                                  <div>
+                                    <label htmlFor="prop-tipo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                      Tipo
+                                    </label>
+                                    <select
+                                      id="prop-tipo"
+                                      value={propTipo}
+                                      onChange={(e) => setPropTipo(e.target.value as typeof propTipo)}
+                                      className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                                    >
+                                      <option value="parada_intermedia">Parada intermedia</option>
+                                      <option value="oficina_agencia">Oficina / agencia</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label htmlFor="prop-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                      Nombre
+                                    </label>
+                                    <input
+                                      id="prop-nombre"
+                                      value={propNombre}
+                                      onChange={(e) => setPropNombre(e.target.value)}
+                                      placeholder="Parador Desayuno"
+                                      className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label htmlFor="prop-ciudad" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                      Ciudad
+                                    </label>
+                                    <input
+                                      id="prop-ciudad"
+                                      value={propCiudad}
+                                      onChange={(e) => setPropCiudad(e.target.value)}
+                                      className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label htmlFor="prop-provincia" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                      Provincia
+                                    </label>
+                                    <input
+                                      id="prop-provincia"
+                                      value={propProvincia}
+                                      onChange={(e) => setPropProvincia(e.target.value)}
+                                      className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                                    />
+                                  </div>
+                                  <div className="flex gap-2 sm:col-span-4">
+                                    <button
+                                      type="submit"
+                                      disabled={guardandoProp}
+                                      className="rounded-lg bg-brand-amber px-4 py-2 text-xs font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+                                    >
+                                      {guardandoProp ? "Enviando..." : "Enviar propuesta"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setProponiendo(false)}
+                                      className="rounded-lg px-3 py-2 text-xs font-semibold text-brand-dark/70"
+                                    >
+                                      Cancelar
+                                    </button>
+                                  </div>
+                                  {errorProp && <p className="text-xs font-medium text-red-600 sm:col-span-4">{errorProp}</p>}
+                                </form>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>

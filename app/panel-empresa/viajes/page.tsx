@@ -364,9 +364,15 @@ export default function ViajesPage() {
     // fija de la cooperativa -- se pre-llena aqui, en vez de pedirlo
     // vacio en cada viaje nuevo. El admin sigue pudiendo cambiarlo
     // puntualmente para un viaje especifico.
-    obtenerConfiguracionVip(token)
-      .then((cfg) => setRecargoVip(String(cfg.recargoVipDefault)))
-      .catch(() => {});
+    // GET /coop/configuracion-vip es admin_cooperativa solamente: al
+    // vendedor ni siquiera se le pide (antes daba 403 en consola, aunque
+    // el error se descartaba en silencio) -- y solo el admin ve el
+    // formulario donde se usa este valor.
+    if (decodificarToken(token)?.rol === "admin_cooperativa") {
+      obtenerConfiguracionVip(token)
+        .then((cfg) => setRecargoVip(String(cfg.recargoVipDefault)))
+        .catch(() => {});
+    }
   }
 
   useEffect(cargarTodo, []);
