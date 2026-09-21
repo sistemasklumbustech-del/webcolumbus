@@ -2060,6 +2060,68 @@ export async function crearConductorCoop(
   }
 }
 
+/** Historial de ventas de la cooperativa (una fila por boleto). El vendedor solo ve las suyas. */
+export interface FiltrosVentasCoop {
+  desde?: string;
+  hasta?: string;
+  canal?: "en_linea" | "ventanilla";
+  estadoBoleto?: "vigente" | "usado" | "cancelado";
+  busqueda?: string;
+  pagina?: number;
+  limite?: number;
+}
+
+export interface FilaVentaCoop {
+  boletoId: string;
+  codigoQr: string;
+  estadoBoleto: string;
+  fechaVenta: string;
+  canal: string;
+  vendedorNombre: string | null;
+  pasajeroNombre: string;
+  tipoDocumento: string;
+  documento: string;
+  tipoTarifa: string;
+  contactoTelefono: string | null;
+  contactoCorreo: string | null;
+  rutaNombre: string;
+  fechaSalida: string;
+  horaSalida: string;
+  numeroAsiento: string;
+  esVip: boolean;
+  metodoPago: string | null;
+  estadoPago: string | null;
+  precioPagado: number;
+  tasaTerminal: number;
+  cargoPlataforma: number;
+  total: number;
+}
+
+export interface ResultadoVentasCoop {
+  filas: FilaVentaCoop[];
+  total: number;
+  resumen: { boletos: number; totalCobrado: number };
+  pagina: number;
+  limite: number;
+}
+
+export async function listarVentasCoop(token: string, filtros: FiltrosVentasCoop): Promise<ResultadoVentasCoop> {
+  const params = new URLSearchParams();
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor !== undefined && valor !== "") params.set(clave, String(valor));
+  }
+  const res = await fetch(`${API_URL}/coop/ventas?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo cargar el historial de ventas.");
+  }
+  return cuerpo as ResultadoVentasCoop;
+}
+
 export interface PasajeroDeViaje {
   numeroAsiento: string;
   nombreCompleto: string;

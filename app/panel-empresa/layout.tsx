@@ -30,6 +30,7 @@ const ENLACES = [
   { href: "/panel-empresa/personal", etiqueta: "Personal", icono: IconoPersonal, soloAdmin: true },
   { href: "/panel-empresa/viajes", etiqueta: "Viajes", icono: IconoViajes },
   { href: "/panel-empresa/vender", etiqueta: "Vender boleto", icono: IconoVender },
+  { href: "/panel-empresa/ventas", etiqueta: "Ventas", icono: IconoVentas },
   { href: "/panel-empresa/validar-qr", etiqueta: "Validar boleto", icono: IconoValidar },
   { href: "/panel-empresa/pagos-pendientes", etiqueta: "Pagos pendientes", icono: IconoPagos, soloAdmin: true },
   { href: "/panel-empresa/solicitudes-factura", etiqueta: "Facturas", icono: IconoFacturas, soloAdmin: true },
@@ -90,6 +91,13 @@ function IconoVender({ className }: { className?: string }) {
       <rect x="3" y="7" width="18" height="13" rx="2" />
       <path d="M3 10h18" />
       <path d="M7 15h4" />
+    </svg>
+  );
+}
+function IconoVentas({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
     </svg>
   );
 }
