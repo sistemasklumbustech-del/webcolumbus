@@ -73,15 +73,25 @@ function ModalAccionesViaje({
   const [conductorElegido, setConductorElegido] = useState(viaje.conductorId ?? "");
   const [confirmandoCancelar, setConfirmandoCancelar] = useState(false);
   const [ocupado, setOcupado] = useState(false);
+  // Cada seccion guarda SOLO lo suyo y confirma por separado; el modal
+  // queda abierto para poder seguir con otra seccion.
+  const [confirmacion, setConfirmacion] = useState<{ seccion: string; texto: string } | null>(null);
 
   const editable = esAdmin && viaje.estado === "programado";
 
-  async function ejecutar(accion: (token: string) => Promise<void>, mensajeError: string) {
+  async function ejecutar(
+    seccion: string,
+    textoOk: string,
+    accion: (token: string) => Promise<void>,
+    mensajeError: string,
+  ) {
     const token = obtenerToken();
     if (!token) return;
     setOcupado(true);
+    setConfirmacion(null);
     try {
       await accion(token);
+      setConfirmacion({ seccion, texto: textoOk });
     } catch (err) {
       onError(err instanceof Error ? err.message : mensajeError);
     } finally {
@@ -94,6 +104,10 @@ function ModalAccionesViaje({
   const claseBoton =
     "rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50";
   const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+  const avisoGuardado = (seccion: string) =>
+    confirmacion?.seccion === seccion ? (
+      <p className="text-xs font-semibold text-emerald-700">✓ {confirmacion.texto}</p>
+    ) : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6" onMouseDown={onCerrar}>
@@ -148,7 +162,7 @@ function ModalAccionesViaje({
                 disabled={ocupado}
                 className={claseBoton}
                 onClick={() =>
-                  ejecutar(async (token) => {
+                  ejecutar("horaPrecio", "Hora y precio guardados.", async (token) => {
                     await editarViajeCoop(token, viaje.id, {
                       horaSalidaProgramada: `${viaje.fechaSalida}T${hora}:00-05:00`,
                       precioBase: Number(precio),
@@ -159,10 +173,12 @@ function ModalAccionesViaje({
               >
                 Guardar hora y precio
               </button>
+              {avisoGuardado("horaPrecio")}
             </section>
 
             <section className="space-y-3 border-t border-black/5 pt-4">
               <h3 className="text-sm font-bold text-brand-dark">Unidad</h3>
+              <p className="text-xs text-brand-dark/60">Actual: {viaje.unidadPlaca}</p>
               <label htmlFor="modal-viaje-unidad" className={claseEtiqueta}>Cambiar por</label>
               <select id="modal-viaje-unidad" value={unidadElegida} onChange={(e) => setUnidadElegida(e.target.value)} className={claseCampo}>
                 <option value="">Elige una unidad...</option>
@@ -176,18 +192,21 @@ function ModalAccionesViaje({
                 disabled={ocupado || !unidadElegida}
                 className={claseBoton}
                 onClick={() =>
-                  ejecutar(async (token) => {
+                  ejecutar("unidad", "Unidad cambiada.", async (token) => {
                     await cambiarUnidadViajeCoop(token, viaje.id, unidadElegida);
+                    setUnidadElegida("");
                     onCambiado();
                   }, "No se pudo cambiar la unidad.")
                 }
               >
                 Cambiar unidad
               </button>
+              {avisoGuardado("unidad")}
             </section>
 
             <section className="space-y-3 border-t border-black/5 pt-4">
               <h3 className="text-sm font-bold text-brand-dark">Conductor</h3>
+              <p className="text-xs text-brand-dark/60">Actual: {viaje.conductorNombre ?? "sin asignar"}</p>
               <label htmlFor="modal-viaje-conductor" className={claseEtiqueta}>Asignado</label>
               <select id="modal-viaje-conductor" value={conductorElegido} onChange={(e) => setConductorElegido(e.target.value)} className={claseCampo}>
                 <option value="">Sin conductor</option>
@@ -201,7 +220,7 @@ function ModalAccionesViaje({
                 disabled={ocupado || conductorElegido === (viaje.conductorId ?? "")}
                 className={claseBoton}
                 onClick={() =>
-                  ejecutar(async (token) => {
+                  ejecutar("conductor", "Conductor guardado.", async (token) => {
                     await asignarConductorViajeCoop(token, viaje.id, conductorElegido || null);
                     onConductor();
                   }, "No se pudo cambiar el conductor.")
@@ -209,6 +228,7 @@ function ModalAccionesViaje({
               >
                 Guardar conductor
               </button>
+              {avisoGuardado("conductor")}
             </section>
 
             <section className="space-y-3 border-t border-black/5 pt-4">
@@ -229,7 +249,7 @@ function ModalAccionesViaje({
                     <button
                       disabled={ocupado}
                       onClick={() =>
-                        ejecutar(async (token) => {
+                        ejecutar("cancelar", "Viaje cancelado.", async (token) => {
                           const { boletosCancelados } = await cancelarViajeCoop(token, viaje.id);
                           onCancelado(boletosCancelados);
                         }, "No se pudo cancelar el viaje.")
@@ -300,9 +320,9 @@ function MenuAccionesViaje({
           conductores={conductores}
           esAdmin={esAdmin}
           onCerrar={() => setAbierto(false)}
-          onEditado={cerrarYAvisar(onEditado)}
-          onCambiado={cerrarYAvisar(onCambiado)}
-          onConductor={cerrarYAvisar(onConductor)}
+          onEditado={onEditado}
+          onCambiado={onCambiado}
+          onConductor={onConductor}
           onCancelado={cerrarYAvisar(onCancelado)}
           onError={onError}
         />
