@@ -20,7 +20,7 @@ export default function InicioPage() {
 
       <section className="mx-auto max-w-screen-2xl px-4 pb-16 pt-24 sm:px-8 lg:px-12">
         <h2 className="font-display text-xl font-bold text-brand-dark">
-          ¿Por qué Columbus?
+          ¿Por qué Klumbus?
         </h2>
         <div className="mt-6 grid gap-6 md:grid-cols-3">
           <div className="rounded-xl bg-brand-light p-5">

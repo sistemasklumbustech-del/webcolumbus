@@ -242,9 +242,9 @@ export default function PanelEmpresaLayout({ children }: { children: React.React
       >
         <div className={`flex h-16 items-center gap-2 bg-brand-amber ${menuColapsado ? "justify-center px-2" : "px-6"}`}>
           {menuColapsado ? (
-            <Image src="/img/icono-columbus.png" alt="Columbus" width={32} height={32} priority />
+            <Image src="/img/icono-klumbus.png" alt="Klumbus" width={32} height={32} priority />
           ) : (
-            <Image src="/img/logo-columbus.png" alt="Columbus" width={110} height={28} priority />
+            <Image src="/img/logo-klumbus.png" alt="Klumbus" width={110} height={28} priority />
           )}
         </div>
         {!menuColapsado && (
@@ -338,7 +338,7 @@ export default function PanelEmpresaLayout({ children }: { children: React.React
           <div className="absolute inset-0 bg-black/30" onClick={() => setMenuMovilAbierto(false)} />
           <aside className="absolute inset-y-0 left-0 flex w-72 flex-col overflow-y-auto bg-white shadow-xl">
             <div className="flex items-center justify-between bg-brand-amber px-4 py-4">
-              <Image src="/img/logo-columbus.png" alt="Columbus" width={100} height={26} />
+              <Image src="/img/logo-klumbus.png" alt="Klumbus" width={100} height={26} />
               <button
                 onClick={() => setMenuMovilAbierto(false)}
                 aria-label="Cerrar menú"

@@ -1,7 +1,7 @@
 import { obtenerTerminosVigente } from "@/lib/api";
 
 export const metadata = {
-  title: "Términos de Servicio | Columbus",
+  title: "Términos de Servicio | Klumbus",
 };
 
 /**

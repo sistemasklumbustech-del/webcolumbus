@@ -150,7 +150,7 @@ export default function CredencialesApiPage() {
 
       <h1 className="font-display text-2xl font-bold text-brand-dark">Credenciales API</h1>
       <p className="mt-1 text-sm text-brand-dark/70">
-        Conecta tu propio sistema de venta a Columbus. Genera una llave, configura a dónde avisamos
+        Conecta tu propio sistema de venta a Klumbus. Genera una llave, configura a dónde avisamos
         cada venta, y revócala cuando quieras.
       </p>
 

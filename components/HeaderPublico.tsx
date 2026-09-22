@@ -56,7 +56,7 @@ export function HeaderPublico() {
     <header className="sticky top-0 z-50 border-b border-black/10 bg-brand-dark">
       <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-4 py-3 sm:px-8 lg:px-12">
         <Link href="/" className="flex items-center">
-          <Image src="/img/logo-columbus.png" alt="Columbus" width={110} height={28} priority />
+          <Image src="/img/logo-klumbus.png" alt="Klumbus" width={110} height={28} priority />
         </Link>
 
         {payload ? (

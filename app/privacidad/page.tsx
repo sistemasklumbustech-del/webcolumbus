@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Política de Privacidad | Columbus",
+  title: "Política de Privacidad | Klumbus",
 };
 
 /**
@@ -23,7 +23,7 @@ export default function PrivacidadPage() {
           <li>Tu correo y/o teléfono -- para enviarte la confirmación de tu compra.</li>
           <li>
             Los datos de tu pago -- estos los procesa directamente la pasarela de pago (tarjeta,
-            De Una, PayPhone, transferencia); Columbus no almacena tu número de tarjeta.
+            De Una, PayPhone, transferencia); Klumbus no almacena tu número de tarjeta.
           </li>
         </ul>
 

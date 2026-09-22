@@ -13,7 +13,7 @@ import { obtenerToken, borrarToken, decodificarToken, tokenExpirado, type Payloa
    ícono por enlace, tarjetas de métrica con insignia de color,
    cabecera simple. Con 2 condiciones reales del director, no
    negociables:
-   1. Logo real de Columbus (`/img/logo-columbus.png`, el mismo que ya
+   1. Logo real de Columbus (`/img/logo-klumbus.png`, el mismo que ya
       usa el header público) -- no un ícono genérico ni texto solo.
    2. Colores de MARCA reales, no los de TailAdmin: `brand-cobalto`
       (azul, #2451c4) como color principal en vez de negro, y
@@ -168,7 +168,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar -- escritorio */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-black/5 bg-white lg:flex">
         {/* Bug real encontrado al verificar con captura (25-ago-2026):
-            `logo-columbus.png` tiene el texto "Columbus" en blanco --
+            `logo-klumbus.png` tiene el texto "Klumbus" en blanco --
             diseñado para fondos oscuros (así se usa en todo el resto
             del sitio: Hero, header público, etc.). Sobre el fondo
             blanco del sidebar, el texto quedaba invisible, solo se
@@ -177,7 +177,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             cobalto, coherente con la instrucción real del director de
             usar cobalto como color principal del panel. */}
         <div className="flex h-16 items-center gap-2 bg-brand-cobalto px-6">
-          <Image src="/img/logo-columbus.png" alt="Columbus" width={110} height={28} priority />
+          <Image src="/img/logo-klumbus.png" alt="Klumbus" width={110} height={28} priority />
         </div>
         <div className="px-4 pt-4">
           <span className="rounded-full bg-brand-cobalto-claro px-2.5 py-1 text-xs font-bold text-brand-cobalto">
@@ -223,7 +223,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="absolute inset-0 bg-black/30" onClick={() => setMenuMovilAbierto(false)} />
           <aside className="absolute inset-y-0 left-0 flex w-72 flex-col overflow-y-auto bg-white shadow-xl">
             <div className="flex items-center justify-between bg-brand-cobalto px-4 py-4">
-              <Image src="/img/logo-columbus.png" alt="Columbus" width={100} height={26} />
+              <Image src="/img/logo-klumbus.png" alt="Klumbus" width={100} height={26} />
               <button
                 onClick={() => setMenuMovilAbierto(false)}
                 aria-label="Cerrar menú"

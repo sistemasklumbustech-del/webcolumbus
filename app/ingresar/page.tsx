@@ -377,7 +377,7 @@ function FormularioIngreso() {
     <main className="flex flex-1 items-center justify-center bg-brand-light/40 px-4 py-16">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg ring-1 ring-black/5">
         <h1 className="font-display text-2xl font-bold text-brand-dark">Iniciar sesión</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">Entra a tu cuenta de Columbus.</p>
+        <p className="mt-1 text-sm text-brand-dark/70">Entra a tu cuenta de Klumbus.</p>
         {searchParams.get("sesion") === "vencida" && (
           <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 ring-1 ring-amber-200">
             Tu sesión venció. Vuelve a iniciar sesión para continuar.

@@ -95,7 +95,7 @@ export function Hero() {
       </div>
 
       <header className="absolute left-0 right-0 top-6 z-20 flex items-center justify-between px-[5%]">
-        <Image src="/img/logo-columbus.png" alt="Columbus" width={120} height={31} priority />
+        <Image src="/img/logo-klumbus.png" alt="Klumbus" width={120} height={31} priority />
         <nav className="hidden items-center gap-8 sm:flex">
           <a href="#" className="text-sm text-white/85 hover:text-white">
             Rutas

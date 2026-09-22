@@ -37,7 +37,7 @@ export function Footer() {
     <footer className="border-t border-black/5 bg-brand-dark px-4 py-10 sm:px-8 lg:px-12">
       <div className="mx-auto grid max-w-screen-2xl grid-cols-2 gap-8 sm:grid-cols-4">
         <div className="col-span-2 sm:col-span-1">
-          <Image src="/img/logo-columbus.png" alt="Columbus" width={100} height={26} />
+          <Image src="/img/logo-klumbus.png" alt="Klumbus" width={100} height={26} />
           <p className="mt-3 text-xs text-white/50">
             Compara y compra tu boleto de bus en Ecuador, de forma simple y segura.
           </p>
@@ -100,7 +100,7 @@ export function Footer() {
       </div>
 
       <div className="mx-auto mt-8 max-w-screen-2xl border-t border-white/10 pt-6 text-center text-xs text-white/40">
-        © Columbus {new Date().getFullYear()}
+        © Klumbus {new Date().getFullYear()}
       </div>
     </footer>
   );

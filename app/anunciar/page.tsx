@@ -53,9 +53,9 @@ export default function AnunciarPage() {
 
   return (
     <main className="mx-auto max-w-lg flex-1 px-4 py-16">
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Anuncia con Columbus</h1>
+      <h1 className="font-display text-2xl font-bold text-brand-dark">Anuncia con Klumbus</h1>
       <p className="mt-2 text-sm text-brand-dark/70">
-        Miles de viajeros reales usan Columbus cada semana para comparar y comprar pasajes de bus en
+        Miles de viajeros reales usan Klumbus cada semana para comparar y comprar pasajes de bus en
         Ecuador. Cuéntanos de tu negocio y te contactamos con las opciones disponibles.
       </p>
 

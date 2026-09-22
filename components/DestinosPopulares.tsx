@@ -81,7 +81,7 @@ const DESTINOS = [
 /** Insignia real de Columbus para cada tarjeta -- mismo criterio ya
  * usado en el resto del sitio (SVG/PNG propio, nunca un emoji ni un
  * ícono genérico de banco de imágenes). Ícono recortado del logo real
- * (`logo-columbus.png`), sin el texto, para que quepa a escala como
+ * (`logo-klumbus.png`), sin el texto, para que quepa a escala como
  * insignia pequeña -- el wordmark completo es demasiado ancho para
  * este tamaño de chip. Posición medida con precisión de la referencia
  * real (20-ago-2026): esquina superior derecha de la foto, chip
@@ -89,7 +89,7 @@ const DESTINOS = [
 function InsigniaColumbus() {
   return (
     <div className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-md ring-1 ring-black/5">
-      <Image src="/img/icono-columbus.png" alt="Columbus" width={18} height={22} className="h-4 w-auto" />
+      <Image src="/img/icono-klumbus.png" alt="Klumbus" width={18} height={22} className="h-4 w-auto" />
     </div>
   );
 }
