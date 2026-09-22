@@ -1685,14 +1685,45 @@ export interface FilaConciliacion {
   discrepancias: string[];
 }
 
-export async function conciliacionAdmin(token: string): Promise<FilaConciliacion[]> {
-  const res = await fetch(`${API_URL}/admin/reportes/conciliacion`, {
+/** Paginación real (22-sep-2026) -- antes traía todos los boletos de la plataforma de una sola vez. */
+export interface FiltrosConciliacion {
+  desde?: string;
+  hasta?: string;
+  cooperativaId?: string;
+  busqueda?: string;
+  soloDiscrepancias?: boolean;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoConciliacion {
+  filas: FilaConciliacion[];
+  total: number;
+  totalConDiscrepancias: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function conciliacionAdmin(
+  token: string,
+  filtros: FiltrosConciliacion,
+): Promise<ResultadoConciliacion> {
+  const params = new URLSearchParams();
+  if (filtros.desde) params.set("desde", filtros.desde);
+  if (filtros.hasta) params.set("hasta", filtros.hasta);
+  if (filtros.cooperativaId) params.set("cooperativaId", filtros.cooperativaId);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  if (filtros.soloDiscrepancias) params.set("soloDiscrepancias", "true");
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/admin/reportes/conciliacion?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo cargar el reporte de conciliación.");
-  return cuerpo as FilaConciliacion[];
+  return cuerpo as ResultadoConciliacion;
 }
 
 export interface DatosNuevoPuntoOperacion {
