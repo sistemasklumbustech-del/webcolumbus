@@ -158,6 +158,30 @@ export default function PanelEmpresaLayout({ children }: { children: React.React
   const [verificando, setVerificando] = useState(true);
   const [estadoDatos, setEstadoDatos] = useState<EstadoDatosCooperativa | null>(null);
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
+  const [menuColapsado, setMenuColapsado] = useState(false);
+
+  useEffect(() => {
+    // Preferencia por navegador (conveniencia individual, no estado que
+    // deba compartirse entre dispositivos) -- si no está disponible
+    // (ventana privada, storage bloqueado), simplemente arranca expandido.
+    try {
+      setMenuColapsado(localStorage.getItem("panelEmpresaMenuColapsado") === "1");
+    } catch {
+      // sin storage disponible -- se queda expandido.
+    }
+  }, []);
+
+  function alternarMenuColapsado() {
+    setMenuColapsado((previo) => {
+      const nuevo = !previo;
+      try {
+        localStorage.setItem("panelEmpresaMenuColapsado", nuevo ? "1" : "0");
+      } catch {
+        // sin storage disponible -- el cambio igual aplica en esta sesión.
+      }
+      return nuevo;
+    });
+  }
 
   useEffect(() => {
     const token = obtenerToken();
@@ -211,16 +235,26 @@ export default function PanelEmpresaLayout({ children }: { children: React.React
   return (
     <div className="flex min-h-full flex-1 bg-brand-light/20">
       <VigilanteSesion />
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-black/5 bg-white lg:flex">
-        <div className="flex h-16 items-center gap-2 bg-brand-amber px-6">
-          <Image src="/img/logo-columbus.png" alt="Columbus" width={110} height={28} priority />
+      <aside
+        className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-black/5 bg-white transition-[width] duration-200 lg:flex ${
+          menuColapsado ? "w-[76px]" : "w-64"
+        }`}
+      >
+        <div className={`flex h-16 items-center gap-2 bg-brand-amber ${menuColapsado ? "justify-center px-2" : "px-6"}`}>
+          {menuColapsado ? (
+            <Image src="/img/icono-columbus.png" alt="Columbus" width={32} height={32} priority />
+          ) : (
+            <Image src="/img/logo-columbus.png" alt="Columbus" width={110} height={28} priority />
+          )}
         </div>
-        <div className="px-4 pt-4">
-          <span className="rounded-full bg-brand-amber/15 px-2.5 py-1 text-xs font-bold text-brand-amber">
-            Panel Empresa
-          </span>
-        </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        {!menuColapsado && (
+          <div className="px-4 pt-4">
+            <span className="rounded-full bg-brand-amber/15 px-2.5 py-1 text-xs font-bold text-brand-amber">
+              Panel Empresa
+            </span>
+          </div>
+        )}
+        <nav className={`flex-1 space-y-1 overflow-y-auto py-4 ${menuColapsado ? "px-2" : "px-3"}`}>
           {enlacesVisibles.map((enlace) => {
             const activo = pathname === enlace.href;
             const Icono = enlace.icono;
@@ -228,27 +262,73 @@ export default function PanelEmpresaLayout({ children }: { children: React.React
               <Link
                 key={enlace.href}
                 href={enlace.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
+                title={menuColapsado ? enlace.etiqueta : undefined}
+                className={`flex items-center gap-3 rounded-lg py-2.5 text-sm font-semibold transition ${
+                  menuColapsado ? "justify-center px-2" : "px-3"
+                } ${
                   activo
                     ? "bg-brand-amber/15 text-brand-amber"
                     : "text-brand-dark/60 hover:bg-brand-amber/10 hover:text-brand-amber"
                 }`}
               >
                 <Icono className="h-5 w-5 shrink-0" />
-                {enlace.etiqueta}
+                {!menuColapsado && enlace.etiqueta}
               </Link>
             );
           })}
         </nav>
-        <div className="border-t border-black/5 p-4">
-          <p className="px-2 text-xs font-medium text-brand-dark/40">
-            {payload?.rol === "admin_cooperativa" ? "Administrador" : "Vendedor"}
-          </p>
+        <div className={`border-t border-black/5 p-4 ${menuColapsado ? "px-2" : ""}`}>
+          <button
+            onClick={alternarMenuColapsado}
+            title={menuColapsado ? "Expandir menú" : "Ocultar menú"}
+            className={`flex w-full items-center gap-2 rounded-lg py-2 text-sm font-semibold text-brand-dark/60 transition hover:bg-brand-light hover:text-brand-dark ${
+              menuColapsado ? "justify-center px-2" : "px-3"
+            }`}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`shrink-0 transition-transform ${menuColapsado ? "rotate-180" : ""}`}
+            >
+              <path d="M15 18l-6-6 6-6" />
+              <path d="M9 18V6" strokeOpacity="0.4" />
+            </svg>
+            {!menuColapsado && "Ocultar menú"}
+          </button>
+          {!menuColapsado && (
+            <p className="mt-3 px-2 text-xs font-medium text-brand-dark/40">
+              {payload?.rol === "admin_cooperativa" ? "Administrador" : "Vendedor"}
+            </p>
+          )}
           <button
             onClick={salir}
-            className="mt-2 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-brand-dark/60 transition hover:bg-brand-light hover:text-brand-dark"
+            title={menuColapsado ? "Salir" : undefined}
+            className={`mt-2 flex w-full items-center gap-2 rounded-lg py-2 text-sm font-semibold text-brand-dark/60 transition hover:bg-brand-light hover:text-brand-dark ${
+              menuColapsado ? "justify-center px-2" : "px-3"
+            }`}
           >
-            Salir
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.75}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="M16 17l5-5-5-5" />
+              <path d="M21 12H9" />
+            </svg>
+            {!menuColapsado && "Salir"}
           </button>
         </div>
       </aside>
