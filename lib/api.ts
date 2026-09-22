@@ -629,6 +629,31 @@ export async function rechazarPagoManual(token: string, pagoId: string, motivo?:
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo rechazar el pago.");
 }
 
+/** Historial de pagos manuales ya confirmados o rechazados — da uso real a esta pantalla fuera de la bandeja de pendientes. */
+export interface PagoManualHistorialItem {
+  pagoId: string;
+  compraId: string;
+  proveedor: string;
+  monto: number;
+  estado: "aprobado" | "rechazado";
+  comprobanteUrl: string | null;
+  compradorNombre: string;
+  confirmadoPorNombre: string | null;
+  motivoRechazo: string | null;
+  creadoEn: string;
+  resueltoEn: string;
+}
+
+export async function listarHistorialPagos(token: string): Promise<PagoManualHistorialItem[]> {
+  const res = await fetch(`${API_URL}/coop/pagos-historial`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo cargar el historial de pagos.");
+  return cuerpo as PagoManualHistorialItem[];
+}
+
 /** Lado pasajero: iniciar un pago manual y subir el comprobante. */
 export interface ResultadoPagoManual {
   compraId: string;
@@ -1071,14 +1096,45 @@ export async function venderEnVentanillaCoop(
   tipoMetodoPago: "efectivo" | "tarjeta_fisica" | "transferencia_bancaria",
   telefonoContacto?: string,
   correoContacto?: string,
+  /**
+   * Respaldo opcional para transferencia (22-sep-2026) -- ninguno de
+   * los dos bloquea la venta, que sigue confirmando al instante; solo
+   * quedan guardados para poder auditar después (visibles en Ventas).
+   */
+  referenciaTransferencia?: string,
+  comprobanteUrl?: string,
 ): Promise<{ compraId: string; boletos: BoletoEmitido[] }> {
   const res = await fetch(`${API_URL}/coop/ventanilla/vender`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ pasajeros, tipoMetodoPago, telefonoContacto, correoContacto }),
+    body: JSON.stringify({
+      pasajeros,
+      tipoMetodoPago,
+      telefonoContacto,
+      correoContacto,
+      referenciaTransferencia,
+      comprobanteUrl,
+    }),
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo completar la venta.");
+  return cuerpo;
+}
+
+/** Sube el comprobante ANTES de vender (todavía no hay compraId) y devuelve su URL. */
+export async function subirComprobanteVentanillaCoop(
+  token: string,
+  archivo: File,
+): Promise<{ comprobanteUrl: string }> {
+  const formData = new FormData();
+  formData.append("comprobante", archivo);
+  const res = await fetch(`${API_URL}/coop/ventanilla/comprobante`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo subir el comprobante.");
   return cuerpo;
 }
 
@@ -2091,6 +2147,9 @@ export interface FilaVentaCoop {
   esVip: boolean;
   metodoPago: string | null;
   estadoPago: string | null;
+  /** Respaldo opcional (22-sep-2026) -- solo tiene valor cuando el vendedor lo dejó al vender por transferencia. */
+  referenciaPago: string | null;
+  comprobantePagoUrl: string | null;
   precioPagado: number;
   tasaTerminal: number;
   cargoPlataforma: number;

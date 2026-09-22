@@ -57,8 +57,8 @@ function aCsv(filas: FilaVentaCoop[]) {
   const encabezado = [
     "Fecha de venta", "Pasajero", "Tipo de documento", "Documento", "Tarifa", "Teléfono", "Correo",
     "Ruta", "Fecha de salida", "Hora de salida", "Asiento", "VIP", "Canal", "Vendedor",
-    "Método de pago", "Estado del pago", "Estado del boleto", "Tarifa (USD)", "Tasa de terminal (USD)",
-    "Cargo de plataforma (USD)", "Total (USD)", "Código QR",
+    "Método de pago", "Estado del pago", "Referencia de pago", "Comprobante", "Estado del boleto",
+    "Tarifa (USD)", "Tasa de terminal (USD)", "Cargo de plataforma (USD)", "Total (USD)", "Código QR",
   ];
   const lineas = filas.map((f) =>
     [
@@ -67,6 +67,7 @@ function aCsv(filas: FilaVentaCoop[]) {
       f.rutaNombre, f.fechaSalida, fechaHora(f.horaSalida), f.numeroAsiento, f.esVip ? "Sí" : "No",
       ETIQUETA_CANAL[f.canal] ?? f.canal, f.vendedorNombre,
       f.metodoPago ? (ETIQUETA_METODO[f.metodoPago] ?? f.metodoPago) : "", f.estadoPago,
+      f.referenciaPago, f.comprobantePagoUrl,
       ETIQUETA_ESTADO[f.estadoBoleto] ?? f.estadoBoleto,
       f.precioPagado.toFixed(2), f.tasaTerminal.toFixed(2), f.cargoPlataforma.toFixed(2), f.total.toFixed(2),
       f.codigoQr,
@@ -376,6 +377,22 @@ export default function VentasPage() {
               <CodigoQr valor={qrAbierto.codigoQr} />
             </div>
             <p className="mt-2 break-all text-[10px] text-brand-dark/40">{qrAbierto.codigoQr}</p>
+            {(qrAbierto.referenciaPago || qrAbierto.comprobantePagoUrl) && (
+              <div className="mt-3 rounded-lg bg-brand-light/20 p-3 text-left text-xs text-brand-dark/70">
+                <p className="font-semibold uppercase tracking-wide text-brand-dark/50">Respaldo del pago</p>
+                {qrAbierto.referenciaPago && <p className="mt-1">Referencia: {qrAbierto.referenciaPago}</p>}
+                {qrAbierto.comprobantePagoUrl && (
+                  <a
+                    href={qrAbierto.comprobantePagoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-block font-semibold text-brand hover:underline"
+                  >
+                    Ver comprobante
+                  </a>
+                )}
+              </div>
+            )}
             <button
               onClick={() => setQrAbierto(null)}
               className="mt-4 w-full rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 hover:bg-brand-light/40"

@@ -5,7 +5,9 @@ import {
   listarPagosPendientes,
   confirmarPagoManual,
   rechazarPagoManual,
+  listarHistorialPagos,
   type PagoManualPendiente,
+  type PagoManualHistorialItem,
 } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
@@ -139,8 +141,47 @@ function TarjetaPago({
   );
 }
 
+function FilaHistorial({ pago }: { pago: PagoManualHistorialItem }) {
+  const aprobado = pago.estado === "aprobado";
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+      <div>
+        <p className="font-semibold text-brand-dark">{pago.compradorNombre}</p>
+        <p className="text-xs text-brand-dark/60">
+          {ETIQUETAS_PROVEEDOR[pago.proveedor] ?? pago.proveedor} · ${pago.monto.toFixed(2)}
+        </p>
+        <p className="text-xs text-brand-dark/40">
+          {formatearFecha(pago.resueltoEn)}
+          {pago.confirmadoPorNombre && ` · por ${pago.confirmadoPorNombre}`}
+        </p>
+        {!aprobado && pago.motivoRechazo && (
+          <p className="mt-1 text-xs text-red-600">Motivo: {pago.motivoRechazo}</p>
+        )}
+        {pago.comprobanteUrl && (
+          <a
+            href={pago.comprobanteUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-1 inline-block text-xs font-semibold text-brand hover:underline"
+          >
+            Ver comprobante
+          </a>
+        )}
+      </div>
+      <span
+        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+          aprobado ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+        }`}
+      >
+        {aprobado ? "Confirmado" : "Rechazado"}
+      </span>
+    </div>
+  );
+}
+
 export default function PagosPendientesPage() {
   const [pagos, setPagos] = useState<PagoManualPendiente[] | null>(null);
+  const [historial, setHistorial] = useState<PagoManualHistorialItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
@@ -150,8 +191,13 @@ export default function PagosPendientesPage() {
     listarPagosPendientes(token)
       .then(setPagos)
       .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar."));
+    // Independiente del anterior -- un fallo cargando el historial no
+    // debe tapar la bandeja de pendientes, que es lo urgente.
+    listarHistorialPagos(token)
+      .then(setHistorial)
+      .catch(() => setHistorial([]));
   }
-  useEffect(cargar, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(cargar, []);
 
   return (
     <main className="mx-auto max-w-2xl flex-1 px-4 py-10">
@@ -189,6 +235,20 @@ export default function PagosPendientesPage() {
           />
         ))}
       </div>
+
+      {historial !== null && historial.length > 0 && (
+        <div className="mt-10">
+          <h2 className="font-display text-lg font-bold text-brand-dark">Historial reciente</h2>
+          <p className="mt-1 text-sm text-brand-dark/60">
+            Los últimos pagos manuales que ya confirmaste o rechazaste.
+          </p>
+          <div className="mt-4 space-y-2">
+            {historial.map((p) => (
+              <FilaHistorial key={p.pagoId} pago={p} />
+            ))}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

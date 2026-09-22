@@ -9,6 +9,7 @@ import {
   obtenerPisosDeDistribucion,
   cotizarVentanillaCoop,
   venderEnVentanillaCoop,
+  subirComprobanteVentanillaCoop,
   type MapaAsientos,
   type Cotizacion,
   type PasajeroCompraInput,
@@ -62,6 +63,10 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
   const [tipoMetodoPago, setTipoMetodoPago] = useState<(typeof METODOS)[number]["valor"]>("efectivo");
   const [telefonoContacto, setTelefonoContacto] = useState("");
   const [correoContacto, setCorreoContacto] = useState("");
+  // Respaldo opcional para transferencia (22-sep-2026) -- nunca bloquea
+  // la venta; solo queda guardado para poder auditar después.
+  const [referenciaTransferencia, setReferenciaTransferencia] = useState("");
+  const [comprobanteArchivo, setComprobanteArchivo] = useState<File | null>(null);
   const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -137,12 +142,26 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
     setProcesando(true);
     setError(null);
     try {
+      // El comprobante se sube primero (todavía no existe compraId) --
+      // si esto falla, se avisa pero no bloquea la venta: el vendedor
+      // puede confirmar igual sin el respaldo.
+      let comprobanteUrl: string | undefined;
+      if (comprobanteArchivo) {
+        try {
+          const subida = await subirComprobanteVentanillaCoop(token, comprobanteArchivo);
+          comprobanteUrl = subida.comprobanteUrl;
+        } catch {
+          // Silencioso a propósito -- ver comentario arriba.
+        }
+      }
       const resp = await venderEnVentanillaCoop(
         token,
         aPasajerosInput(),
         tipoMetodoPago,
         telefonoContacto.trim() || undefined,
         correoContacto.trim() || undefined,
+        referenciaTransferencia.trim() || undefined,
+        comprobanteUrl,
       );
       setResultado(resp);
       setCotizacion(null);
@@ -365,6 +384,45 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
                 <option key={m.valor} value={m.valor}>{m.etiqueta}</option>
               ))}
             </select>
+
+            {tipoMetodoPago === "transferencia_bancaria" && (
+              <div className="mt-3 space-y-2 rounded-lg bg-brand-light/20 p-3">
+                <p className="text-xs text-brand-dark/60">
+                  Opcional: dejá un respaldo de la transferencia para poder revisarla después.
+                </p>
+                <input
+                  type="text"
+                  placeholder="Número de referencia (opcional)"
+                  value={referenciaTransferencia}
+                  onChange={(e) => setReferenciaTransferencia(e.target.value)}
+                  className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                />
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-brand-dark/70">
+                  <span className="rounded-lg border border-brand-light bg-white px-3 py-2 font-semibold text-brand-dark hover:bg-brand-light/40">
+                    {comprobanteArchivo ? "Cambiar foto" : "Adjuntar foto del comprobante (opcional)"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setComprobanteArchivo(e.target.files?.[0] ?? null)}
+                    className="hidden"
+                  />
+                </label>
+                {comprobanteArchivo && (
+                  <p className="text-xs text-brand-dark/50">
+                    {comprobanteArchivo.name}{" "}
+                    <button
+                      type="button"
+                      onClick={() => setComprobanteArchivo(null)}
+                      className="font-semibold text-red-600 hover:underline"
+                    >
+                      Quitar
+                    </button>
+                  </p>
+                )}
+              </div>
+            )}
+
             <p className="mt-3 mb-2 text-xs font-semibold uppercase tracking-wide text-brand-dark/60">
               Contacto del pasajero (opcional, para enviarle su boleto)
             </p>
