@@ -1,10 +1,32 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import jsQR from "jsqr";
 import { validarQrCoop, verificarMenorCoop, type ResultadoValidacionQr, type InfoMenor } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
 
 type Resultado = ResultadoValidacionQr & { codigo: string };
+
+/**
+ * Lee el primer código QR de una imagen (foto o captura de pantalla del
+ * boleto, ej. reenviada por WhatsApp) -- caso real reportado: sin esto,
+ * soltar o pegar una imagen sobre la página no hacía nada útil (en el
+ * mejor caso el navegador la abría en otra pestaña, su comportamiento
+ * por defecto para un archivo soltado sin manejador).
+ */
+async function decodificarQrDeImagen(archivo: Blob): Promise<string | null> {
+  const bitmap = await createImageBitmap(archivo).catch(() => null);
+  if (!bitmap) return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const contexto = canvas.getContext("2d");
+  if (!contexto) return null;
+  contexto.drawImage(bitmap, 0, 0);
+  const { data, width, height } = contexto.getImageData(0, 0, canvas.width, canvas.height);
+  const resultado = jsQR(data, width, height);
+  return resultado?.data ?? null;
+}
 
 const ETIQUETA_ACOMPANAMIENTO: Record<string, string> = {
   con_padre_madre_tutor: "Viaja con padre/madre/tutor en esta misma compra",
@@ -83,6 +105,17 @@ export default function ValidarQrPage() {
   const [ultimoResultado, setUltimoResultado] = useState<Resultado | null>(null);
   const [historial, setHistorial] = useState<Resultado[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const archivoInputRef = useRef<HTMLInputElement>(null);
+
+  const [arrastrando, setArrastrando] = useState(false);
+  const [decodificando, setDecodificando] = useState(false);
+  const [errorImagen, setErrorImagen] = useState<string | null>(null);
+
+  const [camaraActiva, setCamaraActiva] = useState(false);
+  const [errorCamara, setErrorCamara] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const cuadroAnimacionRef = useRef<number | null>(null);
 
   // El escáner de QR físico (si se usa uno) funciona escribiendo el
   // código como si fuera un teclado — por eso el campo debe estar
@@ -92,10 +125,9 @@ export default function ValidarQrPage() {
     inputRef.current?.focus();
   }, [ultimoResultado]);
 
-  async function validar(e: React.FormEvent) {
-    e.preventDefault();
+  const ejecutarValidacion = useCallback(async (codigoCrudo: string) => {
     const token = obtenerToken();
-    const codigoLimpio = codigo.trim();
+    const codigoLimpio = codigoCrudo.trim();
     if (!token || !codigoLimpio) return;
 
     setValidando(true);
@@ -114,7 +146,138 @@ export default function ValidarQrPage() {
       setCodigo("");
       setValidando(false);
     }
+  }, []);
+
+  function validar(e: React.FormEvent) {
+    e.preventDefault();
+    void ejecutarValidacion(codigo);
   }
+
+  const procesarImagen = useCallback(
+    async (archivo: Blob) => {
+      setErrorImagen(null);
+      setDecodificando(true);
+      try {
+        const texto = await decodificarQrDeImagen(archivo);
+        if (!texto) {
+          setErrorImagen("No se encontró ningún código QR en esa imagen. Probá con una foto más nítida.");
+          return;
+        }
+        await ejecutarValidacion(texto);
+      } catch {
+        setErrorImagen("No se pudo leer esa imagen.");
+      } finally {
+        setDecodificando(false);
+      }
+    },
+    [ejecutarValidacion],
+  );
+
+  // Soltar una imagen en cualquier parte de la página (no solo la zona
+  // marcada) -- sin este listener, el navegador la abre en otra pestaña,
+  // que era exactamente el problema reportado.
+  useEffect(() => {
+    function evitarAperturaDeArchivo(e: DragEvent) {
+      e.preventDefault();
+    }
+    window.addEventListener("dragover", evitarAperturaDeArchivo);
+    window.addEventListener("drop", evitarAperturaDeArchivo);
+    return () => {
+      window.removeEventListener("dragover", evitarAperturaDeArchivo);
+      window.removeEventListener("drop", evitarAperturaDeArchivo);
+    };
+  }, []);
+
+  // Pegar una imagen copiada (ej. captura de pantalla con Ctrl+V) en
+  // cualquier parte de la página -- mismo criterio que "pégalo aquí" ya
+  // existía para el texto del código, extendido a imágenes.
+  useEffect(() => {
+    function alPegar(e: ClipboardEvent) {
+      const archivo = Array.from(e.clipboardData?.items ?? [])
+        .find((item) => item.type.startsWith("image/"))
+        ?.getAsFile();
+      if (archivo) {
+        e.preventDefault();
+        void procesarImagen(archivo);
+      }
+    }
+    window.addEventListener("paste", alPegar);
+    return () => window.removeEventListener("paste", alPegar);
+  }, [procesarImagen]);
+
+  function alSoltarEnZona(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setArrastrando(false);
+    const archivo = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith("image/"));
+    if (archivo) void procesarImagen(archivo);
+    else setErrorImagen("Eso no es una imagen. Arrastrá una foto o captura del código QR.");
+  }
+
+  function alSeleccionarArchivo(e: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0];
+    e.target.value = "";
+    if (archivo) void procesarImagen(archivo);
+  }
+
+  const detenerCamara = useCallback(() => {
+    if (cuadroAnimacionRef.current !== null) {
+      cancelAnimationFrame(cuadroAnimacionRef.current);
+      cuadroAnimacionRef.current = null;
+    }
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    setCamaraActiva(false);
+  }, []);
+
+  // Función declarada (no useCallback) a propósito: se llama a sí misma
+  // en cada cuadro vía requestAnimationFrame, y una declaración de
+  // función normal queda hoisted -- evita la referencia circular que
+  // tendría un useCallback apuntándose a sí mismo antes de existir.
+  function escanearCuadroDeVideo() {
+    const video = videoRef.current;
+    if (!video || video.readyState < video.HAVE_ENOUGH_DATA) {
+      cuadroAnimacionRef.current = requestAnimationFrame(escanearCuadroDeVideo);
+      return;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const contexto = canvas.getContext("2d");
+    if (contexto) {
+      contexto.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const { data, width, height } = contexto.getImageData(0, 0, canvas.width, canvas.height);
+      const resultado = jsQR(data, width, height);
+      if (resultado?.data) {
+        detenerCamara();
+        void ejecutarValidacion(resultado.data);
+        return;
+      }
+    }
+    cuadroAnimacionRef.current = requestAnimationFrame(escanearCuadroDeVideo);
+  }
+
+  async function iniciarCamara() {
+    setErrorCamara(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setCamaraActiva(true);
+      cuadroAnimacionRef.current = requestAnimationFrame(escanearCuadroDeVideo);
+    } catch {
+      setErrorCamara("No se pudo acceder a la cámara. Revisá los permisos del navegador para este sitio.");
+    }
+  }
+
+  // Suelta la cámara si el vendedor sale de la pantalla con el escaneo
+  // activo -- nunca debe quedar encendida en segundo plano.
+  useEffect(() => detenerCamara, [detenerCamara]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -149,6 +312,76 @@ export default function ValidarQrPage() {
           </button>
         </div>
       </form>
+
+      <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          ¿No tenés un escáner a mano?
+        </p>
+
+        {camaraActiva ? (
+          <div className="space-y-3">
+            <div className="relative mx-auto aspect-square max-w-xs overflow-hidden rounded-xl bg-black">
+              <video ref={videoRef} muted playsInline className="h-full w-full object-cover" />
+              <div className="pointer-events-none absolute inset-6 rounded-xl border-2 border-brand-amber/80" />
+            </div>
+            <p className="text-center text-xs text-brand-dark/50">Apuntá al código QR del boleto...</p>
+            <button
+              type="button"
+              onClick={detenerCamara}
+              className="mx-auto block rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 hover:bg-brand-light/40"
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <>
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setArrastrando(true);
+              }}
+              onDragLeave={() => setArrastrando(false)}
+              onDrop={alSoltarEnZona}
+              className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-4 py-6 text-center transition ${
+                arrastrando ? "border-brand-amber bg-brand-amber/10" : "border-brand-light"
+              }`}
+            >
+              <p className="text-sm text-brand-dark/60">
+                {decodificando
+                  ? "Leyendo la imagen..."
+                  : "Arrastrá una foto o captura del QR aquí, pegala (Ctrl+V), o:"}
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => archivoInputRef.current?.click()}
+                  disabled={decodificando}
+                  className="rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40 disabled:opacity-50"
+                >
+                  Subir imagen
+                </button>
+                <button
+                  type="button"
+                  onClick={iniciarCamara}
+                  disabled={decodificando}
+                  className="rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40 disabled:opacity-50"
+                >
+                  Usar cámara
+                </button>
+              </div>
+              <input
+                ref={archivoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={alSeleccionarArchivo}
+                className="hidden"
+              />
+            </div>
+            {errorImagen && <p className="mt-2 text-xs font-medium text-red-600">{errorImagen}</p>}
+            {errorCamara && <p className="mt-2 text-xs font-medium text-red-600">{errorCamara}</p>}
+          </>
+        )}
+      </div>
 
       {ultimoResultado && (
         <div
