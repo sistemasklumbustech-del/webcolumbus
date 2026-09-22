@@ -154,6 +154,9 @@ function FilaHistorial({ pago }: { pago: PagoManualHistorialItem }) {
           {formatearFecha(pago.resueltoEn)}
           {pago.confirmadoPorNombre && ` · por ${pago.confirmadoPorNombre}`}
         </p>
+        {pago.referenciaPago && (
+          <p className="mt-1 text-xs text-brand-dark/60">Referencia: {pago.referenciaPago}</p>
+        )}
         {!aprobado && pago.motivoRechazo && (
           <p className="mt-1 text-xs text-red-600">Motivo: {pago.motivoRechazo}</p>
         )}
