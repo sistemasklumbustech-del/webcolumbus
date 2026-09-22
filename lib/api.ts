@@ -2533,20 +2533,45 @@ export async function generarLiquidacion(
   return cuerpo as LiquidacionCooperativa;
 }
 
+/** Paginación real (22-sep-2026) -- antes traía todo el historial de liquidaciones de una sola vez. */
+export interface FiltrosLiquidaciones {
+  cooperativaId?: string;
+  estado?: "pendiente" | "pagada";
+  desde?: string;
+  hasta?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoLiquidaciones {
+  filas: LiquidacionCooperativa[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+function paramsLiquidaciones(filtros: FiltrosLiquidaciones): URLSearchParams {
+  const params = new URLSearchParams();
+  if (filtros.cooperativaId) params.set("cooperativaId", filtros.cooperativaId);
+  if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.desde) params.set("desde", filtros.desde);
+  if (filtros.hasta) params.set("hasta", filtros.hasta);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+  return params;
+}
+
 export async function listarLiquidacionesAdmin(
   token: string,
-  cooperativaId?: string,
-): Promise<LiquidacionCooperativa[]> {
-  const url = cooperativaId
-    ? `${API_URL}/admin/liquidaciones?cooperativaId=${cooperativaId}`
-    : `${API_URL}/admin/liquidaciones`;
-  const res = await fetch(url, {
+  filtros: FiltrosLiquidaciones,
+): Promise<ResultadoLiquidaciones> {
+  const res = await fetch(`${API_URL}/admin/liquidaciones?${paramsLiquidaciones(filtros)}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar las liquidaciones.");
-  return cuerpo as LiquidacionCooperativa[];
+  return cuerpo as ResultadoLiquidaciones;
 }
 
 export async function marcarLiquidacionPagada(token: string, id: string): Promise<void> {
@@ -2564,14 +2589,17 @@ export async function marcarLiquidacionPagada(token: string, id: string): Promis
  * liquidaciones -- solo lectura, generar/marcar pagada sigue siendo
  * exclusivo del admin de plataforma.
  */
-export async function listarMisLiquidaciones(token: string): Promise<LiquidacionCooperativa[]> {
-  const res = await fetch(`${API_URL}/coop/liquidaciones`, {
+export async function listarMisLiquidaciones(
+  token: string,
+  filtros: Omit<FiltrosLiquidaciones, "cooperativaId">,
+): Promise<ResultadoLiquidaciones> {
+  const res = await fetch(`${API_URL}/coop/liquidaciones?${paramsLiquidaciones(filtros)}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar tus liquidaciones.");
-  return cuerpo as LiquidacionCooperativa[];
+  return cuerpo as ResultadoLiquidaciones;
 }
 
 /**
