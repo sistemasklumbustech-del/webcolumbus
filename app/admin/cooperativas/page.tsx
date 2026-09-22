@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  listarCooperativasAdmin,
+  buscarCooperativasAdmin,
   crearCooperativaAdmin,
   cambiarEstadoCooperativaAdmin,
-  type CooperativaResumen,
+  type CooperativaDetalle,
+  type FiltrosCooperativas,
+  type ResultadoCooperativas,
 } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
@@ -25,8 +27,9 @@ const COLOR_ESTADO: Record<string, string> = {
   dada_de_baja: "bg-slate-200 text-slate-600",
 };
 
+const LIMITE_PAGINA = 25;
+
 export default function CooperativasAdminPage() {
-  const [cooperativas, setCooperativas] = useState<CooperativaResumen[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [ruc, setRuc] = useState("");
@@ -42,7 +45,7 @@ export default function CooperativasAdminPage() {
   const [nombreUsuario, setNombreUsuario] = useState("");
 
   // Suspender / reactivar (RF-035): confirmacion en un modal, con motivo opcional.
-  const [cambio, setCambio] = useState<{ cooperativa: CooperativaResumen; estado: "aprobada" | "suspendida" } | null>(null);
+  const [cambio, setCambio] = useState<{ cooperativa: CooperativaDetalle; estado: "aprobada" | "suspendida" } | null>(null);
   const [motivoCambio, setMotivoCambio] = useState("");
   const [aplicandoCambio, setAplicandoCambio] = useState(false);
 
@@ -50,6 +53,17 @@ export default function CooperativasAdminPage() {
   const [errorForm, setErrorForm] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
   const [mensajeError, setMensajeError] = useState<string | null>(null);
+
+  // Paginación real (22-sep-2026) -- ver el comentario del backend.
+  const [estadoFiltro, setEstadoFiltro] = useState("");
+  const [busquedaFiltro, setBusquedaFiltro] = useState("");
+  const [aplicados, setAplicados] = useState<FiltrosCooperativas>({
+    pagina: 1,
+    limite: LIMITE_PAGINA,
+  });
+  const [pagina, setPagina] = useState(1);
+  const [resultado, setResultado] = useState<ResultadoCooperativas | null>(null);
+  const [cargando, setCargando] = useState(false);
 
   async function confirmarCambioEstado() {
     const token = obtenerToken();
@@ -72,15 +86,35 @@ export default function CooperativasAdminPage() {
     }
   }
 
-  function cargar() {
+  const cargar = useCallback(() => {
     const token = obtenerToken();
     if (!token) return;
-    listarCooperativasAdmin(token)
-      .then(setCooperativas)
-      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar las cooperativas."));
+    setCargando(true);
+    buscarCooperativasAdmin(token, { ...aplicados, pagina, limite: LIMITE_PAGINA })
+      .then(setResultado)
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar las cooperativas."))
+      .finally(() => setCargando(false));
+  }, [aplicados, pagina]);
+
+  useEffect(cargar, [cargar]);
+
+  function filtrar(e: React.FormEvent) {
+    e.preventDefault();
+    setPagina(1);
+    setAplicados({
+      estado: estadoFiltro || undefined,
+      busqueda: busquedaFiltro.trim() || undefined,
+      pagina: 1,
+      limite: LIMITE_PAGINA,
+    });
   }
 
-  useEffect(cargar, []);
+  function limpiarFiltros() {
+    setEstadoFiltro("");
+    setBusquedaFiltro("");
+    setPagina(1);
+    setAplicados({ pagina: 1, limite: LIMITE_PAGINA });
+  }
 
   async function crear(e: React.FormEvent) {
     e.preventDefault();
@@ -282,34 +316,88 @@ export default function CooperativasAdminPage() {
         </div>
       )}
 
+      <form
+        onSubmit={filtrar}
+        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
+      >
+        <div>
+          <label htmlFor="coop-filtro-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Estado
+          </label>
+          <select
+            id="coop-filtro-estado"
+            value={estadoFiltro}
+            onChange={(e) => setEstadoFiltro(e.target.value)}
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          >
+            <option value="">Todos</option>
+            <option value="pendiente_revision">Pendiente de revisión</option>
+            <option value="aprobada">Habilitada</option>
+            <option value="suspendida">Suspendida</option>
+            <option value="dada_de_baja">Dada de baja</option>
+          </select>
+        </div>
+        <div className="lg:col-span-2">
+          <label htmlFor="coop-filtro-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Buscar
+          </label>
+          <input
+            id="coop-filtro-busqueda"
+            value={busquedaFiltro}
+            onChange={(e) => setBusquedaFiltro(e.target.value)}
+            placeholder="Nombre, razón social, RUC o contacto"
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+            Filtrar
+          </button>
+          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+            Limpiar
+          </button>
+        </div>
+      </form>
+
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
         <div className="border-b border-black/5 px-6 py-4">
           <h2 className="font-display text-base font-bold text-brand-dark">
-            {cooperativas === null
+            {resultado === null
               ? "Cargando..."
-              : `${cooperativas.length} cooperativa${cooperativas.length === 1 ? "" : "s"}`}
+              : `${resultado.total} cooperativa${resultado.total === 1 ? "" : "s"} con estos filtros`}
           </h2>
         </div>
 
-        {cooperativas !== null && cooperativas.length === 0 && (
+        {resultado !== null && resultado.filas.length === 0 && !cargando && (
           <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
-            Todavía no hay cooperativas — usa el formulario de arriba.
+            No hay cooperativas que coincidan con estos filtros.
           </p>
         )}
 
-        {cooperativas !== null && cooperativas.length > 0 && (
+        {resultado !== null && resultado.filas.length > 0 && (
           <table className="w-full text-left text-sm">
             <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
               <tr>
                 <th className="px-6 py-3">Nombre comercial</th>
+                <th className="px-6 py-3">RUC</th>
+                <th className="px-6 py-3">Contacto</th>
                 <th className="px-6 py-3">Estado</th>
                 <th className="px-6 py-3 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
-              {cooperativas.map((c) => (
+              {resultado.filas.map((c) => (
                 <tr key={c.id}>
                   <td className="px-6 py-3 font-medium text-brand-dark">{c.nombreComercial}</td>
+                  <td className="px-6 py-3 text-brand-dark/70">{c.ruc}</td>
+                  <td className="px-6 py-3 text-xs text-brand-dark/70">
+                    {c.contactoNombre && <p>{c.contactoNombre}</p>}
+                    {c.contactoCorreo && <p>{c.contactoCorreo}</p>}
+                    {c.contactoTelefono && <p>{c.contactoTelefono}</p>}
+                    {!c.contactoNombre && !c.contactoCorreo && !c.contactoTelefono && (
+                      <span className="text-brand-dark/30">Sin contacto</span>
+                    )}
+                  </td>
                   <td className="px-6 py-3">
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLOR_ESTADO[c.estado] ?? "bg-slate-100 text-slate-700"}`}
@@ -339,6 +427,34 @@ export default function CooperativasAdminPage() {
               ))}
             </tbody>
           </table>
+        )}
+
+        {resultado !== null && resultado.total > 0 && (
+          <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+            <span>
+              Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA))}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                disabled={pagina <= 1 || cargando}
+                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() =>
+                  setPagina((p) =>
+                    Math.min(Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)), p + 1),
+                  )
+                }
+                disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) || cargando}
+                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
         )}
       </div>
 

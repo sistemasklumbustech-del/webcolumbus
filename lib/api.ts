@@ -1578,6 +1578,57 @@ export async function listarCooperativasAdmin(token: string): Promise<Cooperativ
   return cuerpo as CooperativaResumen[];
 }
 
+/**
+ * Tabla de gestión con filtros y paginación real (22-sep-2026) -- ver
+ * el comentario del backend. Distinta de listarCooperativasAdmin
+ * (arriba), que se deja intacta para los selectores de Conciliación y
+ * Liquidaciones (necesitan la lista completa sin paginar).
+ */
+export interface CooperativaDetalle {
+  id: string;
+  ruc: string;
+  razonSocial: string;
+  nombreComercial: string;
+  estado: string;
+  contactoNombre: string | null;
+  contactoCorreo: string | null;
+  contactoTelefono: string | null;
+  fechaAfiliacion: string | null;
+}
+
+export interface FiltrosCooperativas {
+  estado?: string;
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoCooperativas {
+  filas: CooperativaDetalle[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function buscarCooperativasAdmin(
+  token: string,
+  filtros: FiltrosCooperativas,
+): Promise<ResultadoCooperativas> {
+  const params = new URLSearchParams();
+  if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/admin/cooperativas/buscar?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar las cooperativas.");
+  return cuerpo as ResultadoCooperativas;
+}
+
 export interface DatosNuevaCooperativa {
   ruc: string;
   razonSocial: string;
