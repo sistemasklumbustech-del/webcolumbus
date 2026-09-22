@@ -120,11 +120,10 @@ export default function PanelEmpresaDashboard() {
     if (rol !== "admin_cooperativa") {
       setCargandoFiscal(false);
       setCargandoLogo(false);
-      listarViajesCoop(token)
-        .then((viajes) => {
-          const hoy = new Date().toLocaleDateString("sv-SE"); // formato real YYYY-MM-DD, mismo que fechaSalida
-          setViajesHoy(viajes.filter((v) => v.fechaSalida === hoy));
-        })
+      // formato real YYYY-MM-DD, mismo que fechaSalida
+      const hoy = new Date().toLocaleDateString("sv-SE");
+      listarViajesCoop(token, { desde: hoy, hasta: hoy, pagina: 1, limite: 100 })
+        .then((resultado) => setViajesHoy(resultado.filas))
         .catch((err) => setErrorViajesHoy(err instanceof Error ? err.message : "No se pudieron cargar los viajes de hoy."));
       return;
     }

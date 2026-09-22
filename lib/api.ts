@@ -1061,14 +1061,44 @@ export interface ViajeCoopResumen {
   conductorNombre: string | null;
 }
 
-export async function listarViajesCoop(token: string): Promise<ViajeCoopResumen[]> {
-  const res = await fetch(`${API_URL}/coop/viajes`, {
+/** Paginación real (22-sep-2026) -- antes traía todos los viajes de la cooperativa de una sola vez. */
+export interface FiltrosViajesCoop {
+  desde?: string;
+  hasta?: string;
+  estado?: "programado" | "en_curso" | "finalizado" | "cancelado";
+  rutaId?: string;
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoViajesCoop {
+  filas: ViajeCoopResumen[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarViajesCoop(
+  token: string,
+  filtros: FiltrosViajesCoop,
+): Promise<ResultadoViajesCoop> {
+  const params = new URLSearchParams();
+  if (filtros.desde) params.set("desde", filtros.desde);
+  if (filtros.hasta) params.set("hasta", filtros.hasta);
+  if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.rutaId) params.set("rutaId", filtros.rutaId);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/coop/viajes?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar los viajes.");
-  return cuerpo as ViajeCoopResumen[];
+  return cuerpo as ResultadoViajesCoop;
 }
 
 /**

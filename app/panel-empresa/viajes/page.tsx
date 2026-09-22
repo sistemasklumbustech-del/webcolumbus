@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   crearViajeCoop,
@@ -17,6 +17,8 @@ import {
   type UnidadResumen,
   type ViajeCoopResumen,
   type ConductorResumen,
+  type FiltrosViajesCoop,
+  type ResultadoViajesCoop,
 } from "@/lib/api";
 import { obtenerToken, decodificarToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
@@ -31,6 +33,21 @@ const ESTADO_ESTILO: Record<string, string> = {
 function formatearDolares(monto: number) {
   return new Intl.NumberFormat("es-EC", { style: "currency", currency: "USD" }).format(monto);
 }
+
+const LIMITE_PAGINA = 25;
+
+function hoyEcuador(desplazamientoDias = 0) {
+  const d = new Date(Date.now() + desplazamientoDias * 86400000);
+  return d.toLocaleDateString("sv-SE", { timeZone: "America/Guayaquil" });
+}
+
+const ESTADOS_VIAJE = [
+  { valor: "", etiqueta: "Todos" },
+  { valor: "programado", etiqueta: "Programado" },
+  { valor: "en_curso", etiqueta: "En curso" },
+  { valor: "finalizado", etiqueta: "Finalizado" },
+  { valor: "cancelado", etiqueta: "Cancelado" },
+] as const;
 
 /**
  * Acciones de un viaje en un modal centrado (21-sep-2026). Antes eran
@@ -334,7 +351,6 @@ function MenuAccionesViaje({
 export default function ViajesPage() {
   const [rutas, setRutas] = useState<RutaResumen[] | null>(null);
   const [unidades, setUnidades] = useState<UnidadResumen[] | null>(null);
-  const [viajes, setViajes] = useState<ViajeCoopResumen[] | null>(null);
   const [conductores, setConductores] = useState<ConductorResumen[]>([]);
   const [conductorElegido, setConductorElegido] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -351,14 +367,32 @@ export default function ViajesPage() {
   const [errorForm, setErrorForm] = useState<string | null>(null);
   const [mensajeError, setMensajeError] = useState<string | null>(null);
 
-  function cargarTodo() {
+  // Paginación real (22-sep-2026) -- ver el comentario del componente
+  // más abajo. Rango por defecto: últimos 7 días + próximos 30, para
+  // cubrir tanto viajes recientes (auditoría) como los que vienen
+  // (gestión operativa del día a día), sin cargar la tabla entera.
+  const [desdeFiltro, setDesdeFiltro] = useState(hoyEcuador(-7));
+  const [hastaFiltro, setHastaFiltro] = useState(hoyEcuador(30));
+  const [estadoFiltro, setEstadoFiltro] = useState<(typeof ESTADOS_VIAJE)[number]["valor"]>("");
+  const [rutaFiltro, setRutaFiltro] = useState("");
+  const [busquedaFiltro, setBusquedaFiltro] = useState("");
+  const [aplicados, setAplicados] = useState<FiltrosViajesCoop>({
+    desde: hoyEcuador(-7),
+    hasta: hoyEcuador(30),
+    pagina: 1,
+    limite: LIMITE_PAGINA,
+  });
+  const [pagina, setPagina] = useState(1);
+  const [resultado, setResultado] = useState<ResultadoViajesCoop | null>(null);
+  const [cargandoViajes, setCargandoViajes] = useState(false);
+
+  function cargarCatalogos() {
     const token = obtenerToken();
     if (!token) return;
-    Promise.all([listarRutasCoop(token), listarUnidadesCoop(token), listarViajesCoop(token)])
-      .then(([r, u, v]) => {
+    Promise.all([listarRutasCoop(token), listarUnidadesCoop(token)])
+      .then(([r, u]) => {
         setRutas(r);
         setUnidades(u);
-        setViajes(v);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "No se pudo cargar la información."));
     // Correccion real (18-ago-2026): el recargo VIP ahora es politica
@@ -377,7 +411,43 @@ export default function ViajesPage() {
     }
   }
 
-  useEffect(cargarTodo, []);
+  useEffect(cargarCatalogos, []);
+
+  const cargarViajes = useCallback(() => {
+    const token = obtenerToken();
+    if (!token) return;
+    setCargandoViajes(true);
+    listarViajesCoop(token, { ...aplicados, pagina, limite: LIMITE_PAGINA })
+      .then(setResultado)
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar los viajes."))
+      .finally(() => setCargandoViajes(false));
+  }, [aplicados, pagina]);
+
+  useEffect(cargarViajes, [cargarViajes]);
+
+  function filtrar(e: React.FormEvent) {
+    e.preventDefault();
+    setPagina(1);
+    setAplicados({
+      desde: desdeFiltro || undefined,
+      hasta: hastaFiltro || undefined,
+      estado: estadoFiltro || undefined,
+      rutaId: rutaFiltro || undefined,
+      busqueda: busquedaFiltro.trim() || undefined,
+      pagina: 1,
+      limite: LIMITE_PAGINA,
+    });
+  }
+
+  function limpiarFiltros() {
+    setDesdeFiltro("");
+    setHastaFiltro("");
+    setEstadoFiltro("");
+    setRutaFiltro("");
+    setBusquedaFiltro("");
+    setPagina(1);
+    setAplicados({ pagina: 1, limite: LIMITE_PAGINA });
+  }
 
   async function crear(e: React.FormEvent) {
     e.preventDefault();
@@ -415,7 +485,7 @@ export default function ViajesPage() {
       setPrecio("");
       setRecargoVip("");
       setMensajeExito("Viaje programado correctamente.");
-      cargarTodo();
+      cargarViajes();
     } catch (err) {
       const mensaje = err instanceof Error ? err.message : "No se pudo crear el viaje.";
       setErrorForm(mensaje);
@@ -593,20 +663,101 @@ id="viaje-fecha"
       </form>
       )}
 
+      <form
+        onSubmit={filtrar}
+        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-6 lg:items-end"
+      >
+        <div>
+          <label htmlFor="viajes-desde" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Desde
+          </label>
+          <input
+            id="viajes-desde"
+            type="date"
+            value={desdeFiltro}
+            onChange={(e) => setDesdeFiltro(e.target.value)}
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          />
+        </div>
+        <div>
+          <label htmlFor="viajes-hasta" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Hasta
+          </label>
+          <input
+            id="viajes-hasta"
+            type="date"
+            value={hastaFiltro}
+            onChange={(e) => setHastaFiltro(e.target.value)}
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          />
+        </div>
+        <div>
+          <label htmlFor="viajes-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Estado
+          </label>
+          <select
+            id="viajes-estado"
+            value={estadoFiltro}
+            onChange={(e) => setEstadoFiltro(e.target.value as (typeof ESTADOS_VIAJE)[number]["valor"])}
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          >
+            {ESTADOS_VIAJE.map((e) => (
+              <option key={e.valor} value={e.valor}>{e.etiqueta}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="viajes-ruta" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Ruta
+          </label>
+          <select
+            id="viajes-ruta"
+            value={rutaFiltro}
+            onChange={(e) => setRutaFiltro(e.target.value)}
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          >
+            <option value="">Todas</option>
+            {rutas?.map((r) => (
+              <option key={r.id} value={r.id}>{r.nombre ?? `${r.origenCiudad} → ${r.destinoCiudad}`}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="viajes-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Buscar
+          </label>
+          <input
+            id="viajes-busqueda"
+            value={busquedaFiltro}
+            onChange={(e) => setBusquedaFiltro(e.target.value)}
+            placeholder="Ruta, unidad o conductor"
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button type="submit" className="flex-1 rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95">
+            Filtrar
+          </button>
+          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+            Limpiar
+          </button>
+        </div>
+      </form>
+
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
         <div className="border-b border-black/5 px-6 py-4">
           <h2 className="font-display text-base font-bold text-brand-dark">
-            {viajes === null ? "Cargando..." : `${viajes.length} viaje${viajes.length === 1 ? "" : "s"}`}
+            {resultado === null ? "Cargando..." : `${resultado.total} viaje${resultado.total === 1 ? "" : "s"} con estos filtros`}
           </h2>
         </div>
 
-        {viajes !== null && viajes.length === 0 && (
+        {resultado !== null && resultado.filas.length === 0 && !cargandoViajes && (
           <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
-            Todavía no has programado ningún viaje.
+            No hay viajes que coincidan con estos filtros.
           </p>
         )}
 
-        {viajes !== null && viajes.length > 0 && (
+        {resultado !== null && resultado.filas.length > 0 && (
           <table className="w-full text-left text-sm">
             <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
               <tr>
@@ -620,7 +771,7 @@ id="viaje-fecha"
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
-              {viajes.map((v) => (
+              {resultado.filas.map((v) => (
                 <tr key={v.id}>
                   <td className="px-6 py-3 font-medium text-brand-dark">{v.rutaNombre}</td>
                   <td className="px-6 py-3 text-brand-dark/70">
@@ -655,21 +806,21 @@ id="viaje-fecha"
                       esAdmin={esAdmin}
                       onEditado={() => {
                         setMensajeExito("Viaje actualizado.");
-                        cargarTodo();
+                        cargarViajes();
                       }}
                       onCambiado={() => {
                         setMensajeExito("Unidad del viaje actualizada — los boletos ya vendidos no se vieron afectados.");
-                        cargarTodo();
+                        cargarViajes();
                       }}
                       onConductor={() => {
                         setMensajeExito("Conductor del viaje actualizado.");
-                        cargarTodo();
+                        cargarViajes();
                       }}
                       onCancelado={(boletosCancelados) => {
                         setMensajeExito(
                           `Viaje cancelado — ${boletosCancelados} boleto${boletosCancelados === 1 ? "" : "s"} cancelado${boletosCancelados === 1 ? "" : "s"} automáticamente.`,
                         );
-                        cargarTodo();
+                        cargarViajes();
                       }}
                       onError={setMensajeError}
                     />
@@ -678,6 +829,30 @@ id="viaje-fecha"
               ))}
             </tbody>
           </table>
+        )}
+
+        {resultado !== null && resultado.total > 0 && (
+          <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+            <span>
+              Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA))}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                disabled={pagina <= 1 || cargandoViajes}
+                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setPagina((p) => Math.min(Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)), p + 1))}
+                disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) || cargandoViajes}
+                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

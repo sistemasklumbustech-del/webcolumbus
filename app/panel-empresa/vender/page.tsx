@@ -12,8 +12,9 @@ export default function VenderVentanillaPage() {
   useEffect(() => {
     const token = obtenerToken();
     if (!token) return;
-    listarViajesCoop(token)
-      .then((lista) => setViajes(lista.filter((v) => v.estado === "programado")))
+    const hoy = new Date().toLocaleDateString("sv-SE");
+    listarViajesCoop(token, { desde: hoy, estado: "programado", pagina: 1, limite: 200 })
+      .then((resultado) => setViajes(resultado.filas))
       .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar los viajes."));
   }, []);
 
