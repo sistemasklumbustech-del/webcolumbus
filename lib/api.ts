@@ -1748,14 +1748,37 @@ export interface PuntoOperacionResumen {
   cooperativaPropietariaNombre: string | null;
 }
 
-export async function listarPuntosOperacionAdmin(token: string): Promise<PuntoOperacionResumen[]> {
-  const res = await fetch(`${API_URL}/admin/puntos-operacion`, {
+export interface FiltrosPuntosOperacion {
+  tipo?: string;
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoPuntosOperacion {
+  filas: PuntoOperacionResumen[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarPuntosOperacionAdmin(
+  token: string,
+  filtros: FiltrosPuntosOperacion,
+): Promise<ResultadoPuntosOperacion> {
+  const params = new URLSearchParams();
+  if (filtros.tipo) params.set("tipo", filtros.tipo);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/admin/puntos-operacion?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar los puntos de operación.");
-  return cuerpo as PuntoOperacionResumen[];
+  return cuerpo as ResultadoPuntosOperacion;
 }
 
 /** Propuesta de una cooperativa: queda 'pendiente_revision' hasta que un admin la apruebe (13-ago-2026). */

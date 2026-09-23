@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   listarPuntosOperacionAdmin,
   crearPuntoOperacionAdmin,
@@ -8,12 +8,15 @@ import {
   listarCooperativasAdmin,
   listarPuntosOperacionPendientesAdmin,
   resolverPuntoOperacionPendienteAdmin,
-  type PuntoOperacionResumen,
+  type FiltrosPuntosOperacion,
+  type ResultadoPuntosOperacion,
   type PuntoOperacionPendiente,
   type CooperativaResumen,
 } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
+
+const LIMITE_PAGINA = 25;
 
 const ETIQUETA_TIPO: Record<string, string> = {
   terminal_terrestre: "Terminal terrestre",
@@ -193,7 +196,13 @@ function CoordenadasEditables({
 }
 
 export default function PuntosOperacionAdminPage() {
-  const [puntos, setPuntos] = useState<PuntoOperacionResumen[] | null>(null);
+  const [resultado, setResultado] = useState<ResultadoPuntosOperacion | null>(null);
+  const [cargandoPuntos, setCargandoPuntos] = useState(false);
+  // Paginación real (23-sep-2026) -- ver el comentario del backend.
+  const [tipoFiltro, setTipoFiltro] = useState("");
+  const [busquedaFiltro, setBusquedaFiltro] = useState("");
+  const [aplicados, setAplicados] = useState<FiltrosPuntosOperacion>({ pagina: 1, limite: LIMITE_PAGINA });
+  const [pagina, setPagina] = useState(1);
   const [pendientes, setPendientes] = useState<PuntoOperacionPendiente[]>([]);
   const [resolviendoId, setResolviendoId] = useState<string | null>(null);
   const [cooperativas, setCooperativas] = useState<CooperativaResumen[]>([]);
@@ -212,23 +221,58 @@ export default function PuntosOperacionAdminPage() {
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
   const [mensajeError, setMensajeError] = useState<string | null>(null);
 
-  function cargar() {
+  const cargarPuntos = useCallback(() => {
     const token = obtenerToken();
     if (!token) return;
-    listarPuntosOperacionAdmin(token)
-      .then(setPuntos)
-      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar los puntos de operación."));
-    listarCooperativasAdmin(token)
-      .then(setCooperativas)
-      .catch(() => {
-        /* el desplegable de cooperativa propietaria es opcional — si falla, el campo simplemente queda vacío */
-      });
+    setCargandoPuntos(true);
+    listarPuntosOperacionAdmin(token, { ...aplicados, pagina, limite: LIMITE_PAGINA })
+      .then(setResultado)
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar los puntos de operación."))
+      .finally(() => setCargandoPuntos(false));
+  }, [aplicados, pagina]);
+
+  useEffect(cargarPuntos, [cargarPuntos]);
+
+  function cargarPendientes() {
+    const token = obtenerToken();
+    if (!token) return;
     listarPuntosOperacionPendientesAdmin(token)
       .then(setPendientes)
       .catch(() => setPendientes([]));
   }
 
-  useEffect(cargar, []);
+  function cargar() {
+    cargarPuntos();
+    cargarPendientes();
+  }
+
+  // El desplegable de cooperativa propietaria es opcional -- si falla, queda vacío.
+  useEffect(() => {
+    const token = obtenerToken();
+    if (!token) return;
+    listarCooperativasAdmin(token)
+      .then(setCooperativas)
+      .catch(() => {});
+    cargarPendientes();
+  }, []);
+
+  function filtrar(e: React.FormEvent) {
+    e.preventDefault();
+    setPagina(1);
+    setAplicados({
+      tipo: tipoFiltro || undefined,
+      busqueda: busquedaFiltro.trim() || undefined,
+      pagina: 1,
+      limite: LIMITE_PAGINA,
+    });
+  }
+
+  function limpiarFiltros() {
+    setTipoFiltro("");
+    setBusquedaFiltro("");
+    setPagina(1);
+    setAplicados({ pagina: 1, limite: LIMITE_PAGINA });
+  }
 
   async function resolverPropuesta(id: string, accion: "aprobar" | "rechazar") {
     const token = obtenerToken();
@@ -441,20 +485,64 @@ id="punto-tasa"
         </div>
       )}
 
+      <form
+        onSubmit={filtrar}
+        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
+      >
+        <div>
+          <label htmlFor="punto-filtro-tipo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Tipo
+          </label>
+          <select
+            id="punto-filtro-tipo"
+            value={tipoFiltro}
+            onChange={(e) => setTipoFiltro(e.target.value)}
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          >
+            <option value="">Todos</option>
+            <option value="terminal_terrestre">Terminal terrestre</option>
+            <option value="oficina_agencia">Oficina / agencia</option>
+            <option value="parada_intermedia">Parada intermedia</option>
+          </select>
+        </div>
+        <div className="lg:col-span-2">
+          <label htmlFor="punto-filtro-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Buscar
+          </label>
+          <input
+            id="punto-filtro-busqueda"
+            value={busquedaFiltro}
+            onChange={(e) => setBusquedaFiltro(e.target.value)}
+            placeholder="Nombre, ciudad o provincia"
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+            Filtrar
+          </button>
+          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+            Limpiar
+          </button>
+        </div>
+      </form>
+
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
         <div className="border-b border-black/5 px-6 py-4">
           <h2 className="font-display text-base font-bold text-brand-dark">
-            {puntos === null ? "Cargando..." : `${puntos.length} punto${puntos.length === 1 ? "" : "s"} de operación`}
+            {resultado === null
+              ? "Cargando..."
+              : `${resultado.total} punto${resultado.total === 1 ? "" : "s"} de operación con estos filtros`}
           </h2>
         </div>
 
-        {puntos !== null && puntos.length === 0 && (
+        {resultado !== null && resultado.filas.length === 0 && !cargandoPuntos && (
           <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
-            Todavía no hay puntos de operación — usa el formulario de arriba.
+            No hay puntos de operación que coincidan con estos filtros.
           </p>
         )}
 
-        {puntos !== null && puntos.length > 0 && (
+        {resultado !== null && resultado.filas.length > 0 && (
           <table className="w-full text-left text-sm">
             <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
               <tr>
@@ -467,7 +555,7 @@ id="punto-tasa"
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
-              {puntos.map((p) => (
+              {resultado?.filas.map((p) => (
                 <tr key={p.id}>
                   <td className="px-6 py-3 font-medium text-brand-dark">{p.nombre}</td>
                   <td className="px-6 py-3 text-brand-dark/70">{ETIQUETA_TIPO[p.tipo] ?? p.tipo}</td>
@@ -506,6 +594,30 @@ id="punto-tasa"
               ))}
             </tbody>
           </table>
+        )}
+
+        {resultado !== null && resultado.total > 0 && (
+          <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+            <span>
+              Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA))}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                disabled={pagina <= 1 || cargandoPuntos}
+                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setPagina((p) => Math.min(Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)), p + 1))}
+                disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) || cargandoPuntos}
+                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
