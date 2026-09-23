@@ -669,14 +669,43 @@ export interface PagoManualHistorialItem {
   resueltoEn: string;
 }
 
-export async function listarHistorialPagos(token: string): Promise<PagoManualHistorialItem[]> {
-  const res = await fetch(`${API_URL}/coop/pagos-historial`, {
+export interface FiltrosHistorialPagos {
+  estado?: "aprobado" | "rechazado";
+  proveedor?: string;
+  busqueda?: string;
+  desde?: string;
+  hasta?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoHistorialPagos {
+  filas: PagoManualHistorialItem[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarHistorialPagos(
+  token: string,
+  filtros: FiltrosHistorialPagos,
+): Promise<ResultadoHistorialPagos> {
+  const params = new URLSearchParams();
+  if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.proveedor) params.set("proveedor", filtros.proveedor);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  if (filtros.desde) params.set("desde", filtros.desde);
+  if (filtros.hasta) params.set("hasta", filtros.hasta);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/coop/pagos-historial?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo cargar el historial de pagos.");
-  return cuerpo as PagoManualHistorialItem[];
+  return cuerpo as ResultadoHistorialPagos;
 }
 
 /** Lado pasajero: iniciar un pago manual y subir el comprobante. */

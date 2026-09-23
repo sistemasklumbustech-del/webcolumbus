@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   listarPagosPendientes,
   confirmarPagoManual,
@@ -8,9 +8,13 @@ import {
   listarHistorialPagos,
   type PagoManualPendiente,
   type PagoManualHistorialItem,
+  type FiltrosHistorialPagos,
+  type ResultadoHistorialPagos,
 } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
+
+const LIMITE_PAGINA = 25;
 
 const ETIQUETAS_PROVEEDOR: Record<string, string> = {
   transferencia_bancaria: "Transferencia bancaria",
@@ -73,8 +77,8 @@ function TarjetaPago({
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
       <div className="flex items-start justify-between">
-        <div>
-          <p className="font-display font-bold text-brand-dark">{pago.compradorNombre}</p>
+        <div className="min-w-0">
+          <p className="break-words font-display font-bold text-brand-dark">{pago.compradorNombre}</p>
           <p className="text-sm text-brand-dark/70">
             {ETIQUETAS_PROVEEDOR[pago.proveedor] ?? pago.proveedor} · ${pago.monto.toFixed(2)}
           </p>
@@ -95,7 +99,7 @@ function TarjetaPago({
       )}
 
       {!rechazando ? (
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           <button
             onClick={confirmar}
             disabled={procesando}
@@ -120,7 +124,7 @@ function TarjetaPago({
             placeholder="Motivo (opcional) — ej. no coincide con el monto"
             className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={rechazar}
               disabled={procesando}
@@ -145,8 +149,8 @@ function FilaHistorial({ pago }: { pago: PagoManualHistorialItem }) {
   const aprobado = pago.estado === "aprobado";
   return (
     <div className="flex items-start justify-between gap-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-      <div>
-        <p className="font-semibold text-brand-dark">{pago.compradorNombre}</p>
+      <div className="min-w-0">
+        <p className="break-words font-semibold text-brand-dark">{pago.compradorNombre}</p>
         <p className="text-xs text-brand-dark/60">
           {ETIQUETAS_PROVEEDOR[pago.proveedor] ?? pago.proveedor} · ${pago.monto.toFixed(2)}
         </p>
@@ -155,7 +159,7 @@ function FilaHistorial({ pago }: { pago: PagoManualHistorialItem }) {
           {pago.confirmadoPorNombre && ` · por ${pago.confirmadoPorNombre}`}
         </p>
         {pago.referenciaPago && (
-          <p className="mt-1 text-xs text-brand-dark/60">Referencia: {pago.referenciaPago}</p>
+          <p className="mt-1 break-words text-xs text-brand-dark/60">Referencia: {pago.referenciaPago}</p>
         )}
         {!aprobado && pago.motivoRechazo && (
           <p className="mt-1 text-xs text-red-600">Motivo: {pago.motivoRechazo}</p>
@@ -184,26 +188,74 @@ function FilaHistorial({ pago }: { pago: PagoManualHistorialItem }) {
 
 export default function PagosPendientesPage() {
   const [pagos, setPagos] = useState<PagoManualPendiente[] | null>(null);
-  const [historial, setHistorial] = useState<PagoManualHistorialItem[] | null>(null);
+  const [historial, setHistorial] = useState<ResultadoHistorialPagos | null>(null);
+  const [cargandoHistorial, setCargandoHistorial] = useState(false);
+  // Paginación real (23-sep-2026) -- ver el comentario del backend. La
+  // bandeja de pendientes es una cola de trabajo y no se pagina.
+  const [estadoFiltro, setEstadoFiltro] = useState("");
+  const [proveedorFiltro, setProveedorFiltro] = useState("");
+  const [busquedaFiltro, setBusquedaFiltro] = useState("");
+  const [desdeFiltro, setDesdeFiltro] = useState("");
+  const [hastaFiltro, setHastaFiltro] = useState("");
+  const [aplicados, setAplicados] = useState<FiltrosHistorialPagos>({ pagina: 1, limite: LIMITE_PAGINA });
+  const [pagina, setPagina] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
-  function cargar() {
+  function cargarPendientes() {
     const token = obtenerToken();
     if (!token) return;
     listarPagosPendientes(token)
       .then(setPagos)
       .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar."));
-    // Independiente del anterior -- un fallo cargando el historial no
-    // debe tapar la bandeja de pendientes, que es lo urgente.
-    listarHistorialPagos(token)
-      .then(setHistorial)
-      .catch(() => setHistorial([]));
   }
-  useEffect(cargar, []);
+
+  // Independiente de la bandeja -- un fallo cargando el historial no
+  // debe tapar los pendientes, que es lo urgente.
+  const cargarHistorial = useCallback(() => {
+    const token = obtenerToken();
+    if (!token) return;
+    setCargandoHistorial(true);
+    listarHistorialPagos(token, { ...aplicados, pagina, limite: LIMITE_PAGINA })
+      .then(setHistorial)
+      .catch(() => setHistorial({ filas: [], total: 0, pagina: 1, limite: LIMITE_PAGINA }))
+      .finally(() => setCargandoHistorial(false));
+  }, [aplicados, pagina]);
+
+  function cargar() {
+    cargarPendientes();
+    cargarHistorial();
+  }
+
+  useEffect(cargarPendientes, []);
+  useEffect(cargarHistorial, [cargarHistorial]);
+
+  function filtrar(e: React.FormEvent) {
+    e.preventDefault();
+    setPagina(1);
+    setAplicados({
+      estado: estadoFiltro === "aprobado" || estadoFiltro === "rechazado" ? estadoFiltro : undefined,
+      proveedor: proveedorFiltro || undefined,
+      busqueda: busquedaFiltro.trim() || undefined,
+      desde: desdeFiltro || undefined,
+      hasta: hastaFiltro || undefined,
+      pagina: 1,
+      limite: LIMITE_PAGINA,
+    });
+  }
+
+  function limpiarFiltros() {
+    setEstadoFiltro("");
+    setProveedorFiltro("");
+    setBusquedaFiltro("");
+    setDesdeFiltro("");
+    setHastaFiltro("");
+    setPagina(1);
+    setAplicados({ pagina: 1, limite: LIMITE_PAGINA });
+  }
 
   return (
-    <main className="mx-auto max-w-2xl flex-1 px-4 py-10">
+    <div className="mx-auto w-full max-w-2xl">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
 
       <h1 className="font-display text-2xl font-bold text-brand-dark">Pagos pendientes</h1>
@@ -239,19 +291,103 @@ export default function PagosPendientesPage() {
         ))}
       </div>
 
-      {historial !== null && historial.length > 0 && (
-        <div className="mt-10">
-          <h2 className="font-display text-lg font-bold text-brand-dark">Historial reciente</h2>
-          <p className="mt-1 text-sm text-brand-dark/60">
-            Los últimos pagos manuales que ya confirmaste o rechazaste.
-          </p>
-          <div className="mt-4 space-y-2">
-            {historial.map((p) => (
-              <FilaHistorial key={p.pagoId} pago={p} />
-            ))}
+      <div className="mt-10">
+        <h2 className="font-display text-lg font-bold text-brand-dark">Historial</h2>
+        <p className="mt-1 text-sm text-brand-dark/60">
+          Los pagos manuales que ya confirmaste o rechazaste.
+        </p>
+
+        <form
+          onSubmit={filtrar}
+          className="mt-4 grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2"
+        >
+          <div>
+            <label htmlFor="pago-filtro-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Resultado</label>
+            <select id="pago-filtro-estado" value={estadoFiltro} onChange={(e) => setEstadoFiltro(e.target.value)} className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium">
+              <option value="">Todos</option>
+              <option value="aprobado">Confirmados</option>
+              <option value="rechazado">Rechazados</option>
+            </select>
           </div>
+          <div>
+            <label htmlFor="pago-filtro-proveedor" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Método de pago</label>
+            <select id="pago-filtro-proveedor" value={proveedorFiltro} onChange={(e) => setProveedorFiltro(e.target.value)} className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium">
+              <option value="">Todos</option>
+              {Object.entries(ETIQUETAS_PROVEEDOR).map(([valor, etiqueta]) => (
+                <option key={valor} value={valor}>
+                  {etiqueta}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="pago-filtro-desde" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Desde</label>
+            <input id="pago-filtro-desde" type="date" value={desdeFiltro} onChange={(e) => setDesdeFiltro(e.target.value)} className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium" />
+          </div>
+          <div>
+            <label htmlFor="pago-filtro-hasta" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Hasta</label>
+            <input id="pago-filtro-hasta" type="date" value={hastaFiltro} onChange={(e) => setHastaFiltro(e.target.value)} className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium" />
+          </div>
+          <div className="sm:col-span-2">
+            <label htmlFor="pago-filtro-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Buscar</label>
+            <input
+              id="pago-filtro-busqueda"
+              value={busquedaFiltro}
+              onChange={(e) => setBusquedaFiltro(e.target.value)}
+              placeholder="Nombre del comprador o referencia"
+              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            />
+          </div>
+          <div className="flex gap-2 sm:col-span-2">
+            <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark sm:flex-none">
+              Filtrar
+            </button>
+            <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+              Limpiar
+            </button>
+          </div>
+        </form>
+
+        {historial === null && <p className="mt-4 text-sm text-brand-dark/50">Cargando...</p>}
+
+        {historial !== null && historial.filas.length === 0 && !cargandoHistorial && (
+          <p className="mt-6 text-center text-sm text-brand-dark/50">
+            {aplicados.estado || aplicados.proveedor || aplicados.busqueda || aplicados.desde || aplicados.hasta
+              ? "No hay pagos que coincidan con estos filtros."
+              : "Todavía no hay pagos manuales resueltos."}
+          </p>
+        )}
+
+        <div className="mt-4 space-y-2">
+          {historial?.filas.map((p) => (
+            <FilaHistorial key={p.pagoId} pago={p} />
+          ))}
         </div>
-      )}
-    </main>
+
+        {historial !== null && historial.total > 0 && (
+          <div className="mt-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+            <span>
+              {historial.total} pago(s) · Página {pagina} de {Math.max(1, Math.ceil(historial.total / LIMITE_PAGINA))}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                disabled={pagina <= 1 || cargandoHistorial}
+                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setPagina((p) => Math.min(Math.max(1, Math.ceil(historial.total / LIMITE_PAGINA)), p + 1))}
+                disabled={pagina >= Math.max(1, Math.ceil(historial.total / LIMITE_PAGINA)) || cargandoHistorial}
+                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
