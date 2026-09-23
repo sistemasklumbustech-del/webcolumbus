@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   crearTipoVehiculoCoop,
   crearUnidadCoop,
   listarTiposVehiculoCoop,
-  listarUnidadesCoop,
+  buscarUnidadesCoop,
   actualizarEstadoUnidadCoop,
   AMENIDADES_CATALOGO,
   interpretarCelda,
   obtenerPisosDeDistribucion,
   type TipoVehiculoResumen,
   type UnidadResumen,
+  type FiltrosUnidades,
+  type ResultadoUnidades,
   type Amenidad,
   type DistribucionAsientos,
 } from "@/lib/api";
@@ -58,12 +60,24 @@ function BotonEstadoUnidad({
   );
 }
 
+const LIMITE_UNIDADES_PAGINA = 25;
+
 export default function UnidadesPage() {
   const [tipos, setTipos] = useState<TipoVehiculoResumen[] | null>(null);
-  const [unidades, setUnidades] = useState<UnidadResumen[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
   const [mensajeError, setMensajeError] = useState<string | null>(null);
+
+  // Paginación real (22-sep-2026) -- ver el comentario del backend.
+  const [activoFiltro, setActivoFiltro] = useState<"" | "true" | "false">("");
+  const [busquedaFiltroUnidad, setBusquedaFiltroUnidad] = useState("");
+  const [aplicadosUnidades, setAplicadosUnidades] = useState<FiltrosUnidades>({
+    pagina: 1,
+    limite: LIMITE_UNIDADES_PAGINA,
+  });
+  const [paginaUnidades, setPaginaUnidades] = useState(1);
+  const [resultadoUnidades, setResultadoUnidades] = useState<ResultadoUnidades | null>(null);
+  const [cargandoUnidades, setCargandoUnidades] = useState(false);
 
   // Formulario: tipo de vehículo
   const [nombreTipo, setNombreTipo] = useState("");
@@ -92,18 +106,49 @@ export default function UnidadesPage() {
   const [guardandoUnidad, setGuardandoUnidad] = useState(false);
   const [errorUnidad, setErrorUnidad] = useState<string | null>(null);
 
-  function cargarTodo() {
+  function cargarTipos() {
     const token = obtenerToken();
     if (!token) return;
-    Promise.all([listarTiposVehiculoCoop(token), listarUnidadesCoop(token)])
-      .then(([t, u]) => {
-        setTipos(t);
-        setUnidades(u);
-      })
+    listarTiposVehiculoCoop(token)
+      .then(setTipos)
       .catch((err) => setError(err instanceof Error ? err.message : "No se pudo cargar la información."));
   }
 
-  useEffect(cargarTodo, []);
+  useEffect(cargarTipos, []);
+
+  const cargarUnidades = useCallback(() => {
+    const token = obtenerToken();
+    if (!token) return;
+    setCargandoUnidades(true);
+    buscarUnidadesCoop(token, { ...aplicadosUnidades, pagina: paginaUnidades, limite: LIMITE_UNIDADES_PAGINA })
+      .then(setResultadoUnidades)
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar las unidades."))
+      .finally(() => setCargandoUnidades(false));
+  }, [aplicadosUnidades, paginaUnidades]);
+
+  useEffect(cargarUnidades, [cargarUnidades]);
+
+  function filtrarUnidades(e: React.FormEvent) {
+    e.preventDefault();
+    setPaginaUnidades(1);
+    setAplicadosUnidades({
+      activo: activoFiltro === "" ? undefined : activoFiltro === "true",
+      busqueda: busquedaFiltroUnidad.trim() || undefined,
+      pagina: 1,
+      limite: LIMITE_UNIDADES_PAGINA,
+    });
+  }
+
+  function limpiarFiltrosUnidades() {
+    setActivoFiltro("");
+    setBusquedaFiltroUnidad("");
+    setPaginaUnidades(1);
+    setAplicadosUnidades({ pagina: 1, limite: LIMITE_UNIDADES_PAGINA });
+  }
+
+  // Crear un tipo de vehículo y crear una unidad ambos afectan solo su
+  // propia lista -- cargarTipos()/cargarUnidades() se llaman por
+  // separado más abajo, no un cargarTodo() combinado.
 
   function alternarAmenidadTipo(valor: Amenidad) {
     setAmenidadesTipo((actuales) =>
@@ -220,7 +265,7 @@ export default function UnidadesPage() {
       setAmenidadesTipo([]);
       setDistribucionJson("");
       setDistribucionParseada(null);
-      cargarTodo();
+      cargarTipos();
     } catch (err) {
       const mensaje = err instanceof Error ? err.message : "No se pudo crear el tipo de vehículo.";
       setErrorTipo(mensaje);
@@ -248,7 +293,7 @@ export default function UnidadesPage() {
       setPlaca("");
       setIdentificador("");
       setMensajeExito(`Unidad "${placa.trim()}" registrada correctamente.`);
-      cargarTodo();
+      cargarUnidades();
     } catch (err) {
       const mensaje = err instanceof Error ? err.message : "No se pudo crear la unidad.";
       setErrorUnidad(mensaje);
@@ -613,13 +658,52 @@ export default function UnidadesPage() {
         </form>
         )}
 
+        <form
+          onSubmit={filtrarUnidades}
+          className="flex flex-wrap items-end gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+        >
+          <div>
+            <label htmlFor="unidades-estado-filtro" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              Estado
+            </label>
+            <select
+              id="unidades-estado-filtro"
+              value={activoFiltro}
+              onChange={(e) => setActivoFiltro(e.target.value as "" | "true" | "false")}
+              className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            >
+              <option value="">Todas</option>
+              <option value="true">Activa</option>
+              <option value="false">Inactiva</option>
+            </select>
+          </div>
+          <div className="min-w-[220px] flex-1">
+            <label htmlFor="unidades-busqueda-filtro" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              Buscar
+            </label>
+            <input
+              id="unidades-busqueda-filtro"
+              value={busquedaFiltroUnidad}
+              onChange={(e) => setBusquedaFiltroUnidad(e.target.value)}
+              placeholder="Placa, identificador o tipo de vehículo"
+              className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            />
+          </div>
+          <button type="submit" className="rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95">
+            Filtrar
+          </button>
+          <button type="button" onClick={limpiarFiltrosUnidades} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+            Limpiar
+          </button>
+        </form>
+
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-          {unidades !== null && unidades.length === 0 && (
+          {resultadoUnidades !== null && resultadoUnidades.filas.length === 0 && !cargandoUnidades && (
             <p className="px-6 py-6 text-center text-sm text-brand-dark/50">
-              Todavía no has registrado ninguna unidad.
+              No hay unidades que coincidan con estos filtros.
             </p>
           )}
-          {unidades !== null && unidades.length > 0 && (
+          {resultadoUnidades !== null && resultadoUnidades.filas.length > 0 && (
             <table className="w-full text-left text-sm">
               <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
                 <tr>
@@ -630,7 +714,7 @@ export default function UnidadesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5">
-                {unidades.map((u) => (
+                {resultadoUnidades.filas.map((u) => (
                   <tr key={u.id}>
                     <td className="px-6 py-3 font-medium text-brand-dark">{u.placa}</td>
                     <td className="px-6 py-3 text-brand-dark/70">{u.identificadorOperativo}</td>
@@ -641,7 +725,7 @@ export default function UnidadesPage() {
                           unidad={u}
                           onCambiado={() => {
                             setMensajeExito(u.activo ? "Unidad desactivada." : "Unidad activada.");
-                            cargarTodo();
+                            cargarUnidades();
                           }}
                           onError={setMensajeError}
                         />
@@ -659,6 +743,37 @@ export default function UnidadesPage() {
                 ))}
               </tbody>
             </table>
+          )}
+
+          {resultadoUnidades !== null && resultadoUnidades.total > 0 && (
+            <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+              <span>
+                Página {paginaUnidades} de {Math.max(1, Math.ceil(resultadoUnidades.total / LIMITE_UNIDADES_PAGINA))}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPaginaUnidades((p) => Math.max(1, p - 1))}
+                  disabled={paginaUnidades <= 1 || cargandoUnidades}
+                  className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                >
+                  Anterior
+                </button>
+                <button
+                  onClick={() =>
+                    setPaginaUnidades((p) =>
+                      Math.min(Math.max(1, Math.ceil(resultadoUnidades.total / LIMITE_UNIDADES_PAGINA)), p + 1),
+                    )
+                  }
+                  disabled={
+                    paginaUnidades >= Math.max(1, Math.ceil(resultadoUnidades.total / LIMITE_UNIDADES_PAGINA)) ||
+                    cargandoUnidades
+                  }
+                  className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </section>

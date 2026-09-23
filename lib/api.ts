@@ -1065,6 +1065,44 @@ export async function listarUnidadesCoop(token: string): Promise<UnidadResumen[]
   return cuerpo as UnidadResumen[];
 }
 
+/**
+ * Tabla de gestión con filtros y paginación real (22-sep-2026) --
+ * distinta de listarUnidadesCoop (arriba), que se deja intacta para el
+ * selector de unidad de Viajes (necesita la lista completa sin paginar).
+ */
+export interface FiltrosUnidades {
+  activo?: boolean;
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoUnidades {
+  filas: UnidadResumen[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function buscarUnidadesCoop(
+  token: string,
+  filtros: FiltrosUnidades,
+): Promise<ResultadoUnidades> {
+  const params = new URLSearchParams();
+  if (filtros.activo !== undefined) params.set("activo", String(filtros.activo));
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/coop/unidades/buscar?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar las unidades.");
+  return cuerpo as ResultadoUnidades;
+}
+
 export async function crearUnidadCoop(
   token: string,
   datos: { tipoVehiculoId: string; placa: string; identificadorOperativo: string },
