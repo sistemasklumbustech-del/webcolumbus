@@ -34,6 +34,7 @@ const ENLACES = [
   { href: "/panel-empresa/validar-qr", etiqueta: "Validar boleto", icono: IconoValidar },
   { href: "/panel-empresa/pagos-pendientes", etiqueta: "Pagos pendientes", icono: IconoPagos, soloAdmin: true },
   { href: "/panel-empresa/solicitudes-factura", etiqueta: "Facturas", icono: IconoFacturas, soloAdmin: true },
+  { href: "/panel-empresa/reclamos", etiqueta: "Reclamos", icono: IconoReclamos, soloAdmin: true },
   { href: "/panel-empresa/configuracion", etiqueta: "Configuración", icono: IconoConfiguracion, soloAdmin: true },
   { href: "/panel-empresa/carga-masiva", etiqueta: "Carga masiva", icono: IconoCargaMasiva, soloAdmin: true },
 ];
@@ -124,6 +125,14 @@ function IconoFacturas({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M6 2h9l3 3v17H6z" />
       <path d="M9 9h6M9 13h6M9 17h4" />
+    </svg>
+  );
+}
+function IconoReclamos({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <path d="M12 8v3M12 14h.01" />
     </svg>
   );
 }

@@ -3495,3 +3495,148 @@ export async function obtenerBeneficiosReferidos(): Promise<BeneficiosReferidos 
     return null;
   }
 }
+
+/* -------------------------------------------------------------------
+ * Reclamos del pasajero (RF-019, 23-sep-2026). El pasajero reclama
+ * sobre un boleto suyo; lo resuelve la cooperativa dueña del viaje.
+ * ------------------------------------------------------------------- */
+
+export type TipoReclamo = "cobro_reembolso" | "servicio_viaje" | "boleto_qr";
+export type EstadoReclamo = "abierto" | "en_revision" | "resuelto" | "rechazado";
+
+export const ETIQUETA_TIPO_RECLAMO: Record<TipoReclamo, string> = {
+  cobro_reembolso: "Cobro o reembolso",
+  servicio_viaje: "Servicio del viaje",
+  boleto_qr: "Boleto o código QR",
+};
+
+export const ETIQUETA_ESTADO_RECLAMO: Record<EstadoReclamo, string> = {
+  abierto: "Abierto",
+  en_revision: "En revisión",
+  resuelto: "Resuelto a tu favor",
+  rechazado: "No procede",
+};
+
+export interface ReclamoPasajero {
+  id: string;
+  boletoId: string;
+  tipo: TipoReclamo;
+  descripcion: string;
+  estado: EstadoReclamo;
+  respuesta: string | null;
+  montoReconocido: number | null;
+  cooperativaNombre: string;
+  origenCiudad: string;
+  destinoCiudad: string;
+  fechaSalida: string;
+  creadoEn: string;
+  resueltoEn: string | null;
+}
+
+export interface ReclamoCoop extends ReclamoPasajero {
+  montoBoleto: number;
+  pasajeroNombre: string;
+  pasajeroCorreo: string | null;
+  pasajeroTelefono: string | null;
+}
+
+export interface ResultadoReclamos<T> {
+  filas: T[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export interface FiltrosReclamosCoop {
+  estado?: EstadoReclamo;
+  tipo?: TipoReclamo;
+  busqueda?: string;
+  desde?: string;
+  hasta?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResumenReclamosCoop {
+  abiertos: number;
+  enRevision: number;
+  resueltos: number;
+  rechazados: number;
+}
+
+async function pedirReclamos<T>(
+  token: string,
+  ruta: string,
+  opciones: RequestInit | undefined,
+  mensajeError: string,
+): Promise<T> {
+  const res = await fetch(`${API_URL}${ruta}`, {
+    ...opciones,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(opciones?.headers ?? {}),
+    },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? mensajeError);
+  }
+  return cuerpo as T;
+}
+
+export function crearReclamo(
+  token: string,
+  datos: { boletoId: string; tipo: TipoReclamo; descripcion: string },
+): Promise<{ id: string }> {
+  return pedirReclamos(token, "/reclamos", { method: "POST", body: JSON.stringify(datos) }, "No se pudo enviar el reclamo.");
+}
+
+export function listarMisReclamos(
+  token: string,
+  filtros: { estado?: EstadoReclamo; pagina: number; limite: number },
+): Promise<ResultadoReclamos<ReclamoPasajero>> {
+  const params = new URLSearchParams();
+  if (filtros.estado) params.set("estado", filtros.estado);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+  return pedirReclamos(token, `/reclamos/mios?${params.toString()}`, undefined, "No se pudieron cargar tus reclamos.");
+}
+
+export function listarReclamosCoop(
+  token: string,
+  filtros: FiltrosReclamosCoop,
+): Promise<ResultadoReclamos<ReclamoCoop>> {
+  const params = new URLSearchParams();
+  if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.tipo) params.set("tipo", filtros.tipo);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  if (filtros.desde) params.set("desde", filtros.desde);
+  if (filtros.hasta) params.set("hasta", filtros.hasta);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+  return pedirReclamos(token, `/coop/reclamos?${params.toString()}`, undefined, "No se pudieron cargar los reclamos.");
+}
+
+export function resumenReclamosCoop(token: string): Promise<ResumenReclamosCoop> {
+  return pedirReclamos(token, "/coop/reclamos/resumen", undefined, "No se pudo cargar el resumen de reclamos.");
+}
+
+export function tomarReclamoCoop(token: string, id: string): Promise<{ ok: true }> {
+  return pedirReclamos(token, `/coop/reclamos/${id}/en-revision`, { method: "PATCH" }, "No se pudo tomar el reclamo.");
+}
+
+export function resolverReclamoCoop(
+  token: string,
+  id: string,
+  datos: { decision: "procede" | "no_procede"; respuesta: string; montoReconocido?: number },
+): Promise<{ ok: true }> {
+  return pedirReclamos(
+    token,
+    `/coop/reclamos/${id}/resolver`,
+    { method: "PATCH", body: JSON.stringify(datos) },
+    "No se pudo resolver el reclamo.",
+  );
+}

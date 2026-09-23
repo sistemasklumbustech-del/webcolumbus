@@ -12,6 +12,7 @@ import { TabMisBoletos } from "./TabMisBoletos";
 import { TabMisCreditos } from "./TabMisCreditos";
 import { TabWallet } from "./TabWallet";
 import { TabReferidos } from "./TabReferidos";
+import { TabMisReclamos } from "./TabMisReclamos";
 
 /**
  * "Mi cuenta" unificada (29-jul-2026) — antes, datos personales y
@@ -32,6 +33,7 @@ import { TabReferidos } from "./TabReferidos";
 const PESTANAS = [
   { valor: "datos", etiqueta: "Mis datos" },
   { valor: "boletos", etiqueta: "Mis viajes" },
+  { valor: "reclamos", etiqueta: "Mis reclamos" },
   { valor: "wallet", etiqueta: "Mi saldo" },
   { valor: "referidos", etiqueta: "Invitar y ganar" },
   { valor: "creditos", etiqueta: "Créditos" },
@@ -321,6 +323,11 @@ function MiCuenta() {
           {pestanaActiva === "boletos" && (
             <div className="max-w-2xl">
               <TabMisBoletos onExito={setMensajeExito} />
+            </div>
+          )}
+          {pestanaActiva === "reclamos" && (
+            <div className="max-w-3xl">
+              <TabMisReclamos />
             </div>
           )}
           {pestanaActiva === "wallet" && <TabWallet />}

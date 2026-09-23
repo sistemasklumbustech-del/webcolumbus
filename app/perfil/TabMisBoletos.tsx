@@ -5,6 +5,7 @@ import { listarMisBoletos, calificarViaje, cancelarBoleto, descargarBoletoPdf, t
 import { tokenValido } from "@/lib/auth";
 import { CodigoQr } from "@/components/CodigoQr";
 import { SolicitarFactura } from "./SolicitarFactura";
+import { ReportarProblema } from "./ReportarProblema";
 
 function formatearFechaHora(iso: string) {
   return new Date(iso).toLocaleString("es-EC", {
@@ -270,6 +271,11 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
               )}
 
               {b.estado !== "cancelado" && <SolicitarFactura boletoId={b.boletoId} />}
+
+              <ReportarProblema
+                boletoId={b.boletoId}
+                onEnviado={() => onExito("Reclamo enviado — la cooperativa te responderá por correo. Sigue el estado en \"Mis reclamos\".")}
+              />
 
               {b.estado === "vigente" && new Date() < new Date(b.horaSalidaProgramada) && (
                 <BotonCancelar
