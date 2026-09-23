@@ -2243,14 +2243,38 @@ export interface UsuarioStaffResumen {
   activo: boolean;
 }
 
-export async function listarUsuariosStaffCoop(token: string): Promise<UsuarioStaffResumen[]> {
-  const res = await fetch(`${API_URL}/coop/usuarios`, {
+/** Paginación real (22-sep-2026) -- único consumidor es esta pantalla, no hay dropdown que necesite la lista completa. */
+export interface FiltrosUsuariosStaff {
+  rol?: "vendedor" | "admin_cooperativa";
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoUsuariosStaff {
+  filas: UsuarioStaffResumen[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarUsuariosStaffCoop(
+  token: string,
+  filtros: FiltrosUsuariosStaff,
+): Promise<ResultadoUsuariosStaff> {
+  const params = new URLSearchParams();
+  if (filtros.rol) params.set("rol", filtros.rol);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/coop/usuarios?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo cargar el personal.");
-  return cuerpo as UsuarioStaffResumen[];
+  return cuerpo as ResultadoUsuariosStaff;
 }
 
 export async function crearUsuarioStaffCoop(
@@ -2286,6 +2310,42 @@ export async function listarConductoresCoop(token: string): Promise<ConductorRes
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar los conductores.");
   return cuerpo as ConductorResumen[];
+}
+
+/**
+ * Tabla de gestión con filtro y paginación real (22-sep-2026) --
+ * distinta de listarConductoresCoop (arriba), que se deja intacta
+ * para el selector de conductor de Viajes.
+ */
+export interface FiltrosConductores {
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoConductores {
+  filas: ConductorResumen[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function buscarConductoresCoop(
+  token: string,
+  filtros: FiltrosConductores,
+): Promise<ResultadoConductores> {
+  const params = new URLSearchParams();
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/coop/conductores/buscar?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar los conductores.");
+  return cuerpo as ResultadoConductores;
 }
 
 export async function crearConductorCoop(
