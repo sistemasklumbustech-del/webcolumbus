@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   listarCredencialesApi,
   crearCredencialApi,
   rotarCredencialApi,
   revocarCredencialApi,
   actualizarWebhookCredencialApi,
-  type CredencialApiCooperativa,
+  type FiltrosCredencialesApi,
+  type ResultadoCredencialesApi,
   type CredencialApiRecienCreada,
 } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
+
+const LIMITE_PAGINA = 25;
 
 function formatearFecha(iso: string) {
   return new Date(iso).toLocaleDateString("es-EC", {
@@ -30,7 +33,13 @@ function formatearFecha(iso: string) {
  * después de eso, ni este mismo panel puede volver a recuperarla.
  */
 export default function CredencialesApiPage() {
-  const [credenciales, setCredenciales] = useState<CredencialApiCooperativa[] | null>(null);
+  const [resultado, setResultado] = useState<ResultadoCredencialesApi | null>(null);
+  const [cargandoLista, setCargandoLista] = useState(false);
+  // Paginación real (23-sep-2026) -- ver el comentario del backend.
+  const [estadoFiltro, setEstadoFiltro] = useState("");
+  const [busquedaFiltro, setBusquedaFiltro] = useState("");
+  const [aplicados, setAplicados] = useState<FiltrosCredencialesApi>({ pagina: 1, limite: LIMITE_PAGINA });
+  const [pagina, setPagina] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
@@ -43,17 +52,35 @@ export default function CredencialesApiPage() {
   const [idConfirmandoRevocar, setIdConfirmandoRevocar] = useState<string | null>(null);
   const [webhookEditando, setWebhookEditando] = useState<Record<string, string>>({});
 
-  function cargar() {
+  const cargar = useCallback(() => {
     const token = obtenerToken();
     if (!token) return;
-    listarCredencialesApi(token)
-      .then(setCredenciales)
-      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar."));
+    setCargandoLista(true);
+    listarCredencialesApi(token, { ...aplicados, pagina, limite: LIMITE_PAGINA })
+      .then(setResultado)
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar."))
+      .finally(() => setCargandoLista(false));
+  }, [aplicados, pagina]);
+
+  useEffect(cargar, [cargar]);
+
+  function filtrar(e: React.FormEvent) {
+    e.preventDefault();
+    setPagina(1);
+    setAplicados({
+      activo: estadoFiltro === "" ? undefined : estadoFiltro === "activa",
+      busqueda: busquedaFiltro.trim() || undefined,
+      pagina: 1,
+      limite: LIMITE_PAGINA,
+    });
   }
 
-  useEffect(() => {
-    cargar();
-  }, []);
+  function limpiarFiltros() {
+    setEstadoFiltro("");
+    setBusquedaFiltro("");
+    setPagina(1);
+    setAplicados({ pagina: 1, limite: LIMITE_PAGINA });
+  }
 
   async function crear(e: React.FormEvent) {
     e.preventDefault();
@@ -141,11 +168,11 @@ export default function CredencialesApiPage() {
     }
   }
 
-  const activas = credenciales?.filter((c) => c.activo) ?? [];
-  const revocadas = credenciales?.filter((c) => !c.activo) ?? [];
+  const activas = resultado?.filas.filter((c) => c.activo) ?? [];
+  const revocadas = resultado?.filas.filter((c) => !c.activo) ?? [];
 
   return (
-    <main className="mx-auto max-w-2xl flex-1 px-4 py-10">
+    <div className="mx-auto w-full max-w-2xl">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
 
       <h1 className="font-display text-2xl font-bold text-brand-dark">Credenciales API</h1>
@@ -221,11 +248,54 @@ export default function CredencialesApiPage() {
         </button>
       </form>
 
-      {credenciales === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+      <form
+        onSubmit={filtrar}
+        className="mt-6 grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-3 sm:items-end"
+      >
+        <div>
+          <label htmlFor="credencial-filtro-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Estado
+          </label>
+          <select
+            id="credencial-filtro-estado"
+            value={estadoFiltro}
+            onChange={(e) => setEstadoFiltro(e.target.value)}
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          >
+            <option value="">Todas</option>
+            <option value="activa">Activas</option>
+            <option value="revocada">Revocadas</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="credencial-filtro-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Buscar
+          </label>
+          <input
+            id="credencial-filtro-busqueda"
+            value={busquedaFiltro}
+            onChange={(e) => setBusquedaFiltro(e.target.value)}
+            placeholder="Prefijo de la llave o webhook"
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+            Filtrar
+          </button>
+          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+            Limpiar
+          </button>
+        </div>
+      </form>
 
-      {credenciales !== null && credenciales.length === 0 && (
+      {resultado === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+
+      {resultado !== null && resultado.total === 0 && !cargandoLista && (
         <p className="mt-8 text-center text-sm text-brand-dark/50">
-          Todavía no tienes ninguna credencial. Genera la primera arriba.
+          {aplicados.activo !== undefined || aplicados.busqueda
+            ? "No hay credenciales que coincidan con estos filtros."
+            : "Todavía no tienes ninguna credencial. Genera la primera arriba."}
         </p>
       )}
 
@@ -246,7 +316,7 @@ export default function CredencialesApiPage() {
                 <label htmlFor={`credencial-webhook-${c.id}`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
                   Webhook
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     id={`credencial-webhook-${c.id}`}
                     type="url"
@@ -255,7 +325,7 @@ export default function CredencialesApiPage() {
                       setWebhookEditando((w) => ({ ...w, [c.id]: e.target.value }))
                     }
                     placeholder="https://tu-sistema.com/webhooks/columbus"
-                    className="flex-1 rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                    className="min-w-0 flex-1 rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
                   />
                   <button
                     type="button"
@@ -268,7 +338,7 @@ export default function CredencialesApiPage() {
                 </div>
               </div>
 
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => rotar(c.id)}
@@ -328,6 +398,30 @@ export default function CredencialesApiPage() {
           ))}
         </div>
       )}
-    </main>
+
+      {resultado !== null && resultado.total > 0 && (
+        <div className="mt-6 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+          <span>
+            {resultado.total} credencial(es) · Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA))}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPagina((p) => Math.max(1, p - 1))}
+              disabled={pagina <= 1 || cargandoLista}
+              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => setPagina((p) => Math.min(Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)), p + 1))}
+              disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) || cargandoLista}
+              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

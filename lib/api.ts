@@ -523,14 +523,37 @@ export interface CredencialApiRecienCreada {
   apiKeyCompleta: string;
 }
 
-export async function listarCredencialesApi(token: string): Promise<CredencialApiCooperativa[]> {
-  const res = await fetch(`${API_URL}/coop/credenciales-api`, {
+export interface FiltrosCredencialesApi {
+  activo?: boolean;
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoCredencialesApi {
+  filas: CredencialApiCooperativa[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarCredencialesApi(
+  token: string,
+  filtros: FiltrosCredencialesApi,
+): Promise<ResultadoCredencialesApi> {
+  const params = new URLSearchParams();
+  if (filtros.activo !== undefined) params.set("activo", String(filtros.activo));
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/coop/credenciales-api?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar las credenciales API.");
-  return cuerpo as CredencialApiCooperativa[];
+  return cuerpo as ResultadoCredencialesApi;
 }
 
 export async function crearCredencialApi(
