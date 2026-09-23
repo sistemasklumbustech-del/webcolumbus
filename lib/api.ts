@@ -309,8 +309,42 @@ export interface FilaVentaDelDia {
   totalVentas: number;
 }
 
-export async function obtenerDashboardCoop(token: string): Promise<FilaVentaDelDia[]> {
-  const res = await fetch(`${API_URL}/coop/dashboard`, {
+export interface RangoDashboardCoop {
+  desde?: string;
+  hasta?: string;
+}
+
+export interface FilaVentaPorDia {
+  fecha: string;
+  totalBoletos: number;
+  totalVentas: number;
+}
+
+function paramsRangoDashboard(rango?: RangoDashboardCoop): string {
+  const params = new URLSearchParams();
+  if (rango?.desde) params.set("desde", rango.desde);
+  if (rango?.hasta) params.set("hasta", rango.hasta);
+  const texto = params.toString();
+  return texto ? `?${texto}` : "";
+}
+
+export async function obtenerDashboardPorDiaCoop(
+  token: string,
+  rango?: RangoDashboardCoop,
+): Promise<FilaVentaPorDia[]> {
+  const res = await fetch(`${API_URL}/coop/dashboard/por-dia${paramsRangoDashboard(rango)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) {
+    throw new Error(cuerpo?.message ?? "No se pudo cargar el consolidado por día.");
+  }
+  return cuerpo as FilaVentaPorDia[];
+}
+
+export async function obtenerDashboardCoop(token: string, rango?: RangoDashboardCoop): Promise<FilaVentaDelDia[]> {
+  const res = await fetch(`${API_URL}/coop/dashboard${paramsRangoDashboard(rango)}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });

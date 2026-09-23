@@ -3,16 +3,50 @@
 import { useEffect, useState } from "react";
 import {
   obtenerDashboardCoop,
+  obtenerDashboardPorDiaCoop,
   obtenerConfiguracionFiscal,
   actualizarConfiguracionFiscal,
   obtenerPerfilCoop,
   actualizarPerfilCoop,
   listarViajesCoop,
   type FilaVentaDelDia,
+  type FilaVentaPorDia,
   type ViajeCoopResumen,
 } from "@/lib/api";
 import { obtenerToken, decodificarToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
+
+/** Día calendario de Ecuador, YYYY-MM-DD (mismo criterio que usa el backend). */
+function hoyEcuador() {
+  return new Date().toLocaleDateString("sv-SE", { timeZone: "America/Guayaquil" });
+}
+
+/** Suma (o resta) días a un YYYY-MM-DD sin depender de la zona horaria del navegador. */
+function sumarDias(fecha: string, dias: number) {
+  const d = new Date(`${fecha}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().slice(0, 10);
+}
+
+function primerDiaDelMes(fecha: string) {
+  return `${fecha.slice(0, 8)}01`;
+}
+
+function ultimoDiaDelMes(fecha: string) {
+  const d = new Date(`${primerDiaDelMes(fecha)}T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + 1);
+  d.setUTCDate(0);
+  return d.toISOString().slice(0, 10);
+}
+
+function formatearDia(fecha: string) {
+  return new Date(`${fecha}T12:00:00Z`).toLocaleDateString("es-EC", {
+    timeZone: "UTC",
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+  });
+}
 
 function formatearDolares(monto: number) {
   return new Intl.NumberFormat("es-EC", { style: "currency", currency: "USD" }).format(monto);
@@ -89,6 +123,14 @@ export default function PanelEmpresaDashboard() {
   const [filas, setFilas] = useState<FilaVentaDelDia[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Período consultado (23-sep-2026) -- antes solo se veía "hoy". Los
+  // campos de fecha son el borrador; `periodo` es lo ya aplicado.
+  const [desdeCampo, setDesdeCampo] = useState(hoyEcuador);
+  const [hastaCampo, setHastaCampo] = useState(hoyEcuador);
+  const [periodo, setPeriodo] = useState(() => ({ desde: hoyEcuador(), hasta: hoyEcuador() }));
+  const [cargandoVentas, setCargandoVentas] = useState(false);
+  const [porDia, setPorDia] = useState<FilaVentaPorDia[] | null>(null);
+
   const [ivaPorcentaje, setIvaPorcentaje] = useState("");
   const [ivaVisible, setIvaVisible] = useState(true);
   const [ivaAutomatico, setIvaAutomatico] = useState(true);
@@ -128,10 +170,6 @@ export default function PanelEmpresaDashboard() {
       return;
     }
 
-    obtenerDashboardCoop(token)
-      .then(setFilas)
-      .catch((err) => setError(err instanceof Error ? err.message : "No se pudo cargar el dashboard."));
-
     obtenerConfiguracionFiscal(token)
       .then((cfg) => {
         setIvaPorcentaje(String(cfg.ivaPorcentaje));
@@ -146,6 +184,40 @@ export default function PanelEmpresaDashboard() {
       .catch((err) => setErrorLogo(err instanceof Error ? err.message : "No se pudo cargar el logo."))
       .finally(() => setCargandoLogo(false));
   }, []);
+
+  // Ventas del período elegido (solo admin_cooperativa; el resto no ve esta sección).
+  useEffect(() => {
+    const token = obtenerToken();
+    if (!token || rolActual !== "admin_cooperativa") return;
+    setCargandoVentas(true);
+    setError(null);
+    Promise.all([obtenerDashboardCoop(token, periodo), obtenerDashboardPorDiaCoop(token, periodo)])
+      .then(([detalle, dias]) => {
+        setFilas(detalle);
+        setPorDia(dias);
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudo cargar el dashboard."))
+      .finally(() => setCargandoVentas(false));
+  }, [periodo, rolActual]);
+
+  function aplicarPeriodo(desde: string, hasta: string) {
+    setDesdeCampo(desde);
+    setHastaCampo(hasta);
+    setPeriodo({ desde, hasta });
+  }
+
+  function aplicarRangoLibre(e: React.FormEvent) {
+    e.preventDefault();
+    if (!desdeCampo || !hastaCampo) {
+      setError("Indica la fecha desde y la fecha hasta.");
+      return;
+    }
+    if (desdeCampo > hastaCampo) {
+      setError('La fecha "desde" no puede ser posterior a "hasta".');
+      return;
+    }
+    setPeriodo({ desde: desdeCampo, hasta: hastaCampo });
+  }
 
   async function guardarLogo(e: React.FormEvent) {
     e.preventDefault();
@@ -192,6 +264,26 @@ export default function PanelEmpresaDashboard() {
   const totalBoletos = filas?.reduce((acc, f) => acc + f.totalBoletos, 0) ?? 0;
   const totalVentas = filas?.reduce((acc, f) => acc + f.totalVentas, 0) ?? 0;
 
+  const hoy = hoyEcuador();
+  const ayer = sumarDias(hoy, -1);
+  const inicioMesPasado = primerDiaDelMes(sumarDias(primerDiaDelMes(hoy), -1));
+  const esUnSoloDia = periodo.desde === periodo.hasta;
+  const etiquetaPeriodo = esUnSoloDia
+    ? periodo.desde === hoy
+      ? "hoy"
+      : periodo.desde === ayer
+        ? "ayer"
+        : `el ${formatearDia(periodo.desde)}`
+    : `del ${formatearDia(periodo.desde)} al ${formatearDia(periodo.hasta)}`;
+  const claseAtajo = (activo: boolean) =>
+    `rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+      activo
+        ? "border-brand bg-brand text-white"
+        : "border-brand-light bg-white text-brand-dark/70 hover:bg-brand-light/40"
+    }`;
+  const totalPorDiaBoletos = porDia?.reduce((acc, d) => acc + d.totalBoletos, 0) ?? 0;
+  const totalPorDiaVentas = porDia?.reduce((acc, d) => acc + d.totalVentas, 0) ?? 0;
+
   return (
     <div className="space-y-6">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
@@ -199,10 +291,66 @@ export default function PanelEmpresaDashboard() {
       {rolActual === "admin_cooperativa" ? (
         <>
           <div>
-            <h1 className="font-display text-2xl font-bold text-brand-dark">Ventas de hoy</h1>
+            <h1 className="font-display text-2xl font-bold text-brand-dark">Ventas</h1>
             <p className="mt-1 text-sm text-brand-dark/70">
-              Resumen de boletos vendidos hoy, en línea y en ventanilla, por ruta y por vendedor.
+              Boletos vendidos en línea y en ventanilla, por ruta y por vendedor. Elige el día o el período que
+              quieres revisar.
             </p>
+          </div>
+
+          <div className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => aplicarPeriodo(hoy, hoy)} className={claseAtajo(periodo.desde === hoy && periodo.hasta === hoy)}>
+                Hoy
+              </button>
+              <button type="button" onClick={() => aplicarPeriodo(ayer, ayer)} className={claseAtajo(periodo.desde === ayer && periodo.hasta === ayer)}>
+                Ayer
+              </button>
+              <button
+                type="button"
+                onClick={() => aplicarPeriodo(primerDiaDelMes(hoy), ultimoDiaDelMes(hoy))}
+                className={claseAtajo(periodo.desde === primerDiaDelMes(hoy) && periodo.hasta === ultimoDiaDelMes(hoy))}
+              >
+                Este mes
+              </button>
+              <button
+                type="button"
+                onClick={() => aplicarPeriodo(inicioMesPasado, ultimoDiaDelMes(inicioMesPasado))}
+                className={claseAtajo(periodo.desde === inicioMesPasado && periodo.hasta === ultimoDiaDelMes(inicioMesPasado))}
+              >
+                Mes pasado
+              </button>
+            </div>
+            <form onSubmit={aplicarRangoLibre} className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-end">
+              <div>
+                <label htmlFor="panel-desde" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                  Desde
+                </label>
+                <input
+                  id="panel-desde"
+                  type="date"
+                  value={desdeCampo}
+                  max={hoy}
+                  onChange={(e) => setDesdeCampo(e.target.value)}
+                  className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                />
+              </div>
+              <div>
+                <label htmlFor="panel-hasta" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                  Hasta
+                </label>
+                <input
+                  id="panel-hasta"
+                  type="date"
+                  value={hastaCampo}
+                  onChange={(e) => setHastaCampo(e.target.value)}
+                  className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                />
+              </div>
+              <button type="submit" className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+                Ver período
+              </button>
+            </form>
           </div>
 
           {error && (
@@ -212,10 +360,10 @@ export default function PanelEmpresaDashboard() {
           )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <TarjetaMetrica icono={IconoBoletos} etiqueta="Boletos vendidos hoy" valor={filas === null ? "—" : totalBoletos} />
+            <TarjetaMetrica icono={IconoBoletos} etiqueta={`Boletos vendidos ${etiquetaPeriodo}`} valor={filas === null ? "—" : totalBoletos} />
             <TarjetaMetrica
               icono={IconoVentas}
-              etiqueta="Total vendido hoy"
+              etiqueta={`Total vendido ${etiquetaPeriodo}`}
               valor={filas === null ? "—" : formatearDolares(totalVentas)}
             />
           </div>
@@ -225,17 +373,17 @@ export default function PanelEmpresaDashboard() {
           <h2 className="font-display text-base font-bold text-brand-dark">Detalle por ruta y vendedor</h2>
         </div>
 
-        {filas === null && !error && (
+        {(filas === null || cargandoVentas) && !error && (
           <p className="px-6 py-8 text-center text-sm text-brand-dark/50">Cargando...</p>
         )}
 
-        {filas !== null && filas.length === 0 && (
+        {filas !== null && filas.length === 0 && !cargandoVentas && (
           <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
-            Todavía no hay ventas registradas hoy.
+            No hay ventas registradas {etiquetaPeriodo}.
           </p>
         )}
 
-        {filas !== null && filas.length > 0 && (
+        {filas !== null && filas.length > 0 && !cargandoVentas && (
           <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
             <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
               <tr>
@@ -262,6 +410,41 @@ export default function PanelEmpresaDashboard() {
           </table></div>
         )}
       </div>
+
+      {!esUnSoloDia && porDia !== null && porDia.length > 0 && !cargandoVentas && (
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+          <div className="border-b border-black/5 px-6 py-4">
+            <h2 className="font-display text-base font-bold text-brand-dark">Consolidado por día</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] text-left text-sm">
+              <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                <tr>
+                  <th className="px-6 py-3">Día</th>
+                  <th className="px-6 py-3 text-right">Boletos</th>
+                  <th className="px-6 py-3 text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/5">
+                {porDia.map((d) => (
+                  <tr key={d.fecha}>
+                    <td className="px-6 py-3 font-medium capitalize text-brand-dark">{formatearDia(d.fecha)}</td>
+                    <td className="px-6 py-3 text-right text-brand-dark/70">{d.totalBoletos}</td>
+                    <td className="px-6 py-3 text-right font-semibold text-brand-dark">{formatearDolares(d.totalVentas)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="border-t-2 border-black/10 bg-brand-light/30 font-bold text-brand-dark">
+                <tr>
+                  <td className="px-6 py-3">Total del período</td>
+                  <td className="px-6 py-3 text-right">{totalPorDiaBoletos}</td>
+                  <td className="px-6 py-3 text-right">{formatearDolares(totalPorDiaVentas)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
         <h2 className="font-display text-base font-bold text-brand-dark">Logo de la cooperativa</h2>
