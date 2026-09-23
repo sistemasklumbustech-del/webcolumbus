@@ -2725,14 +2725,37 @@ export interface SolicitudFactura {
   creadoEn: string;
 }
 
-export async function listarSolicitudesFactura(token: string): Promise<SolicitudFactura[]> {
-  const res = await fetch(`${API_URL}/coop/solicitudes-factura`, {
+export interface FiltrosSolicitudesFactura {
+  estado?: "pendiente" | "emitida";
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoSolicitudesFactura {
+  filas: SolicitudFactura[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarSolicitudesFactura(
+  token: string,
+  filtros: FiltrosSolicitudesFactura,
+): Promise<ResultadoSolicitudesFactura> {
+  const params = new URLSearchParams();
+  if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/coop/solicitudes-factura?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar las solicitudes de factura.");
-  return cuerpo as SolicitudFactura[];
+  return cuerpo as ResultadoSolicitudesFactura;
 }
 
 export async function marcarFacturaEmitida(

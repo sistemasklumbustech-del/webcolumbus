@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   listarSolicitudesFactura,
   marcarFacturaEmitida,
   type SolicitudFactura,
+  type FiltrosSolicitudesFactura,
+  type ResultadoSolicitudesFactura,
 } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
+
+const LIMITE_PAGINA = 25;
 
 function formatearFecha(iso: string) {
   return new Date(iso).toLocaleString("es-EC", {
@@ -47,9 +51,9 @@ function TarjetaSolicitud({
 
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="font-display font-bold text-brand-dark">{solicitud.pasajeroNombre}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="break-words font-display font-bold text-brand-dark">{solicitud.pasajeroNombre}</p>
           <p className="text-xs text-brand-dark/40">
             Solicitado {formatearFecha(solicitud.creadoEn)}
           </p>
@@ -67,7 +71,7 @@ function TarjetaSolicitud({
 
       <div className="mt-3 rounded-lg bg-brand-light/30 p-3 text-sm text-brand-dark">
         {Object.entries(solicitud.datosTributarios).map(([clave, valor]) => (
-          <p key={clave}>
+          <p key={clave} className="break-words">
             <span className="text-brand-dark/50 capitalize">{clave}: </span>
             <span className="font-semibold">{valor}</span>
           </p>
@@ -108,24 +112,51 @@ function TarjetaSolicitud({
 }
 
 export default function SolicitudesFacturaPage() {
-  const [solicitudes, setSolicitudes] = useState<SolicitudFactura[] | null>(null);
+  const [resultado, setResultado] = useState<ResultadoSolicitudesFactura | null>(null);
+  const [cargandoLista, setCargandoLista] = useState(false);
+  // Paginación real (23-sep-2026) -- ver el comentario del backend.
+  const [estadoFiltro, setEstadoFiltro] = useState("");
+  const [busquedaFiltro, setBusquedaFiltro] = useState("");
+  const [aplicados, setAplicados] = useState<FiltrosSolicitudesFactura>({ pagina: 1, limite: LIMITE_PAGINA });
+  const [pagina, setPagina] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
-  function cargar() {
+  const cargar = useCallback(() => {
     const token = obtenerToken();
     if (!token) return;
-    listarSolicitudesFactura(token)
-      .then(setSolicitudes)
-      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar."));
-  }
-  useEffect(cargar, []); // eslint-disable-line react-hooks/exhaustive-deps
+    setCargandoLista(true);
+    listarSolicitudesFactura(token, { ...aplicados, pagina, limite: LIMITE_PAGINA })
+      .then(setResultado)
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar."))
+      .finally(() => setCargandoLista(false));
+  }, [aplicados, pagina]);
 
-  const pendientes = solicitudes?.filter((s) => s.estado === "pendiente") ?? [];
-  const emitidas = solicitudes?.filter((s) => s.estado === "emitida") ?? [];
+  useEffect(cargar, [cargar]);
+
+  function filtrar(e: React.FormEvent) {
+    e.preventDefault();
+    setPagina(1);
+    setAplicados({
+      estado: estadoFiltro === "pendiente" || estadoFiltro === "emitida" ? estadoFiltro : undefined,
+      busqueda: busquedaFiltro.trim() || undefined,
+      pagina: 1,
+      limite: LIMITE_PAGINA,
+    });
+  }
+
+  function limpiarFiltros() {
+    setEstadoFiltro("");
+    setBusquedaFiltro("");
+    setPagina(1);
+    setAplicados({ pagina: 1, limite: LIMITE_PAGINA });
+  }
+
+  const pendientes = resultado?.filas.filter((s) => s.estado === "pendiente") ?? [];
+  const emitidas = resultado?.filas.filter((s) => s.estado === "emitida") ?? [];
 
   return (
-    <main className="mx-auto max-w-2xl flex-1 px-4 py-10">
+    <div className="mx-auto w-full max-w-2xl">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
 
       <h1 className="font-display text-2xl font-bold text-brand-dark">Solicitudes de factura</h1>
@@ -140,11 +171,54 @@ export default function SolicitudesFacturaPage() {
         </div>
       )}
 
-      {solicitudes === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+      <form
+        onSubmit={filtrar}
+        className="mt-6 grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-3 sm:items-end"
+      >
+        <div>
+          <label htmlFor="factura-filtro-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Estado
+          </label>
+          <select
+            id="factura-filtro-estado"
+            value={estadoFiltro}
+            onChange={(e) => setEstadoFiltro(e.target.value)}
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          >
+            <option value="">Todas</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="emitida">Emitidas</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="factura-filtro-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Buscar
+          </label>
+          <input
+            id="factura-filtro-busqueda"
+            value={busquedaFiltro}
+            onChange={(e) => setBusquedaFiltro(e.target.value)}
+            placeholder="Pasajero, RUC o razón social"
+            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+            Filtrar
+          </button>
+          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+            Limpiar
+          </button>
+        </div>
+      </form>
 
-      {solicitudes !== null && solicitudes.length === 0 && (
+      {resultado === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+
+      {resultado !== null && resultado.total === 0 && !cargandoLista && (
         <p className="mt-8 text-center text-sm text-brand-dark/50">
-          Todavía no hay ninguna solicitud de factura.
+          {aplicados.estado || aplicados.busqueda
+            ? "No hay solicitudes que coincidan con estos filtros."
+            : "Todavía no hay ninguna solicitud de factura."}
         </p>
       )}
 
@@ -174,6 +248,30 @@ export default function SolicitudesFacturaPage() {
           </div>
         </div>
       )}
-    </main>
+
+      {resultado !== null && resultado.total > 0 && (
+        <div className="mt-6 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+          <span>
+            {resultado.total} solicitud(es) · Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA))}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPagina((p) => Math.max(1, p - 1))}
+              disabled={pagina <= 1 || cargandoLista}
+              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => setPagina((p) => Math.min(Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)), p + 1))}
+              disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) || cargandoLista}
+              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
