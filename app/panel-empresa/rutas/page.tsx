@@ -1,9 +1,9 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import {
   crearRutaCoop,
-  listarRutasCoop,
+  buscarRutasCoop,
   listarTiposVehiculoCoop,
   listarHorariosRutaCoop,
   crearHorarioRutaCoop,
@@ -14,11 +14,12 @@ import {
   agregarParadaCoop,
   eliminarParadaCoop,
   type PuntoOperacion,
-  type RutaResumen,
   type TipoVehiculoResumen,
   type HorarioRutaResumen,
   type ResultadoCancelacionMasiva,
   type ParadaResumen,
+  type FiltrosRutas,
+  type ResultadoRutas,
 } from "@/lib/api";
 import { obtenerToken, decodificarToken } from "@/lib/auth";
 import { SelectorCiudad } from "@/components/SelectorCiudad";
@@ -35,10 +36,21 @@ const DIAS_SEMANA = [
   { valor: 0, etiqueta: "Dom" },
 ];
 
+const LIMITE_RUTAS_PAGINA = 25;
+
 export default function RutasPage() {
-  const [rutas, setRutas] = useState<RutaResumen[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
+
+  // Paginación real (22-sep-2026) -- ver el comentario del backend.
+  const [busquedaFiltro, setBusquedaFiltro] = useState("");
+  const [aplicados, setAplicados] = useState<FiltrosRutas>({
+    pagina: 1,
+    limite: LIMITE_RUTAS_PAGINA,
+  });
+  const [pagina, setPagina] = useState(1);
+  const [resultado, setResultado] = useState<ResultadoRutas | null>(null);
+  const [cargando, setCargando] = useState(false);
 
   const [origen, setOrigen] = useState<PuntoOperacion | null>(null);
   const [destino, setDestino] = useState<PuntoOperacion | null>(null);
@@ -156,15 +168,33 @@ export default function RutasPage() {
       .catch((err) => setErrorParada(err instanceof Error ? err.message : "No se pudo eliminar la parada."));
   }
 
-  function cargarRutas() {
+  const cargarRutas = useCallback(() => {
     const token = obtenerToken();
     if (!token) return;
-    listarRutasCoop(token)
-      .then(setRutas)
-      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar las rutas."));
+    setCargando(true);
+    buscarRutasCoop(token, { ...aplicados, pagina, limite: LIMITE_RUTAS_PAGINA })
+      .then(setResultado)
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar las rutas."))
+      .finally(() => setCargando(false));
+  }, [aplicados, pagina]);
+
+  useEffect(cargarRutas, [cargarRutas]);
+
+  function filtrarRutas(e: React.FormEvent) {
+    e.preventDefault();
+    setPagina(1);
+    setAplicados({
+      busqueda: busquedaFiltro.trim() || undefined,
+      pagina: 1,
+      limite: LIMITE_RUTAS_PAGINA,
+    });
   }
 
-  useEffect(cargarRutas, []);
+  function limpiarFiltrosRutas() {
+    setBusquedaFiltro("");
+    setPagina(1);
+    setAplicados({ pagina: 1, limite: LIMITE_RUTAS_PAGINA });
+  }
 
   useEffect(() => {
     const token = obtenerToken();
@@ -367,20 +397,44 @@ export default function RutasPage() {
         </div>
       )}
 
+      <form
+        onSubmit={filtrarRutas}
+        className="flex flex-wrap items-end gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+      >
+        <div className="min-w-[220px] flex-1">
+          <label htmlFor="rutas-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Buscar
+          </label>
+          <input
+            id="rutas-busqueda"
+            value={busquedaFiltro}
+            onChange={(e) => setBusquedaFiltro(e.target.value)}
+            placeholder="Nombre, origen o destino"
+            className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          />
+        </div>
+        <button type="submit" className="rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95">
+          Filtrar
+        </button>
+        <button type="button" onClick={limpiarFiltrosRutas} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          Limpiar
+        </button>
+      </form>
+
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
         <div className="border-b border-black/5 px-6 py-4">
           <h2 className="font-display text-base font-bold text-brand-dark">
-            {rutas === null ? "Cargando..." : `${rutas.length} ruta${rutas.length === 1 ? "" : "s"}`}
+            {resultado === null ? "Cargando..." : `${resultado.total} ruta${resultado.total === 1 ? "" : "s"} con estos filtros`}
           </h2>
         </div>
 
-        {rutas !== null && rutas.length === 0 && (
+        {resultado !== null && resultado.filas.length === 0 && !cargando && (
           <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
-            Todavía no has creado ninguna ruta — usa el formulario de arriba.
+            No hay rutas que coincidan con estos filtros.
           </p>
         )}
 
-        {rutas !== null && rutas.length > 0 && (
+        {resultado !== null && resultado.filas.length > 0 && (
           <table className="w-full text-left text-sm">
             <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
               <tr>
@@ -391,7 +445,7 @@ export default function RutasPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
-              {rutas.map((r) => (
+              {resultado.filas.map((r) => (
                 <Fragment key={r.id}>
                   <tr>
                     <td className="px-6 py-3 font-medium text-brand-dark">
@@ -813,6 +867,34 @@ export default function RutasPage() {
               ))}
             </tbody>
           </table>
+        )}
+
+        {resultado !== null && resultado.total > 0 && (
+          <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+            <span>
+              Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_RUTAS_PAGINA))}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                disabled={pagina <= 1 || cargando}
+                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() =>
+                  setPagina((p) =>
+                    Math.min(Math.max(1, Math.ceil(resultado.total / LIMITE_RUTAS_PAGINA)), p + 1),
+                  )
+                }
+                disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_RUTAS_PAGINA)) || cargando}
+                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

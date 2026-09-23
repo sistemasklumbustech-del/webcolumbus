@@ -739,6 +739,42 @@ export async function listarRutasCoop(token: string): Promise<RutaResumen[]> {
   return cuerpo as RutaResumen[];
 }
 
+/**
+ * Tabla de gestión con filtro y paginación real (22-sep-2026) --
+ * distinta de listarRutasCoop (arriba), que se deja intacta para los
+ * selectores de Viajes (necesitan la lista completa sin paginar).
+ */
+export interface FiltrosRutas {
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoRutas {
+  filas: RutaResumen[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function buscarRutasCoop(
+  token: string,
+  filtros: FiltrosRutas,
+): Promise<ResultadoRutas> {
+  const params = new URLSearchParams();
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/coop/rutas/buscar?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar las rutas.");
+  return cuerpo as ResultadoRutas;
+}
+
 export async function crearRutaCoop(
   token: string,
   datos: { origenPuntoOperacionId: string; destinoPuntoOperacionId: string; precioBaseReferencia: number; nombre?: string },
