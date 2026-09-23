@@ -2744,14 +2744,42 @@ export interface LeadAnunciante {
   creadoEn: string;
 }
 
-export async function listarLeads(token: string): Promise<LeadAnunciante[]> {
-  const res = await fetch(`${API_URL}/admin/leads`, {
+/** Paginación real (22-sep-2026) -- antes traía todos los leads de una sola vez. */
+export interface FiltrosLeads {
+  estado?: "nuevo" | "contactado" | "cerrado";
+  busqueda?: string;
+  desde?: string;
+  hasta?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoLeads {
+  filas: LeadAnunciante[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarLeads(
+  token: string,
+  filtros: FiltrosLeads,
+): Promise<ResultadoLeads> {
+  const params = new URLSearchParams();
+  if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  if (filtros.desde) params.set("desde", filtros.desde);
+  if (filtros.hasta) params.set("hasta", filtros.hasta);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/admin/leads?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar los leads.");
-  return cuerpo as LeadAnunciante[];
+  return cuerpo as ResultadoLeads;
 }
 
 export async function actualizarEstadoLead(

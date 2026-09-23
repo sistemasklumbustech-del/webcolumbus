@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   crearEspacioPublicitario,
   listarEspaciosPublicitarios,
@@ -15,7 +15,8 @@ import {
   obtenerMetricasCampana,
   type EspacioPublicitario,
   type PlanComercial,
-  type LeadAnunciante,
+  type FiltrosLeads,
+  type ResultadoLeads,
   type CampanaPublicitaria,
   type MetricaDiaCampana,
 } from "@/lib/api";
@@ -278,15 +279,56 @@ function TabPlanes({ onExito, onError }: { onExito: (m: string) => void; onError
   );
 }
 
-function TabLeads({ onExito, onError }: { onExito: (m: string) => void; onError: (m: string) => void }) {
-  const [leads, setLeads] = useState<LeadAnunciante[] | null>(null);
+const LIMITE_LEADS_PAGINA = 25;
 
-  function cargar() {
+function TabLeads({ onExito, onError }: { onExito: (m: string) => void; onError: (m: string) => void }) {
+  const [estadoFiltro, setEstadoFiltro] = useState<"" | "nuevo" | "contactado" | "cerrado">("");
+  const [busquedaFiltro, setBusquedaFiltro] = useState("");
+  const [desdeFiltro, setDesdeFiltro] = useState("");
+  const [hastaFiltro, setHastaFiltro] = useState("");
+  const [aplicados, setAplicados] = useState<FiltrosLeads>({
+    pagina: 1,
+    limite: LIMITE_LEADS_PAGINA,
+  });
+  const [pagina, setPagina] = useState(1);
+
+  const [resultado, setResultado] = useState<ResultadoLeads | null>(null);
+  const [cargando, setCargando] = useState(false);
+
+  const cargar = useCallback(() => {
     const token = obtenerToken();
     if (!token) return;
-    listarLeads(token).then(setLeads).catch((err) => onError(err.message));
+    setCargando(true);
+    listarLeads(token, { ...aplicados, pagina, limite: LIMITE_LEADS_PAGINA })
+      .then(setResultado)
+      .catch((err) => onError(err.message))
+      .finally(() => setCargando(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aplicados, pagina]);
+
+  useEffect(cargar, [cargar]);
+
+  function filtrar(e: React.FormEvent) {
+    e.preventDefault();
+    setPagina(1);
+    setAplicados({
+      estado: estadoFiltro || undefined,
+      busqueda: busquedaFiltro.trim() || undefined,
+      desde: desdeFiltro || undefined,
+      hasta: hastaFiltro || undefined,
+      pagina: 1,
+      limite: LIMITE_LEADS_PAGINA,
+    });
   }
-  useEffect(cargar, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function limpiarFiltros() {
+    setEstadoFiltro("");
+    setBusquedaFiltro("");
+    setDesdeFiltro("");
+    setHastaFiltro("");
+    setPagina(1);
+    setAplicados({ pagina: 1, limite: LIMITE_LEADS_PAGINA });
+  }
 
   async function cambiarEstado(id: string, estado: "nuevo" | "contactado" | "cerrado") {
     const token = obtenerToken();
@@ -305,42 +347,116 @@ function TabLeads({ onExito, onError }: { onExito: (m: string) => void; onError:
     contactado: "bg-blue-100 text-blue-700",
     cerrado: "bg-emerald-100 text-emerald-700",
   };
+  const totalPaginas = resultado ? Math.max(1, Math.ceil(resultado.total / LIMITE_LEADS_PAGINA)) : 1;
+  const claseCampo =
+    "w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+  const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
 
   return (
-    <div className="space-y-2">
-      {leads !== null && leads.length === 0 && (
-        <p className="mt-8 text-center text-sm text-brand-dark/50">Todavía no hay leads.</p>
-      )}
-      {leads?.map((l) => (
-        <div key={l.id} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-semibold text-brand-dark">{l.nombreEmpresa}</p>
-              <p className="text-xs text-brand-dark/50">
-                {l.contactoNombre ?? "Sin nombre"} · {l.contactoCorreo}
-                {l.contactoTelefono && ` · ${l.contactoTelefono}`}
-              </p>
-              {l.mensaje && <p className="mt-1 text-sm text-brand-dark/70">{l.mensaje}</p>}
+    <div className="space-y-4">
+      <form
+        onSubmit={filtrar}
+        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-5 lg:items-end"
+      >
+        <div>
+          <label htmlFor="leads-estado" className={claseEtiqueta}>Estado</label>
+          <select
+            id="leads-estado"
+            value={estadoFiltro}
+            onChange={(e) => setEstadoFiltro(e.target.value as "" | "nuevo" | "contactado" | "cerrado")}
+            className={claseCampo}
+          >
+            <option value="">Todos</option>
+            <option value="nuevo">Nuevo</option>
+            <option value="contactado">Contactado</option>
+            <option value="cerrado">Cerrado</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="leads-desde" className={claseEtiqueta}>Desde</label>
+          <input id="leads-desde" type="date" value={desdeFiltro} onChange={(e) => setDesdeFiltro(e.target.value)} className={claseCampo} />
+        </div>
+        <div>
+          <label htmlFor="leads-hasta" className={claseEtiqueta}>Hasta</label>
+          <input id="leads-hasta" type="date" value={hastaFiltro} onChange={(e) => setHastaFiltro(e.target.value)} className={claseCampo} />
+        </div>
+        <div>
+          <label htmlFor="leads-busqueda" className={claseEtiqueta}>Buscar</label>
+          <input
+            id="leads-busqueda"
+            value={busquedaFiltro}
+            onChange={(e) => setBusquedaFiltro(e.target.value)}
+            placeholder="Empresa, nombre o correo"
+            className={claseCampo}
+          />
+        </div>
+        <div className="flex gap-2">
+          <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+            Filtrar
+          </button>
+          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+            Limpiar
+          </button>
+        </div>
+      </form>
+
+      <div className="space-y-2">
+        {resultado !== null && resultado.filas.length === 0 && !cargando && (
+          <p className="mt-8 text-center text-sm text-brand-dark/50">No hay leads que coincidan con estos filtros.</p>
+        )}
+        {resultado?.filas.map((l) => (
+          <div key={l.id} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-semibold text-brand-dark">{l.nombreEmpresa}</p>
+                <p className="text-xs text-brand-dark/50">
+                  {l.contactoNombre ?? "Sin nombre"} · {l.contactoCorreo}
+                  {l.contactoTelefono && ` · ${l.contactoTelefono}`}
+                </p>
+                {l.mensaje && <p className="mt-1 text-sm text-brand-dark/70">{l.mensaje}</p>}
+              </div>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${colores[l.estado]}`}>
+                {l.estado}
+              </span>
             </div>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${colores[l.estado]}`}>
-              {l.estado}
-            </span>
+            <div className="mt-2 flex gap-2">
+              {(["nuevo", "contactado", "cerrado"] as const)
+                .filter((e) => e !== l.estado)
+                .map((e) => (
+                  <button
+                    key={e}
+                    onClick={() => cambiarEstado(l.id, e)}
+                    className="rounded-lg border border-brand-light px-3 py-1 text-xs font-semibold text-brand-dark/70 hover:bg-brand-light/40"
+                  >
+                    Marcar {e}
+                  </button>
+                ))}
+            </div>
           </div>
-          <div className="mt-2 flex gap-2">
-            {(["nuevo", "contactado", "cerrado"] as const)
-              .filter((e) => e !== l.estado)
-              .map((e) => (
-                <button
-                  key={e}
-                  onClick={() => cambiarEstado(l.id, e)}
-                  className="rounded-lg border border-brand-light px-3 py-1 text-xs font-semibold text-brand-dark/70 hover:bg-brand-light/40"
-                >
-                  Marcar {e}
-                </button>
-              ))}
+        ))}
+      </div>
+
+      {resultado !== null && resultado.total > 0 && (
+        <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+          <span>Página {pagina} de {totalPaginas}</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPagina((p) => Math.max(1, p - 1))}
+              disabled={pagina <= 1 || cargando}
+              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+              disabled={pagina >= totalPaginas || cargando}
+              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Siguiente
+            </button>
           </div>
         </div>
-      ))}
+      )}
     </div>
   );
 }
