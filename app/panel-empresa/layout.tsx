@@ -369,7 +369,7 @@ export default function PanelEmpresaLayout({ children }: { children: React.React
         </div>
       )}
 
-      <div className="flex min-h-full flex-1 flex-col">
+      <div className="flex min-h-full min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-black/5 bg-white px-4 lg:px-8">
           <div className="flex items-center gap-3">
             <button
@@ -409,7 +409,7 @@ export default function PanelEmpresaLayout({ children }: { children: React.React
             </Link>
           </div>
         )}
-        <main className="flex-1 px-4 py-6 lg:px-8">{children}</main>
+        <main className="min-w-0 flex-1 px-4 py-6 lg:px-8">{children}</main>
       </div>
     </div>
   );

@@ -540,7 +540,7 @@ export default function UnidadesPage() {
             </p>
           )}
           {tipos !== null && tipos.length > 0 && (
-            <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
               <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
                 <tr>
                   <th className="px-6 py-3">Nombre</th>
@@ -582,7 +582,7 @@ export default function UnidadesPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </div>
       </section>
@@ -704,7 +704,7 @@ export default function UnidadesPage() {
             </p>
           )}
           {resultadoUnidades !== null && resultadoUnidades.filas.length > 0 && (
-            <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
               <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
                 <tr>
                   <th className="px-6 py-3">Placa</th>
@@ -742,7 +742,7 @@ export default function UnidadesPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
 
           {resultadoUnidades !== null && resultadoUnidades.total > 0 && (

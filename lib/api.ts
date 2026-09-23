@@ -2056,14 +2056,37 @@ export interface BannerPropio {
   orden?: number;
 }
 
-export async function listarBannersPropiosAdmin(token: string): Promise<BannerPropio[]> {
-  const res = await fetch(`${API_URL}/admin/banners-propios`, {
+export interface FiltrosBanners {
+  activo?: boolean;
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoBanners {
+  filas: BannerPropio[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarBannersPropiosAdmin(
+  token: string,
+  filtros: FiltrosBanners,
+): Promise<ResultadoBanners> {
+  const params = new URLSearchParams();
+  if (filtros.activo !== undefined) params.set("activo", String(filtros.activo));
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/admin/banners-propios?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar los banners.");
-  return cuerpo as BannerPropio[];
+  return cuerpo as ResultadoBanners;
 }
 
 export async function crearBannerPropioAdmin(

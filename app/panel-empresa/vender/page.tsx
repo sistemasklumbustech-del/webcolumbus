@@ -35,7 +35,7 @@ export default function VenderVentanillaPage() {
         <p className="text-sm text-brand-dark/50">No hay salidas programadas todavía.</p>
       ) : (
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
             <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/60">
               <tr>
                 <th className="px-4 py-3">Ruta</th>
@@ -73,7 +73,7 @@ export default function VenderVentanillaPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
     </div>

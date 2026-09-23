@@ -73,7 +73,7 @@ export default function ManifiestoViajePage() {
         )}
 
         {pasajeros !== null && pasajeros.length > 0 && (
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
             <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
               <tr>
                 <th className="px-6 py-3">Asiento</th>
@@ -116,7 +116,7 @@ export default function ManifiestoViajePage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
 

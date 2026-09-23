@@ -236,7 +236,7 @@ export default function PanelEmpresaDashboard() {
         )}
 
         {filas !== null && filas.length > 0 && (
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
             <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
               <tr>
                 <th className="px-6 py-3">Ruta</th>
@@ -259,7 +259,7 @@ export default function PanelEmpresaDashboard() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
 
@@ -393,7 +393,7 @@ export default function PanelEmpresaDashboard() {
 
           {viajesHoy !== null && viajesHoy.length > 0 && (
             <div className="mt-4 overflow-hidden rounded-xl ring-1 ring-black/5">
-              <table className="w-full text-left text-sm">
+              <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
                 <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
                   <tr>
                     <th className="px-4 py-3">Hora</th>
@@ -412,7 +412,7 @@ export default function PanelEmpresaDashboard() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           )}
         </div>
