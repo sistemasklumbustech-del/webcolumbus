@@ -3112,14 +3112,39 @@ export interface AdministradorResumen {
   creadoEn: string;
 }
 
-export async function listarAdministradoresAdmin(token: string): Promise<AdministradorResumen[]> {
-  const res = await fetch(`${API_URL}/admin/administradores`, {
+export interface FiltrosAdministradores {
+  rol?: string;
+  activo?: boolean;
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoAdministradores {
+  filas: AdministradorResumen[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarAdministradoresAdmin(
+  token: string,
+  filtros: FiltrosAdministradores,
+): Promise<ResultadoAdministradores> {
+  const params = new URLSearchParams();
+  if (filtros.rol) params.set("rol", filtros.rol);
+  if (filtros.activo !== undefined) params.set("activo", String(filtros.activo));
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+
+  const res = await fetch(`${API_URL}/admin/administradores?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar los administradores.");
-  return cuerpo as AdministradorResumen[];
+  return cuerpo as ResultadoAdministradores;
 }
 
 export async function crearAdministradorAdmin(
