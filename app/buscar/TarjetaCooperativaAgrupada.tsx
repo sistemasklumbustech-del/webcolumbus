@@ -7,11 +7,17 @@ import { AMENIDADES_CATALOGO, listarParadasDeViaje, type ResultadoViaje, type Pa
 import { ResenasCooperativa } from "./ResenasCooperativa";
 
 function formatearHora(iso: string): string {
-  return new Date(iso).toLocaleTimeString("es-EC", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "America/Guayaquil",
-  });
+  // El servidor (Node) y el navegador pueden usar espacios distintos entre la
+  // hora y "a. m." (espacio normal vs. espacio fino U+202F); se unifican para
+  // que ambos generen exactamente el mismo texto y React no reporte un error
+  // de hidratación.
+  return new Date(iso)
+    .toLocaleTimeString("es-EC", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "America/Guayaquil",
+    })
+    .replace(/[\u202f\u00a0]/g, " ");
 }
 
 /** Mismo cálculo real ya usado en page.tsx -- nunca un dato inventado. */

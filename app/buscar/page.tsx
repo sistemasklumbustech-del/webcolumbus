@@ -11,6 +11,7 @@ import { OrdenarPor } from "./OrdenarPor";
 import { FiltroCooperativaPills } from "./FiltroCooperativaPills";
 import { TarjetaCooperativaAgrupada } from "./TarjetaCooperativaAgrupada";
 import { SinResultadosAlternativas } from "./SinResultadosAlternativas";
+import { construirQuery } from "@/lib/buscar-url";
 
 function formatearFecha(fecha: string): string {
   return new Date(`${fecha}T00:00:00`).toLocaleDateString("es-EC", {
@@ -27,13 +28,27 @@ export default async function ResultadosBusquedaPage({
 }) {
   const sp = await searchParams;
   const { origenId, destinoId, origenCiudad, destinoCiudad, fecha, pasajeros, horaDesde, horaHasta, amenidades } = sp;
+  const { vueltaOrigenId, vueltaOrigenCiudad, vueltaDestinoId, vueltaDestinoCiudad, horaVueltaDesde, horaVueltaHasta } = sp;
   // Fase 7-idayvuelta (11-ago-2026) -- fechaVuelta viene del buscador
   // solo si el pasajero activo el interruptor "Ida y vuelta". idaViajeId
   // y idaAsiento llegan cuando ya se eligio el tramo de ida y se esta
   // viendo la busqueda del tramo de vuelta (ver TarjetaResultado, que
   // arma ese link al elegir "Elegir asiento" en el tramo de ida).
   const { fechaVuelta, idaViajeId, idaAsientos, ordenarPor, cooperativaId, precioMin, precioMax } = sp;
-  const esIdaYVuelta = !!fechaVuelta;
+  // Segundo paso de una compra de ida y vuelta: ya se eligió el viaje de
+  // ida (idaViajeId) y esta misma página busca el tramo de VUELTA -- la
+  // URL trae ya el origen/destino/fecha de la vuelta, no hace falta
+  // fechaVuelta. Antes esto dependía de fechaVuelta, que en este paso no
+  // viajaba en la URL: el viaje de vuelta elegido se comprobaba como un
+  // pasaje suelto y se perdía la ida.
+  const esTramoVuelta = !!idaViajeId;
+  const esIdaYVuelta = !!fechaVuelta || esTramoVuelta;
+  // Origen/destino de la vuelta elegidos en el buscador; si no vienen,
+  // se invierte la ida (compatibilidad con enlaces anteriores).
+  const vOrigenId = vueltaOrigenId ?? destinoId;
+  const vOrigenCiudad = vueltaOrigenCiudad ?? destinoCiudad;
+  const vDestinoId = vueltaDestinoId ?? origenId;
+  const vDestinoCiudad = vueltaDestinoCiudad ?? origenCiudad;
 
   if (!origenId || !destinoId || !fecha) {
     return (
@@ -72,13 +87,18 @@ export default async function ResultadosBusquedaPage({
         amenidades: amenidadesArr,
       }),
     ];
-    if (esIdaYVuelta && fechaVuelta) {
+    // Solo en el paso de la ida: se consulta también la vuelta, para
+    // avisar desde ya si NO hay viajes de regreso (antes de elegir la
+    // ida) en vez de descubrirlo al final.
+    if (esIdaYVuelta && !esTramoVuelta && fechaVuelta && vOrigenId && vDestinoId) {
       busquedas.push(
         buscarViajes({
-          origenId: destinoId,
-          destinoId: origenId,
+          origenId: vOrigenId,
+          destinoId: vDestinoId,
           fecha: fechaVuelta,
           pasajeros: Number(pasajeros ?? 1),
+          horaDesde: horaVueltaDesde,
+          horaHasta: horaVueltaHasta,
         }),
       );
     }
@@ -98,6 +118,36 @@ export default async function ResultadosBusquedaPage({
     !error && resultadosIda.length === 0
       ? await buscarAlternativas({ origenId, destinoId, fecha, pasajeros: Number(pasajeros ?? 1) })
       : null;
+
+  // Ida y vuelta sin viajes de regreso ese día: mismas sugerencias, pero
+  // para la vuelta (otras fechas, horas y cooperativas de esa ruta).
+  const sinViajesDeVuelta = esIdaYVuelta && !esTramoVuelta && !!fechaVuelta && !error && resultadosVuelta.length === 0;
+  const alternativasVuelta =
+    sinViajesDeVuelta && vOrigenId && vDestinoId && fechaVuelta
+      ? await buscarAlternativas({
+          origenId: vOrigenId,
+          destinoId: vDestinoId,
+          fecha: fechaVuelta,
+          pasajeros: Number(pasajeros ?? 1),
+        })
+      : null;
+
+  // Enlaces de las sugerencias: conservan todos los parámetros actuales
+  // (pasajeros, filtros, y el estado de una compra de ida y vuelta) y
+  // cambian solo lo necesario.
+  const paramsActuales: Record<string, string | undefined> = { ...sp };
+  const hrefBuscar = (cambios: Record<string, string | null>) => `/buscar?${construirQuery(paramsActuales, cambios)}`;
+  const hrefDisponibilidad = (tramo: "principal" | "vuelta") =>
+    `/buscar/disponibilidad?${construirQuery(paramsActuales, { tramo })}`;
+  const hrefSoloIda = hrefBuscar({
+    fechaVuelta: null,
+    vueltaOrigenId: null,
+    vueltaOrigenCiudad: null,
+    vueltaDestinoId: null,
+    vueltaDestinoCiudad: null,
+    horaVueltaDesde: null,
+    horaVueltaHasta: null,
+  });
 
   // Fase 5-buscador (16-ago-2026) -- ordenamiento real, del lado del
   // servidor, sobre los datos reales ya obtenidos -- nunca se inventa
@@ -142,13 +192,17 @@ export default async function ResultadosBusquedaPage({
     // terminar de elegir el asiento de ida, debe volver a /buscar por
     // el tramo de vuelta -- no ir directo al checkout.
     const params = new URLSearchParams({
-      vuelta_origenId: destinoId ?? "",
-      vuelta_origenCiudad: destinoCiudad ?? "",
-      vuelta_destinoId: origenId ?? "",
-      vuelta_destinoCiudad: origenCiudad ?? "",
+      vuelta_origenId: vOrigenId ?? "",
+      vuelta_origenCiudad: vOrigenCiudad ?? "",
+      vuelta_destinoId: vDestinoId ?? "",
+      vuelta_destinoCiudad: vDestinoCiudad ?? "",
       vuelta_fecha: fechaVuelta ?? "",
       pasajeros: pasajeros ?? "1",
     });
+    if (horaVueltaDesde && horaVueltaHasta) {
+      params.set("vuelta_horaDesde", horaVueltaDesde);
+      params.set("vuelta_horaHasta", horaVueltaHasta);
+    }
     return `/viajes/${viajeId}/asientos?${params.toString()}`;
   }
 
@@ -160,8 +214,8 @@ export default async function ResultadosBusquedaPage({
     return `/viajes/${viajeId}/asientos?${params.toString()}`;
   }
 
-  const mostrandoVuelta = esIdaYVuelta && !!idaViajeId;
-  let resultadosAMostrar = mostrandoVuelta ? resultadosVuelta : resultadosIda;
+  const mostrandoVuelta = esTramoVuelta;
+  let resultadosAMostrar = resultadosIda;
 
   // Corrección real de un bug de producción (17-ago-2026, reportado
   // por el director con evidencia -- "This page couldn't load"):
@@ -280,20 +334,17 @@ export default async function ResultadosBusquedaPage({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="font-display text-2xl font-bold text-white">
-                {mostrandoVuelta ? (
-                  <>
-                    {destinoCiudad ?? "Destino"} <span className="text-brand-amber">→</span> {origenCiudad ?? "Origen"}
-                  </>
-                ) : (
-                  <>
-                    {origenCiudad ?? "Origen"} <span className="text-brand-amber">→</span> {destinoCiudad ?? "Destino"}
-                  </>
-                )}
+                {origenCiudad ?? "Origen"} <span className="text-brand-amber">→</span> {destinoCiudad ?? "Destino"}
               </h1>
               <p className="text-sm text-white/60">
-                {formatearFecha(mostrandoVuelta ? (fechaVuelta ?? fecha) : fecha)}{" "}
-                · {pasajeros ?? 1} pasajero{Number(pasajeros ?? 1) > 1 ? "s" : ""}
+                {mostrandoVuelta ? "Vuelta · " : ""}
+                {formatearFecha(fecha)} · {pasajeros ?? 1} pasajero{Number(pasajeros ?? 1) > 1 ? "s" : ""}
               </p>
+              {esIdaYVuelta && !mostrandoVuelta && fechaVuelta && (
+                <p className="text-sm text-white/60">
+                  Vuelta: {vOrigenCiudad ?? "Origen"} → {vDestinoCiudad ?? "Destino"} · {formatearFecha(fechaVuelta)}
+                </p>
+              )}
             </div>
             <Link
               href="/"
@@ -340,30 +391,99 @@ export default async function ResultadosBusquedaPage({
 
             {!mostrandoVuelta && <FiltroCooperativaPills cooperativas={cooperativasUnicas} />}
 
+            {/* Estado de la vuelta, visible desde el paso de la ida. */}
+            {esIdaYVuelta && !mostrandoVuelta && fechaVuelta && !error && (
+              <div className="mb-4">
+                {resultadosVuelta.length > 0 ? (
+                  <div className="rounded-xl bg-emerald-50 p-4 ring-1 ring-emerald-200">
+                    <p className="text-sm font-semibold text-emerald-900">
+                      ✓ Hay viajes de vuelta: {vOrigenCiudad} → {vDestinoCiudad}, {formatearFecha(fechaVuelta)}
+                    </p>
+                    <p className="mt-1 text-xs text-emerald-800/80">
+                      {resultadosVuelta.length} viaje{resultadosVuelta.length === 1 ? "" : "s"} desde $
+                      {Math.min(...resultadosVuelta.map((r) => Number(r.precioBase))).toFixed(2)} con{" "}
+                      {Array.from(new Set(resultadosVuelta.map((r) => r.cooperativaNombre))).join(", ")}. Elegirás el horario
+                      de vuelta después de escoger tu ida.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
+                    <p className="font-display text-base font-bold text-amber-900">
+                      Aún no hay ruta de vuelta programada: {vOrigenCiudad} → {vDestinoCiudad}, {formatearFecha(fechaVuelta)}
+                    </p>
+                    <p className="mt-1 text-sm text-amber-900/80">
+                      Esto es lo que sí hay disponible para la vuelta. También puedes{" "}
+                      <Link href={hrefSoloIda} className="font-semibold underline">
+                        comprar solo la ida
+                      </Link>
+                      .
+                    </p>
+                    {alternativasVuelta && (
+                      <div className="mt-4 rounded-lg bg-white p-4">
+                        <SinResultadosAlternativas
+                          alternativas={alternativasVuelta}
+                          origenCiudad={vOrigenCiudad}
+                          destinoCiudad={vDestinoCiudad}
+                          hrefFecha={(f) => hrefBuscar({ fechaVuelta: f })}
+                          hrefTodas={hrefDisponibilidad("vuelta")}
+                          mensajeSinNada="Todavía ninguna cooperativa tiene programada esta ruta de vuelta."
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="space-y-4">
               {error && <p className="rounded-lg bg-red-50 p-4 text-red-700">{error}</p>}
 
               {!error && grupos.length === 0 && (
                 <div className="rounded-xl bg-white p-8 text-center shadow-sm">
                   <p className="font-display text-lg font-bold text-brand-dark">
-                    No encontramos viajes para esta fecha.
+                    {mostrandoVuelta
+                      ? "Aún no hay viajes de vuelta programados para esta fecha."
+                      : "No encontramos viajes para esta fecha."}
                   </p>
                   <p className="mt-1 text-sm text-brand-dark/70">
-                    Prueba con otra fecha, o confirma que la ruta ya esté publicada por alguna cooperativa.
+                    {mostrandoVuelta
+                      ? "Tus asientos de ida siguen reservados unos minutos. Si hay otras fechas con viajes de vuelta, las verás debajo."
+                      : "Prueba con otra fecha o cambia tu búsqueda. Si hay otras opciones, las verás debajo."}
                   </p>
                 </div>
               )}
 
-              {!error && grupos.length === 0 && alternativas && !mostrandoVuelta && (
-                <SinResultadosAlternativas
-                  alternativas={alternativas}
-                  origenId={origenId}
-                  destinoId={destinoId}
-                  origenCiudad={origenCiudad}
-                  destinoCiudad={destinoCiudad}
-                  fecha={fecha}
-                  pasajeros={pasajeros ?? "1"}
-                />
+              {!error && grupos.length === 0 && alternativas && (
+                <div className="rounded-xl bg-white p-6 shadow-sm">
+                  <SinResultadosAlternativas
+                    alternativas={alternativas}
+                    origenCiudad={origenCiudad}
+                    destinoCiudad={destinoCiudad}
+                    hrefFecha={(f) =>
+                      hrefBuscar({
+                        fecha: f,
+                        ...(fechaVuelta && fechaVuelta < f ? { fechaVuelta: f } : {}),
+                      })
+                    }
+                    hrefDestino={
+                      mostrandoVuelta
+                        ? undefined
+                        : (id, ciudad) =>
+                            hrefBuscar({
+                              destinoId: id,
+                              destinoCiudad: ciudad,
+                              vueltaOrigenId: null,
+                              vueltaOrigenCiudad: null,
+                            })
+                    }
+                    hrefTodas={hrefDisponibilidad("principal")}
+                    mensajeSinNada={
+                      mostrandoVuelta
+                        ? "Todavía no hay ninguna ruta de vuelta programada por las cooperativas."
+                        : "Todavía ninguna cooperativa tiene programada esta ruta."
+                    }
+                  />
+                </div>
               )}
 
               {grupos.map((grupo) => (

@@ -55,7 +55,13 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative h-[100svh] min-h-[560px] max-h-[900px] overflow-hidden">
+    <section className="bg-brand-dark">
+      {/* Foto arriba, contenido debajo (24-sep-2026): antes el título y
+          el buscador se dibujaban ENCIMA de la foto y tapaban el logo
+          del bus (más aún en celular). Ahora la foto tiene su propio
+          espacio y solo lleva el encabezado; el texto y el buscador
+          van en un panel aparte, debajo, que crece sin tapar nada. */}
+      <div className="relative h-[40svh] min-h-[240px] max-h-[520px] overflow-hidden md:h-[54svh]">
       {FOTOS.map((foto, i) => (
         <div
           key={foto}
@@ -70,14 +76,15 @@ export function Hero() {
             fill
             priority={i === 0}
             sizes="100vw"
-            className="object-cover"
+            className="object-cover object-[50%_40%]"
           />
           {/* Degradado real, para que el texto blanco y la barra de
               búsqueda se lean bien sobre la foto -- más oscuro abajo
               (donde vive el contenido) y arriba (donde vive el
               encabezado), más claro en el medio para que la foto
               respire. */}
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/60 via-brand-dark/10 to-brand-dark/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/60 via-transparent to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-brand-dark to-transparent" />
         </div>
       ))}
 
@@ -158,8 +165,10 @@ export function Hero() {
         </nav>
       )}
 
-      <div className="absolute inset-x-0 bottom-0 z-10 px-[5%] pb-6 md:pb-10">
-        <h1 className="font-display max-w-xl text-3xl font-bold leading-tight text-white md:text-4xl lg:text-5xl">
+      </div>
+
+      <div className="px-[5%] pb-8 pt-2 md:pb-12">
+        <h1 className="font-display max-w-2xl text-3xl font-bold leading-tight text-white md:text-4xl lg:text-5xl">
           Tu pasaje de bus, <span className="text-brand-amber">sin filas ni papeleo</span>
         </h1>
         <p className="mt-2 max-w-md text-sm text-white/80 md:text-base">
@@ -167,7 +176,7 @@ export function Hero() {
           tu boleto digital con QR al instante.
         </p>
 
-        <div className="mt-5 max-w-screen-2xl md:mt-7">
+        <div className="mt-5 md:mt-7">
           <BuscadorForm />
         </div>
       </div>

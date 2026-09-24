@@ -3647,13 +3647,16 @@ export function resolverReclamoCoop(
 }
 
 export interface AlternativasBusqueda {
-  fechasCercanas: { fecha: string; cantidadViajes: number; precioDesde: number; cooperativas: string[] }[];
+  fechasCercanas: { fecha: string; cantidadViajes: number; precioDesde: number; cooperativas: string[]; horas: string[] }[];
+  /** Cuántas fechas con viajes existen en total (puede ser mayor que las de fechasCercanas). */
+  totalFechas: number;
   otrosDestinos: {
     destinoId: string;
     destinoCiudad: string;
     cantidadViajes: number;
     precioDesde: number;
     cooperativas: string[];
+    horas: string[];
   }[];
   cooperativasEnLaRuta: string[];
 }
@@ -3664,6 +3667,8 @@ export async function buscarAlternativas(params: {
   destinoId: string;
   fecha: string;
   pasajeros: number;
+  /** true = todas las fechas de los próximos 45 días (página "ver todo"). */
+  completo?: boolean;
 }): Promise<AlternativasBusqueda | null> {
   const query = new URLSearchParams({
     origenId: params.origenId,
@@ -3671,6 +3676,7 @@ export async function buscarAlternativas(params: {
     fecha: params.fecha,
     pasajeros: String(params.pasajeros),
   });
+  if (params.completo) query.set("completo", "true");
   try {
     const res = await fetch(`${API_URL}/viajes/alternativas?${query.toString()}`, { cache: "no-store" });
     if (!res.ok) return null;

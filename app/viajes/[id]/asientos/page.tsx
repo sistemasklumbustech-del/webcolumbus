@@ -59,6 +59,8 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
   const vueltaOrigenCiudad = searchParams.get("vuelta_origenCiudad");
   const vueltaDestinoCiudad = searchParams.get("vuelta_destinoCiudad");
   const vueltaFecha = searchParams.get("vuelta_fecha");
+  const vueltaHoraDesde = searchParams.get("vuelta_horaDesde");
+  const vueltaHoraHasta = searchParams.get("vuelta_horaHasta");
   const pasajerosParam = searchParams.get("pasajeros");
   const esTramoIda = !!vueltaFecha;
 
@@ -153,6 +155,10 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
           idaViajeId: viajeId,
           idaAsientos: seleccionados.join(","),
         });
+        if (vueltaHoraDesde && vueltaHoraHasta) {
+          params.set("horaDesde", vueltaHoraDesde);
+          params.set("horaHasta", vueltaHoraHasta);
+        }
         router.push(`/buscar?${params.toString()}`);
         return;
       }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { AMENIDADES_CATALOGO, type Amenidad } from "@/lib/api";
+import { FRANJAS_HORARIO } from "@/lib/franjas-horario";
 
 /**
  * Ítem 11, Fase 2 (04-ago-2026) -- filtros de hora y amenidades.
@@ -29,12 +30,6 @@ import { AMENIDADES_CATALOGO, type Amenidad } from "@/lib/api";
  * única (una franja a la vez), no casillas independientes: así el
  * resultado siempre es predecible, sin necesitar cambios de backend.
  */
-const FRANJAS_HORARIO = [
-  { valor: "madrugada", etiqueta: "Madrugada", horaDesde: "00:00", horaHasta: "06:00" },
-  { valor: "manana", etiqueta: "Mañana", horaDesde: "06:00", horaHasta: "12:00" },
-  { valor: "tarde", etiqueta: "Tarde", horaDesde: "12:00", horaHasta: "18:00" },
-  { valor: "noche", etiqueta: "Noche", horaDesde: "18:00", horaHasta: "23:59" },
-] as const;
 
 function franjaActivaDesdeUrl(horaDesde: string | null, horaHasta: string | null): string | null {
   const encontrada = FRANJAS_HORARIO.find((f) => f.horaDesde === horaDesde && f.horaHasta === horaHasta);

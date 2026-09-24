@@ -141,7 +141,7 @@ export function SelectorCiudad({ etiqueta, placeholder, valor, onCambio, compact
 
   return (
     <div className="relative min-w-[140px] flex-1">
-      <label htmlFor={idCampo} className={`block text-xs font-semibold uppercase tracking-wide text-brand-dark/70 mb-1 ${compacto ? "md:text-[10px] md:text-white/60 md:mb-0.5" : ""}`}>
+      <label htmlFor={idCampo} className={`block font-semibold uppercase tracking-wide ${compacto ? "mb-0.5 text-[10px] text-white/60" : "mb-1 text-xs text-brand-dark/70"}`}>
         {etiqueta}
       </label>
       <input
