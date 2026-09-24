@@ -12,6 +12,7 @@ import { FiltroCooperativaPills } from "./FiltroCooperativaPills";
 import { TarjetaCooperativaAgrupada } from "./TarjetaCooperativaAgrupada";
 import { SinResultadosAlternativas } from "./SinResultadosAlternativas";
 import { construirQuery } from "@/lib/buscar-url";
+import { FRANJAS_HORARIO } from "@/lib/franjas-horario";
 
 function formatearFecha(fecha: string): string {
   return new Date(`${fecha}T00:00:00`).toLocaleDateString("es-EC", {
@@ -108,6 +109,57 @@ export default async function ResultadosBusquedaPage({
   } catch {
     error = "No se pudo completar la búsqueda. Intenta de nuevo en un momento.";
   }
+
+  // Si la franja de hora elegida deja la lista vacía pero ese día SÍ hay
+  // viajes en otros horarios, se muestran directamente (con venta
+  // habilitada) y se avisa -- antes la persona veía "no hay viajes" y
+  // tenía que adivinar que el filtro de hora era la causa.
+  let ordenFueraDeFranja = false;
+  let vueltaFueraDeFranja = false;
+  if (!error && resultadosIda.length === 0 && horaDesde && horaHasta) {
+    try {
+      const sinFiltroHora = await buscarViajes({
+        origenId,
+        destinoId,
+        fecha,
+        pasajeros: Number(pasajeros ?? 1),
+        amenidades: amenidadesArr,
+      });
+      if (sinFiltroHora.length > 0) {
+        resultadosIda = sinFiltroHora;
+        ordenFueraDeFranja = true;
+      }
+    } catch {
+      /* si falla, se sigue con el aviso normal de "sin viajes" */
+    }
+  }
+  if (
+    !error &&
+    esIdaYVuelta &&
+    !esTramoVuelta &&
+    fechaVuelta &&
+    resultadosVuelta.length === 0 &&
+    horaVueltaDesde &&
+    horaVueltaHasta &&
+    vOrigenId &&
+    vDestinoId
+  ) {
+    try {
+      const sinFiltroHora = await buscarViajes({
+        origenId: vOrigenId,
+        destinoId: vDestinoId,
+        fecha: fechaVuelta,
+        pasajeros: Number(pasajeros ?? 1),
+      });
+      if (sinFiltroHora.length > 0) {
+        resultadosVuelta = sinFiltroHora;
+        vueltaFueraDeFranja = true;
+      }
+    } catch {
+      /* igual que arriba */
+    }
+  }
+  const franjaElegida = FRANJAS_HORARIO.find((f) => f.horaDesde === horaDesde && f.horaHasta === horaHasta);
 
   const beneficiosReferidos = await promesaBeneficios;
 
@@ -391,6 +443,20 @@ export default async function ResultadosBusquedaPage({
 
             {!mostrandoVuelta && <FiltroCooperativaPills cooperativas={cooperativasUnicas} />}
 
+            {ordenFueraDeFranja && (
+              <div className="mb-4 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
+                <p className="text-sm font-semibold text-amber-900">
+                  No hay viajes en la franja {franjaElegida ? `${franjaElegida.etiqueta.toLowerCase()} (${franjaElegida.horaDesde}–${franjaElegida.horaHasta})` : "de hora que elegiste"}, pero ese día sí hay estos horarios.
+                </p>
+                <Link
+                  href={hrefBuscar({ horaDesde: null, horaHasta: null })}
+                  className="mt-1 inline-block text-sm font-semibold text-amber-900 underline"
+                >
+                  Quitar el filtro de hora
+                </Link>
+              </div>
+            )}
+
             {/* Estado de la vuelta, visible desde el paso de la ida. */}
             {esIdaYVuelta && !mostrandoVuelta && fechaVuelta && !error && (
               <div className="mb-4">
@@ -402,8 +468,9 @@ export default async function ResultadosBusquedaPage({
                     <p className="mt-1 text-xs text-emerald-800/80">
                       {resultadosVuelta.length} viaje{resultadosVuelta.length === 1 ? "" : "s"} desde $
                       {Math.min(...resultadosVuelta.map((r) => Number(r.precioBase))).toFixed(2)} con{" "}
-                      {Array.from(new Set(resultadosVuelta.map((r) => r.cooperativaNombre))).join(", ")}. Elegirás el horario
-                      de vuelta después de escoger tu ida.
+                      {Array.from(new Set(resultadosVuelta.map((r) => r.cooperativaNombre))).join(", ")}.{" "}
+                      {vueltaFueraDeFranja ? "Ninguno cae en la franja de hora que elegiste, pero ese día sí hay viajes. " : ""}
+                      Elegirás el horario de vuelta después de escoger tu ida.
                     </p>
                   </div>
                 ) : (
@@ -424,7 +491,7 @@ export default async function ResultadosBusquedaPage({
                           alternativas={alternativasVuelta}
                           origenCiudad={vOrigenCiudad}
                           destinoCiudad={vDestinoCiudad}
-                          hrefFecha={(f) => hrefBuscar({ fechaVuelta: f })}
+                          hrefFecha={(f) => hrefBuscar({ fechaVuelta: f, horaVueltaDesde: null, horaVueltaHasta: null })}
                           hrefTodas={hrefDisponibilidad("vuelta")}
                           mensajeSinNada="Todavía ninguna cooperativa tiene programada esta ruta de vuelta."
                         />
@@ -462,6 +529,8 @@ export default async function ResultadosBusquedaPage({
                     hrefFecha={(f) =>
                       hrefBuscar({
                         fecha: f,
+                        horaDesde: null,
+                        horaHasta: null,
                         ...(fechaVuelta && fechaVuelta < f ? { fechaVuelta: f } : {}),
                       })
                     }
@@ -472,6 +541,8 @@ export default async function ResultadosBusquedaPage({
                             hrefBuscar({
                               destinoId: id,
                               destinoCiudad: ciudad,
+                              horaDesde: null,
+                              horaHasta: null,
                               vueltaOrigenId: null,
                               vueltaOrigenCiudad: null,
                             })

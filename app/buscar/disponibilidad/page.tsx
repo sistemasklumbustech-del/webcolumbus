@@ -47,7 +47,15 @@ export default async function DisponibilidadPage({
   const { tramo: _tramo, ...sinTramo } = sp;
   void _tramo;
   const hrefVolver = `/buscar?${construirQuery(sinTramo)}`;
-  const hrefFecha = (f: string) => `/buscar?${construirQuery(sinTramo, esVuelta ? { fechaVuelta: f } : { fecha: f })}`;
+  // Cada fecha tiene sus propios horarios: se suelta el filtro de hora
+  // para que el viaje elegido no quede oculto por una franja anterior.
+  const hrefFecha = (f: string) =>
+    `/buscar?${construirQuery(
+      sinTramo,
+      esVuelta
+        ? { fechaVuelta: f, horaVueltaDesde: null, horaVueltaHasta: null }
+        : { fecha: f, horaDesde: null, horaHasta: null },
+    )}`;
 
   return (
     <main className="flex-1 bg-brand-light/40">
