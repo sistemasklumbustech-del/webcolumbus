@@ -6,11 +6,11 @@ import Link from "next/link";
 import {
   obtenerMapaAsientos,
   bloquearAsiento,
-  interpretarCelda,
   obtenerPisosDeDistribucion,
   type MapaAsientos,
 } from "@/lib/api";
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
+import { MapaAsientosBus } from "@/components/MapaAsientosBus";
 
 /**
  * Vacío real de diseño encontrado el 29-jul-2026: hasta ahora esta
@@ -107,18 +107,6 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
   const estadoPorNumero = new Map(mapa.asientosNoDisponibles.map((a) => [a.numeroAsiento, a.estado]));
   const pisos = obtenerPisosDeDistribucion(mapa.distribucionAsientos, mapa.capacidadTotal);
 
-  // Ítem 14 (05-ago-2026) -- la leyenda de etiquetas solo se muestra si
-  // el vehículo tiene al menos un asiento con alguna, para no ensuciar
-  // la pantalla en la enorme mayoría de viajes que no usan esto todavía.
-  const hayEtiquetas = pisos.some((piso) =>
-    piso.filas.some((fila) =>
-      fila.celdas.some((celda) => {
-        const interpretada = interpretarCelda(celda, piso);
-        return interpretada !== null && interpretada.etiquetas.length > 0;
-      }),
-    ),
-  );
-
   async function continuar() {
     if (seleccionados.length === 0) return;
     // Item 31, Fase 7 (11-ago-2026) -- compra como invitado: ya NO se
@@ -199,7 +187,7 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
 
   return (
     <main className="flex-1 bg-brand-light/40 px-4 py-10">
-      <div className="mx-auto max-w-md">
+      <div className={`mx-auto ${pisos.length > 1 ? "max-w-3xl" : "max-w-md"}`}>
         <h1 className="font-display text-xl font-bold text-brand-dark">Elige tu asiento</h1>
         <p className="mt-1 flex items-center gap-3 text-sm text-brand-dark/70">
           <span>
@@ -228,107 +216,14 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
             )}
           </div>
         )}
-        {hayEtiquetas && (
-          <div className="mt-4 flex items-center justify-center gap-4 text-xs text-brand-dark/70">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-500" aria-hidden="true" /> VIP
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-pink-500" aria-hidden="true" /> Exclusivo mujeres
-            </span>
-          </div>
-        )}
-        <div className="mt-6 space-y-4">
-          {pisos.map((piso, pisoIdx) => (
-            <div key={pisoIdx} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-              {pisos.length > 1 && (
-                <div className="mb-4 flex items-center justify-center gap-2">
-                  <h2 className="font-display text-sm font-bold text-brand-dark">{piso.nombre}</h2>
-                  {piso.categoria && (
-                    <span className="rounded-full bg-brand-amber/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-dark">
-                      {piso.categoria}
-                    </span>
-                  )}
-                </div>
-              )}
-              <div className="space-y-2" role="group" aria-label={`Asientos, piso ${piso.nombre ?? pisoIdx + 1}`}>
-                {piso.filas.map((fila, i) => (
-                  <div key={i} className="flex items-center justify-center gap-2">
-                    {fila.celdas.map((celda, j) => {
-                      const interpretada = interpretarCelda(celda, piso);
-                      if (interpretada === null) {
-                        return <span key={j} className="w-4" />;
-                      }
-                      const { numero, etiquetas } = interpretada;
-                      const estado = estadoPorNumero.get(numero);
-                      const noDisponible = estado === "ocupado" || estado === "bloqueado_temporal";
-                      const esSeleccionado = seleccionados.includes(numero);
-                      // Lectores de pantalla (13-ago-2026, accesibilidad
-                      // parte 2) -- el mapa se veía bien pero no se podía
-                      // "escuchar": sin esto, un lector de pantalla solo
-                      // anunciaba el número, nunca si el asiento estaba
-                      // libre, ocupado, seleccionado, o si era VIP/exclusivo
-                      // mujeres (antes solo un `title=`, que la mayoría de
-                      // lectores de pantalla no anuncia de forma confiable).
-                      const descripcionEstado = noDisponible
-                        ? "ocupado"
-                        : esSeleccionado
-                          ? "seleccionado"
-                          : "disponible";
-                      const descripcionEtiquetas = [
-                        etiquetas.includes("vip") ? "VIP" : null,
-                        etiquetas.includes("mujeres") ? "exclusivo mujeres" : null,
-                      ]
-                        .filter(Boolean)
-                        .join(", ");
-                      const etiquetaAria = `Asiento ${numero}, ${descripcionEstado}${
-                        descripcionEtiquetas ? `, ${descripcionEtiquetas}` : ""
-                      }`;
-                      return (
-                        <div key={numero} className="relative">
-                          <button
-                            type="button"
-                            disabled={noDisponible}
-                            onClick={() => alternarAsiento(numero)}
-                            aria-label={etiquetaAria}
-                            aria-pressed={esSeleccionado}
-                            className={`h-10 w-10 rounded-lg text-xs font-semibold transition ${
-                              noDisponible
-                                ? "cursor-not-allowed bg-gray-200 text-gray-400"
-                                : esSeleccionado
-                                  ? "bg-brand-amber text-brand-dark ring-2 ring-brand-dark"
-                                  : "bg-brand-light text-brand-dark hover:bg-brand-cobalto hover:text-white"
-                            }`}
-                          >
-                            {numero}
-                          </button>
-                          {/* Ítem 14 (05-ago-2026) -- indicadores de etiqueta, un asiento puede tener ambas a la vez.
-                              aria-hidden: el significado ya va en el aria-label del botón de arriba -- estos puntos
-                              de color son puramente decorativos para quien SÍ ve la pantalla. */}
-                          {!noDisponible && etiquetas.length > 0 && (
-                            <span className="absolute -top-1 -right-1 flex gap-0.5" aria-hidden="true">
-                              {etiquetas.includes("vip") && (
-                                <span
-                                  className="h-2.5 w-2.5 rounded-full bg-amber-500 ring-1 ring-white"
-                                  title="VIP"
-                                />
-                              )}
-                              {etiquetas.includes("mujeres") && (
-                                <span
-                                  className="h-2.5 w-2.5 rounded-full bg-pink-500 ring-1 ring-white"
-                                  title="Exclusivo mujeres"
-                                />
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+          <MapaAsientosBus
+            pisos={pisos}
+            estadoPorNumero={estadoPorNumero}
+            seleccionados={seleccionados}
+            onAlternar={alternarAsiento}
+            tieneBano={(mapa.tipoVehiculoAmenidades ?? []).includes("bano_a_bordo")}
+          />
         </div>
         {(esTramoIda || esTramoVuelta) && (
           <p className="mt-3 text-center text-sm font-semibold text-brand-cobalto">

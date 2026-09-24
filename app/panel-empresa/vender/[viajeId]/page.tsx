@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   obtenerMapaAsientos,
   bloquearAsiento,
-  interpretarCelda,
   obtenerPisosDeDistribucion,
   cotizarVentanillaCoop,
   venderEnVentanillaCoop,
@@ -16,6 +15,7 @@ import {
   type BoletoEmitido,
 } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
+import { MapaAsientosBus } from "@/components/MapaAsientosBus";
 import { CodigoQr } from "@/components/CodigoQr";
 
 const TARIFAS = [
@@ -247,57 +247,13 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
           {mapa.capacidadTotal - mapa.asientosNoDisponibles.length} disponibles · {mapa.asientosNoDisponibles.length} ocupados · {mapa.capacidadTotal} en total
           {pisos.length > 1 ? ` · ${pisos.length} pisos` : ""}
         </p>
-        <div className="space-y-4">
-          {pisos.map((piso, pisoIdx) => (
-            <div key={pisoIdx} className="rounded-xl bg-brand-light/20 p-4">
-              {pisos.length > 1 && (
-                <p className="mb-3 text-center font-display text-sm font-bold text-brand-dark">{piso.nombre}</p>
-              )}
-              <div className="space-y-2">
-                {piso.filas.map((fila, i) => (
-                  <div key={i} className="flex items-center justify-center gap-2">
-                    {fila.celdas.map((celda, j) => {
-                      const interpretada = interpretarCelda(celda, piso);
-                      if (interpretada === null) return <span key={j} className="w-6" />;
-                      const { numero, etiquetas } = interpretada;
-                      const estado = estadoPorNumero.get(numero);
-                      const noDisponible = estado === "ocupado" || estado === "bloqueado_temporal";
-                      const esSeleccionado = seleccionados.includes(numero);
-                      return (
-                        <div key={j} className="relative">
-                          <button
-                            type="button"
-                            disabled={noDisponible}
-                            onClick={() => alternarAsiento(numero)}
-                            className={`h-10 w-10 rounded-lg text-xs font-semibold transition ${
-                              noDisponible
-                                ? "cursor-not-allowed bg-gray-200 text-gray-400"
-                                : esSeleccionado
-                                  ? "bg-brand-amber text-brand-dark ring-2 ring-brand-dark"
-                                  : "bg-white text-brand-dark ring-1 ring-black/10 hover:bg-brand-cobalto hover:text-white"
-                            }`}
-                          >
-                            {numero}
-                          </button>
-                          {!noDisponible && etiquetas.includes("vip") && (
-                            <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-amber-500 ring-1 ring-white" title="VIP" />
-                          )}
-                          {!noDisponible && etiquetas.includes("mujeres") && (
-                            <span className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-pink-500 ring-1 ring-white" title="Exclusivo mujeres" />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 flex items-center justify-center gap-4 text-xs text-brand-dark/70">
-          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-amber-500" /> VIP</span>
-          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-pink-500" /> Exclusivo mujeres</span>
-        </div>
+        <MapaAsientosBus
+          pisos={pisos}
+          estadoPorNumero={estadoPorNumero}
+          seleccionados={seleccionados}
+          onAlternar={alternarAsiento}
+          tieneBano={(mapa.tipoVehiculoAmenidades ?? []).includes("bano_a_bordo")}
+        />
       </div>
 
       {pasajerosData.length > 0 && (

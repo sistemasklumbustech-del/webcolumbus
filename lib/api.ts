@@ -218,6 +218,10 @@ export interface PisoDistribucionAsientos {
   nombre: string;
   /** Formato viejo -- ya no se escribe desde el sistema nuevo, se sigue leyendo para heredar VIP. */
   categoria?: string;
+  /** Dónde está el baño en este piso (opcional; por defecto, al fondo del primer piso si el vehículo declara baño a bordo). */
+  bano?: "frente" | "atras" | "ninguno";
+  /** Dónde está la escalera (opcional; por defecto, al frente en buses de más de un piso). */
+  escalera?: "frente" | "atras" | "ninguno";
   filas: Array<{ celdas: Celda[] }>;
 }
 
@@ -279,6 +283,10 @@ export interface MapaAsientos {
   /** Política de cancelación/reprogramación (29-jul-2026) — el pasajero debe saberlo ANTES de comprar. */
   permiteCancelacion: boolean;
   permiteReprogramacion: boolean;
+  /** 24-sep-2026 -- para dibujar el bus real (baño a bordo, etc.). Opcionales por compatibilidad con un api anterior. */
+  tipoVehiculoNombre?: string;
+  tipoVehiculoCategoria?: string | null;
+  tipoVehiculoAmenidades?: string[];
 }
 
 export async function obtenerMapaAsientos(viajeId: string): Promise<MapaAsientos> {
