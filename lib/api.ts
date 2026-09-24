@@ -4041,3 +4041,61 @@ export const subirLogoCoop = (token: string, archivo: File) =>
 /** Sube la imagen de un banner desde un archivo y devuelve su URL. */
 export const subirImagenBannerAdmin = (token: string, archivo: File) =>
   subirImagen(token, "/admin/banners-propios/imagen", "imagen", archivo, 1920);
+
+/** Carga masiva por plantilla Excel (24-sep-2026). */
+export interface ErrorCargaMasiva {
+  hoja: string;
+  fila: number;
+  mensaje: string;
+}
+
+export interface RevisionCargaMasiva {
+  ok: boolean;
+  errores: ErrorCargaMasiva[];
+  resumen: {
+    tiposVehiculo: number;
+    conductores: number;
+    unidades: number;
+    rutas: number;
+    horarios: number;
+    generarViajes: { desde: string; hasta: string } | null;
+  };
+}
+
+/** Descarga la plantilla .xlsx (necesita el token, así que se baja como archivo y se dispara la descarga). */
+export async function descargarPlantillaCargaMasiva(token: string): Promise<void> {
+  const res = await fetch(`${API_URL}/coop/carga-masiva/plantilla`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("No se pudo descargar la plantilla.");
+  const url = URL.createObjectURL(await res.blob());
+  const enlace = document.createElement("a");
+  enlace.href = url;
+  enlace.download = "plantilla-carga-masiva-klumbus.xlsx";
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function enviarArchivoCargaMasiva<T>(token: string, ruta: string, archivo: File): Promise<T> {
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+  const res = await fetch(`${API_URL}/coop/carga-masiva/${ruta}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo procesar el archivo.");
+  }
+  return cuerpo as T;
+}
+
+export const revisarCargaMasiva = (token: string, archivo: File) =>
+  enviarArchivoCargaMasiva<RevisionCargaMasiva>(token, "revisar", archivo);
+
+export const importarCargaMasivaExcel = (token: string, archivo: File) =>
+  enviarArchivoCargaMasiva<ResultadoImportacion>(token, "importar", archivo);
