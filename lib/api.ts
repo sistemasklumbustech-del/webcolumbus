@@ -1588,12 +1588,16 @@ export async function verificarCorreo(token: string): Promise<{ ok: true }> {
   return cuerpo;
 }
 
+/** El backend limita los intentos de login/registro (5 por minuto por conexión); el mensaje crudo del límite no le dice nada a la persona. */
+const MENSAJE_DEMASIADOS_INTENTOS = "Demasiados intentos seguidos. Espera un minuto e inténtalo de nuevo.";
+
 export async function login(correo: string, password: string): Promise<RespuestaLogin> {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ correo, password }),
   });
+  if (res.status === 429) throw new Error(MENSAJE_DEMASIADOS_INTENTOS);
   const cuerpo = await res.json();
   if (!res.ok) {
     throw new Error(cuerpo?.message ?? "No se pudo iniciar sesión.");
@@ -1690,6 +1694,7 @@ export async function registrar(datos: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(datos),
   });
+  if (res.status === 429) throw new Error(MENSAJE_DEMASIADOS_INTENTOS);
   const cuerpo = await res.json();
   if (!res.ok) {
     const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
