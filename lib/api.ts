@@ -3790,3 +3790,140 @@ export async function exportarAuditoriaAdmin(
   enlace.remove();
   window.URL.revokeObjectURL(url);
 }
+
+/* -------------------------------------------------------------------
+ * Panel operativo de la plataforma (RF-022, 24-sep-2026) -- solo lectura,
+ * solo para administradores de plataforma.
+ * ------------------------------------------------------------------- */
+
+export type EstadoViajeOperacion = "programado" | "en_curso" | "finalizado" | "cancelado";
+
+export interface FiltrosOperacion {
+  desde?: string;
+  hasta?: string;
+  cooperativaId?: string;
+  rutaId?: string;
+  estado?: EstadoViajeOperacion;
+}
+
+export interface ResumenOperacion {
+  totalViajes: number;
+  viajesPorEstado: Record<EstadoViajeOperacion, number>;
+  boletosVendidos: number;
+  boletosCancelados: number;
+  ingresos: number;
+  ocupacionPromedio: number;
+}
+
+export interface ViajeOperacion {
+  viajeId: string;
+  fechaSalida: string;
+  horaSalida: string;
+  cooperativa: string;
+  ruta: string;
+  placa: string;
+  estado: EstadoViajeOperacion;
+  capacidad: number;
+  vendidos: number;
+  ocupacion: number;
+  ingresos: number;
+}
+
+export interface ResultadoViajesOperacion {
+  filas: ViajeOperacion[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export interface RutaOperacion {
+  rutaId: string;
+  cooperativa: string;
+  ruta: string;
+  viajes: number;
+  vendidos: number;
+  capacidad: number;
+  ocupacion: number;
+  ingresos: number;
+}
+
+export interface ViajeEnAlerta {
+  viajeId: string;
+  cooperativa: string;
+  ruta: string;
+  horaSalida: string;
+  ocupacion: number;
+  minutosAtraso?: number;
+}
+
+export interface AlertasOperacion {
+  pagosPendientes: { cantidad: number; masAntiguoHoras: number | null };
+  reclamos: { abiertos: number; enRevision: number };
+  viajesAtrasados: ViajeEnAlerta[];
+  viajesBajaOcupacion: ViajeEnAlerta[];
+}
+
+function paramsOperacion(filtros: FiltrosOperacion & { pagina?: number; limite?: number }): string {
+  const params = new URLSearchParams();
+  if (filtros.desde) params.set("desde", filtros.desde);
+  if (filtros.hasta) params.set("hasta", filtros.hasta);
+  if (filtros.cooperativaId) params.set("cooperativaId", filtros.cooperativaId);
+  if (filtros.rutaId) params.set("rutaId", filtros.rutaId);
+  if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.pagina) params.set("pagina", String(filtros.pagina));
+  if (filtros.limite) params.set("limite", String(filtros.limite));
+  const texto = params.toString();
+  return texto ? `?${texto}` : "";
+}
+
+async function pedirOperacion<T>(token: string, ruta: string, mensajeError: string): Promise<T> {
+  const res = await fetch(`${API_URL}/admin/operacion${ruta}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? mensajeError);
+  }
+  return cuerpo as T;
+}
+
+export const resumenOperacionAdmin = (token: string, f: FiltrosOperacion) =>
+  pedirOperacion<ResumenOperacion>(token, `/resumen${paramsOperacion(f)}`, "No se pudo cargar el resumen.");
+
+export const viajesOperacionAdmin = (token: string, f: FiltrosOperacion & { pagina: number; limite: number }) =>
+  pedirOperacion<ResultadoViajesOperacion>(token, `/viajes${paramsOperacion(f)}`, "No se pudieron cargar los viajes.");
+
+export const rutasOperacionAdmin = (token: string, f: FiltrosOperacion) =>
+  pedirOperacion<RutaOperacion[]>(token, `/rutas${paramsOperacion(f)}`, "No se pudieron cargar las rutas.");
+
+export const alertasOperacionAdmin = (token: string) =>
+  pedirOperacion<AlertasOperacion>(token, "/alertas", "No se pudieron cargar las alertas.");
+
+export const opcionesRutasOperacionAdmin = (token: string, cooperativaId?: string) =>
+  pedirOperacion<{ id: string; nombre: string }[]>(
+    token,
+    cooperativaId ? `/opciones-rutas?cooperativaId=${cooperativaId}` : "/opciones-rutas",
+    "No se pudieron cargar las rutas.",
+  );
+
+/** Descarga el CSV de viajes con los mismos filtros de la pantalla (hasta 10.000 filas). */
+export async function exportarOperacionAdmin(token: string, filtros: FiltrosOperacion): Promise<void> {
+  const res = await fetch(`${API_URL}/admin/operacion/exportar${paramsOperacion(filtros)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const cuerpo = await res.json().catch(() => null);
+    throw new Error(cuerpo?.message ?? "No se pudo exportar.");
+  }
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const enlace = document.createElement("a");
+  enlace.href = url;
+  enlace.download = "operacion-viajes.csv";
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  window.URL.revokeObjectURL(url);
+}

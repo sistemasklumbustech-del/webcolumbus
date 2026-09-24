@@ -37,6 +37,7 @@ const ENLACES = [
   { href: "/admin/liquidaciones", etiqueta: "Liquidaciones", icono: IconoLiquidaciones },
   { href: "/admin/reportes/conciliacion", etiqueta: "Conciliación", icono: IconoConciliacion },
   { href: "/admin/administradores", etiqueta: "Administradores", icono: IconoAdministradores },
+  { href: "/admin/operacion", etiqueta: "Operación", icono: IconoOperacion },
   { href: "/admin/auditoria", etiqueta: "Auditoría", icono: IconoAuditoria },
 ];
 
@@ -63,6 +64,13 @@ function IconoPuntos({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z" />
       <circle cx="12" cy="9.5" r="2.5" />
+    </svg>
+  );
+}
+function IconoOperacion({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 12h4l3-8 4 16 3-8h4" />
     </svg>
   );
 }
