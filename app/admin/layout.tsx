@@ -35,6 +35,7 @@ const ENLACES = [
   { href: "/admin/banners", etiqueta: "Banners", icono: IconoBanners },
   { href: "/admin/comercial", etiqueta: "Comercial", icono: IconoComercial },
   { href: "/admin/liquidaciones", etiqueta: "Liquidaciones", icono: IconoLiquidaciones },
+  { href: "/admin/cuentas-cobro", etiqueta: "Cuentas de cobro", icono: IconoCuentasCobro },
   { href: "/admin/reportes/conciliacion", etiqueta: "Conciliación", icono: IconoConciliacion },
   { href: "/admin/administradores", etiqueta: "Administradores", icono: IconoAdministradores },
   { href: "/admin/operacion", etiqueta: "Operación", icono: IconoOperacion },
@@ -79,6 +80,15 @@ function IconoAuditoria({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 3l8 3v5c0 4.5-3.2 8.3-8 10-4.8-1.7-8-5.5-8-10V6z" />
       <path d="M9 12l2 2 4-4" />
+    </svg>
+  );
+}
+function IconoCuentasCobro({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 10l9-6 9 6" />
+      <path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8" />
+      <path d="M3 21h18" />
     </svg>
   );
 }

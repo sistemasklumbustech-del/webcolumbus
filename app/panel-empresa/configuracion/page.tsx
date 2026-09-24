@@ -18,6 +18,7 @@ import {
 import { obtenerToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
 import { MetodosPago } from "./MetodosPago";
+import { CuentaCobroCoop } from "./CuentaCobro";
 
 /**
  * Configuración de la cooperativa (29-jul-2026) — antes no existía
@@ -171,6 +172,8 @@ export default function ConfiguracionPage() {
       <p className="mt-1 text-sm text-brand-dark/70">
         Ajustes propios de tu cooperativa — cada empresa afiliada configura los suyos.
       </p>
+
+      <CuentaCobroCoop onExito={setMensajeExito} onError={setError} />
 
       <MetodosPago onExito={setMensajeExito} onError={setError} />
 

@@ -34,6 +34,9 @@ const ETIQUETA_ACCION: Record<string, string> = {
   resolucion_reclamo: "Resolución de reclamo",
   confirmacion_pago_manual: "Confirmación de pago manual",
   rechazo_pago_manual: "Rechazo de pago manual",
+  registro_cuenta_cobro: "Registro de cuenta de cobro",
+  verificacion_cuenta_cobro: "Verificación de cuenta de cobro",
+  rechazo_cuenta_cobro: "Rechazo de cuenta de cobro",
 };
 
 function nombreAccion(accion: string) {

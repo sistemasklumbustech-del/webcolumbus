@@ -1533,6 +1533,7 @@ export async function crearCompra(
   correoContacto?: string,
   sesionInvitadoId?: string,
   aceptoTerminos?: boolean,
+  metodoPagoEnLinea?: "tarjeta" | "deuna",
 ): Promise<ResultadoCompra> {
   const res = await fetch(`${API_URL}/compras`, {
     method: "POST",
@@ -1548,6 +1549,7 @@ export async function crearCompra(
       correoContacto,
       sesionInvitadoId,
       aceptoTerminos,
+      metodoPagoEnLinea,
     }),
   });
   const cuerpo = await res.json();
@@ -3948,3 +3950,68 @@ export async function confirmarLlegadaViaje(token: string, viajeId: string): Pro
   const cuerpo = await res.json().catch(() => null);
   if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo confirmar la llegada.");
 }
+
+/** Qué medios de pago en línea hay y si la pasarela es real o de prueba (24-sep-2026). Si falla, se asume modo de prueba. */
+export interface InfoPasarela {
+  proveedor: string;
+  modoPrueba: boolean;
+  metodos: ("tarjeta" | "deuna")[];
+}
+
+export async function obtenerInfoPasarela(): Promise<InfoPasarela> {
+  try {
+    const res = await fetch(`${API_URL}/compras/pasarela`, { cache: "no-store" });
+    if (!res.ok) throw new Error("sin información");
+    return (await res.json()) as InfoPasarela;
+  } catch {
+    return { proveedor: "simulado", modoPrueba: true, metodos: ["tarjeta", "deuna"] };
+  }
+}
+
+/** Cuenta de cobro de la cooperativa (24-sep-2026) -- donde recibe las liquidaciones de sus boletos. */
+export type EstadoCuentaCobro = "pendiente_verificacion" | "verificada" | "rechazada" | "reemplazada";
+
+export interface DatosCuentaCobro {
+  entidadFinanciera: EntidadFinanciera;
+  tipoCuenta: "ahorros" | "corriente";
+  numeroCuenta: string;
+  titularNombre: string;
+  titularTipoIdentificacion: "cedula" | "ruc";
+  titularIdentificacion: string;
+  correoNotificacion: string;
+}
+
+export interface CuentaCobro extends DatosCuentaCobro {
+  id: string;
+  cooperativaId: string;
+  cooperativaNombre: string;
+  estado: EstadoCuentaCobro;
+  motivoRechazo: string | null;
+  verificadaEn: string | null;
+  creadoEn: string;
+}
+
+async function pedirCuentaCobro<T>(token: string, ruta: string, metodo = "GET", cuerpo?: unknown): Promise<T> {
+  const res = await fetch(`${API_URL}${ruta}`, {
+    method: metodo,
+    headers: { Authorization: `Bearer ${token}`, ...(cuerpo ? { "Content-Type": "application/json" } : {}) },
+    body: cuerpo ? JSON.stringify(cuerpo) : undefined,
+    cache: "no-store",
+  });
+  const datos = await res.json().catch(() => null);
+  if (!res.ok) {
+    const mensaje = Array.isArray(datos?.message) ? datos.message.join(" ") : datos?.message;
+    throw new Error(mensaje ?? "No se pudo completar la operación.");
+  }
+  return datos as T;
+}
+
+export const listarCuentasCobroCoop = (token: string) => pedirCuentaCobro<CuentaCobro[]>(token, "/coop/cuenta-cobro");
+export const registrarCuentaCobro = (token: string, datos: DatosCuentaCobro) =>
+  pedirCuentaCobro<{ id: string }>(token, "/coop/cuenta-cobro", "POST", datos);
+export const listarCuentasCobroAdmin = (token: string, estado?: EstadoCuentaCobro) =>
+  pedirCuentaCobro<CuentaCobro[]>(token, `/admin/cuentas-cobro${estado ? `?estado=${estado}` : ""}`);
+export const verificarCuentaCobro = (token: string, id: string) =>
+  pedirCuentaCobro<{ ok: boolean }>(token, `/admin/cuentas-cobro/${id}/verificar`, "PATCH");
+export const rechazarCuentaCobro = (token: string, id: string, motivo: string) =>
+  pedirCuentaCobro<{ ok: boolean }>(token, `/admin/cuentas-cobro/${id}/rechazar`, "PATCH", { motivo });

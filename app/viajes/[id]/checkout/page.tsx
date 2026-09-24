@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect, use as usePromise } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { crearCompra, cotizarCompra, listarMisCreditos, obtenerMapaAsientos, iniciarPagoManual, subirComprobantePago, listarMetodosPagoPorViaje, type ResultadoCompra, type Cotizacion, type MiCredito, type MapaAsientos, type MetodoPagoDisponible, type TipoMetodoPago, type PasajeroCompraInput } from "@/lib/api";
+import { crearCompra, cotizarCompra, listarMisCreditos, obtenerMapaAsientos, iniciarPagoManual, subirComprobantePago, listarMetodosPagoPorViaje, obtenerInfoPasarela, type InfoPasarela, type ResultadoCompra, type Cotizacion, type MiCredito, type MapaAsientos, type MetodoPagoDisponible, type TipoMetodoPago, type PasajeroCompraInput } from "@/lib/api";
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
 import { CodigoQr } from "@/components/CodigoQr";
 
@@ -104,7 +104,13 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   const [creditoElegidoId, setCreditoElegidoId] = useState("");
   const [mapa, setMapa] = useState<MapaAsientos | null>(null);
   const [metodosDisponibles, setMetodosDisponibles] = useState<MetodoPagoDisponible[]>([]);
-  const [metodoElegido, setMetodoElegido] = useState<TipoMetodoPago | "tarjeta">("tarjeta");
+  // "tarjeta" y "deuna_en_linea" se cobran en línea por la pasarela; los demás son métodos manuales de la cooperativa.
+  const [metodoElegido, setMetodoElegido] = useState<TipoMetodoPago | "tarjeta" | "deuna_en_linea">("tarjeta");
+  const esEnLinea = metodoElegido === "tarjeta" || metodoElegido === "deuna_en_linea";
+  const [infoPasarela, setInfoPasarela] = useState<InfoPasarela | null>(null);
+  useEffect(() => {
+    obtenerInfoPasarela().then(setInfoPasarela);
+  }, []);
   const [pagoManual, setPagoManual] = useState<{ compraId: string } | null>(null);
   const [comprobanteArchivo, setComprobanteArchivo] = useState<File | null>(null);
   const [subiendoComprobante, setSubiendoComprobante] = useState(false);
@@ -178,7 +184,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
       return;
     }
     const sesionInvitadoId = token ? undefined : obtenerOCrearSesionInvitado();
-    if (!token && metodoElegido !== "tarjeta") {
+    if (!token && !esEnLinea) {
       setError("Los metodos de pago manuales todavia requieren una cuenta -- crea una gratis o paga con tarjeta.");
       return;
     }
@@ -237,7 +243,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
     setProcesando(true);
     setError(null);
     try {
-      if (metodoElegido === "tarjeta") {
+      if (metodoElegido === "tarjeta" || metodoElegido === "deuna_en_linea") {
         const resp = await crearCompra(
           pasajeros,
           token,
@@ -247,6 +253,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           token ? undefined : correoContacto.trim() || undefined,
           sesionInvitadoId,
           token ? undefined : aceptoTerminos,
+          metodoElegido === "deuna_en_linea" ? "deuna" : "tarjeta",
         );
         setResultado(resp);
         if (resp.estado === "rechazado") {
@@ -259,7 +266,8 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
         // El "!" es seguro: la guardia de arriba ya garantiza que si
         // llegamos a esta rama (metodo distinto de tarjeta), token no
         // puede ser null -- ese caso ya se rechazo antes con setError.
-        const resp = await iniciarPagoManual(token!, pasajeros, metodoElegido, idempotencyKey);
+        // Aquí metodoElegido ya no puede ser un medio en línea (arriba se atendieron).
+        const resp = await iniciarPagoManual(token!, pasajeros, metodoElegido as TipoMetodoPago, idempotencyKey);
         setPagoManual({ compraId: resp.compraId });
       }
       setCotizacion(null);
@@ -675,40 +683,68 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                 )}
               </div>
             )}
-            {metodosDisponibles.length > 0 && (
-              <div>
-                <label htmlFor="checkout-metodo-pago" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-                  Cómo quieres pagar
-                </label>
-                <select
-                  id="checkout-metodo-pago"
-                  value={metodoElegido}
-                  onChange={(e) => setMetodoElegido(e.target.value as typeof metodoElegido)}
-                  className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
-                >
-                  <option value="tarjeta">Tarjeta</option>
-                  {metodosDisponibles.map((m) => (
-                    <option key={m.tipo} value={m.tipo}>
-                      {
-                        {
+            <fieldset>
+              <legend className="mb-2 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                Cómo quieres pagar
+              </legend>
+              <div className="space-y-2">
+                {(
+                  [
+                    {
+                      valor: "tarjeta" as const,
+                      titulo: "Tarjeta de crédito o débito",
+                      detalle: "Visa, Mastercard, Diners y Discover · pago inmediato",
+                    },
+                    {
+                      valor: "deuna_en_linea" as const,
+                      titulo: "DeUna",
+                      detalle: "Paga desde tu app · pago inmediato",
+                    },
+                    ...metodosDisponibles
+                      .filter((m) => m.tipo !== "tarjeta_pasarela")
+                      .map((m) => ({
+                        valor: m.tipo as TipoMetodoPago,
+                        titulo: {
                           transferencia_bancaria: "Transferencia bancaria",
                           efectivo: "Efectivo",
-                          deuna: "DeUna",
+                          deuna: "DeUna (pago directo a la cooperativa)",
                           payphone: "PayPhone (billetera)",
                           tarjeta_pasarela: "Tarjeta",
-                        }[m.tipo]
-                      }
-                    </option>
-                  ))}
-                </select>
-                {metodoElegido !== "tarjeta" && (
-                  <p className="mt-1 text-xs text-brand-dark/50">
-                    Pagas por fuera de la plataforma y subes tu comprobante — la cooperativa confirma
-                    tu{pasajerosData.length > 1 ? "s boletos" : " boleto"} después.
-                  </p>
-                )}
+                        }[m.tipo],
+                        detalle: "Pagas por fuera y subes tu comprobante · la cooperativa lo confirma",
+                      })),
+                  ] as { valor: TipoMetodoPago | "tarjeta" | "deuna_en_linea"; titulo: string; detalle: string }[]
+                ).map((opcion) => (
+                  <label
+                    key={opcion.valor}
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition ${
+                      metodoElegido === opcion.valor
+                        ? "border-brand bg-brand-light/40 ring-1 ring-brand"
+                        : "border-brand-light bg-white hover:bg-brand-light/20"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="checkout-metodo-pago"
+                      value={opcion.valor}
+                      checked={metodoElegido === opcion.valor}
+                      onChange={() => setMetodoElegido(opcion.valor)}
+                      className="mt-1"
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold text-brand-dark">{opcion.titulo}</span>
+                      <span className="block text-xs text-brand-dark/60">{opcion.detalle}</span>
+                    </span>
+                  </label>
+                ))}
               </div>
-            )}
+              {!esEnLinea && (
+                <p className="mt-2 text-xs text-brand-dark/50">
+                  Pagas por fuera de la plataforma y subes tu comprobante — la cooperativa confirma
+                  tu{pasajerosData.length > 1 ? "s boletos" : " boleto"} después.
+                </p>
+              )}
+            </fieldset>
             {creditos.length > 0 && (
               <div>
                 <label htmlFor="checkout-credito" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
@@ -801,9 +837,11 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
             >
               {procesando ? "Calculando..." : "Revisar y pagar"}
             </button>
-            <p className="text-center text-xs text-brand-dark/40">
-              Pago de prueba — todavía no está conectada una pasarela real.
-            </p>
+            {infoPasarela?.modoPrueba !== false && (
+              <p className="text-center text-xs text-brand-dark/40">
+                Pago de prueba — todavía no está conectada una pasarela real.
+              </p>
+            )}
           </div>
         </form>
       </div>
@@ -813,7 +851,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="font-display text-lg font-bold text-brand-dark">Revisa antes de pagar</h2>
             <p className="mt-1 text-sm text-brand-dark/70">
-              Método: {metodoElegido === "tarjeta" ? "Tarjeta" : metodoElegido === "transferencia_bancaria" ? "Transferencia" : metodoElegido === "deuna" ? "DeUna" : "PayPhone"}
+              Método: {metodoElegido === "tarjeta" ? "Tarjeta de crédito o débito" : metodoElegido === "deuna_en_linea" ? "DeUna" : metodoElegido === "transferencia_bancaria" ? "Transferencia" : metodoElegido === "efectivo" ? "Efectivo" : metodoElegido === "deuna" ? "DeUna (pago directo a la cooperativa)" : "PayPhone"}
             </p>
             <div className="mt-3 space-y-1 rounded-lg bg-brand-light/30 px-4 py-3 text-sm">
               <div className="flex justify-between text-brand-dark/70">
