@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { listarMisBoletos, calificarViaje, cancelarBoleto, descargarBoletoPdf, type MiBoleto } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
 import { CodigoQr } from "@/components/CodigoQr";
@@ -225,9 +226,17 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
 
   return (
     <>
-      <p className="text-sm text-brand-dark/70">
-        Tu historial de viajes comprados. Podrás calificar cada uno después de la hora estimada de llegada.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-brand-dark/70">
+          Tu historial de viajes comprados. Podrás calificar cada uno después de la hora estimada de llegada.
+        </p>
+        <Link
+          href="/"
+          className="shrink-0 rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95"
+        >
+          Comprar un boleto
+        </Link>
+      </div>
 
       {error && (
         <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
@@ -238,7 +247,15 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
       {boletos === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
 
       {boletos !== null && boletos.length === 0 && (
-        <p className="mt-8 text-center text-sm text-brand-dark/50">Todavía no tienes boletos comprados.</p>
+        <div className="mt-8 text-center">
+          <p className="text-sm text-brand-dark/50">Todavía no tienes boletos comprados.</p>
+          <Link
+            href="/"
+            className="mt-4 inline-block rounded-lg bg-brand-amber px-5 py-2.5 text-sm font-semibold text-brand-dark transition hover:brightness-95"
+          >
+            Buscar pasajes
+          </Link>
+        </div>
       )}
 
       <div className="mt-6 space-y-3">

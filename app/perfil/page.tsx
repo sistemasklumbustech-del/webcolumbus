@@ -186,7 +186,7 @@ function MiCuenta() {
       <div className="mt-6 overflow-hidden rounded-2xl bg-white shadow-lg shadow-black/5 ring-1 ring-black/5">
         <div className="relative h-48 w-full sm:h-64 lg:h-80">
           <Image
-            src="/img/bus-portada-perfil.jpg"
+            src="/img/hero-1.jpg"
             alt=""
             fill
             sizes="(max-width: 1024px) 100vw, 1536px"
