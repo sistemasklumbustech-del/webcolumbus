@@ -1,9 +1,16 @@
 import Link from "next/link";
-import { buscarViajes, obtenerBeneficiosReferidos, type Amenidad, type ResultadoViaje } from "@/lib/api";
+import {
+  buscarViajes,
+  buscarAlternativas,
+  obtenerBeneficiosReferidos,
+  type Amenidad,
+  type ResultadoViaje,
+} from "@/lib/api";
 import { FiltrosBusqueda } from "./FiltrosBusqueda";
 import { OrdenarPor } from "./OrdenarPor";
 import { FiltroCooperativaPills } from "./FiltroCooperativaPills";
 import { TarjetaCooperativaAgrupada } from "./TarjetaCooperativaAgrupada";
+import { SinResultadosAlternativas } from "./SinResultadosAlternativas";
 
 function formatearFecha(fecha: string): string {
   return new Date(`${fecha}T00:00:00`).toLocaleDateString("es-EC", {
@@ -83,6 +90,14 @@ export default async function ResultadosBusquedaPage({
   }
 
   const beneficiosReferidos = await promesaBeneficios;
+
+  // Sin viajes en el tramo de ida (y sin haber fallado la búsqueda):
+  // se piden las alternativas reales -- otras fechas, otros destinos
+  // desde el mismo origen y qué cooperativas cubren la ruta.
+  const alternativas =
+    !error && resultadosIda.length === 0
+      ? await buscarAlternativas({ origenId, destinoId, fecha, pasajeros: Number(pasajeros ?? 1) })
+      : null;
 
   // Fase 5-buscador (16-ago-2026) -- ordenamiento real, del lado del
   // servidor, sobre los datos reales ya obtenidos -- nunca se inventa
@@ -337,6 +352,18 @@ export default async function ResultadosBusquedaPage({
                     Prueba con otra fecha, o confirma que la ruta ya esté publicada por alguna cooperativa.
                   </p>
                 </div>
+              )}
+
+              {!error && grupos.length === 0 && alternativas && !mostrandoVuelta && (
+                <SinResultadosAlternativas
+                  alternativas={alternativas}
+                  origenId={origenId}
+                  destinoId={destinoId}
+                  origenCiudad={origenCiudad}
+                  destinoCiudad={destinoCiudad}
+                  fecha={fecha}
+                  pasajeros={pasajeros ?? "1"}
+                />
               )}
 
               {grupos.map((grupo) => (

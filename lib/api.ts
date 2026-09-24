@@ -3640,3 +3640,38 @@ export function resolverReclamoCoop(
     "No se pudo resolver el reclamo.",
   );
 }
+
+export interface AlternativasBusqueda {
+  fechasCercanas: { fecha: string; cantidadViajes: number; precioDesde: number; cooperativas: string[] }[];
+  otrosDestinos: {
+    destinoId: string;
+    destinoCiudad: string;
+    cantidadViajes: number;
+    precioDesde: number;
+    cooperativas: string[];
+  }[];
+  cooperativasEnLaRuta: string[];
+}
+
+/** Qué hay disponible cuando una búsqueda no trae viajes (23-sep-2026). null si falla: la sugerencia es opcional. */
+export async function buscarAlternativas(params: {
+  origenId: string;
+  destinoId: string;
+  fecha: string;
+  pasajeros: number;
+}): Promise<AlternativasBusqueda | null> {
+  const query = new URLSearchParams({
+    origenId: params.origenId,
+    destinoId: params.destinoId,
+    fecha: params.fecha,
+    pasajeros: String(params.pasajeros),
+  });
+  try {
+    const res = await fetch(`${API_URL}/viajes/alternativas?${query.toString()}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as AlternativasBusqueda;
+  } catch {
+    return null;
+  }
+}
+
