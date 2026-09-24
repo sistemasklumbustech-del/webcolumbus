@@ -34,15 +34,20 @@ export interface ResultadoViaje {
   asientosDisponibles: number;
   // Ítem 15 (05-ago-2026) -- ya llegaban del backend, pero se descartaban
   // en silencio por no estar declaradas aquí. Para el link "ver trayecto".
-  origenLatitud: string;
-  origenLongitud: string;
-  destinoLatitud: string;
-  destinoLongitud: string;
+  // Pueden venir en null si la terminal no tiene coordenadas cargadas.
+  origenLatitud: string | number | null;
+  origenLongitud: string | number | null;
+  destinoLatitud: string | number | null;
+  destinoLongitud: string | number | null;
   origenNombre: string;
   destinoNombre: string;
   recargoVip: string;
   // Hallazgo real del director (21-ago-2026) -- dato informativo.
   distanciaKm: number | null;
+  // 24-sep-2026 -- duración cargada en la ruta y ciudades (ver busqueda.service.ts).
+  duracionEstimadaMinutos?: number | null;
+  origenCiudad?: string;
+  destinoCiudad?: string;
 }
 
 export async function buscarPuntosOperacion(texto: string, soloConRutas = true): Promise<PuntoOperacion[]> {

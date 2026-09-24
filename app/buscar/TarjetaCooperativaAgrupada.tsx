@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AMENIDADES_CATALOGO, listarParadasDeViaje, type ResultadoViaje, type ParadaTrayecto } from "@/lib/api";
 import { ResenasCooperativa } from "./ResenasCooperativa";
+import { estimarTrayecto, formatearDuracion, urlMapaTrayecto } from "@/lib/trayecto";
 
 function formatearHora(iso: string): string {
   // El servidor (Node) y el navegador pueden usar espacios distintos entre la
@@ -20,15 +21,6 @@ function formatearHora(iso: string): string {
     .replace(/[\u202f\u00a0]/g, " ");
 }
 
-/** Mismo cálculo real ya usado en page.tsx -- nunca un dato inventado. */
-function calcularDuracion(salida: string, llegada: string | null): string | null {
-  if (!llegada) return null;
-  const minutos = Math.round((new Date(llegada).getTime() - new Date(salida).getTime()) / 60000);
-  if (minutos <= 0) return null;
-  const horas = Math.floor(minutos / 60);
-  const mins = minutos % 60;
-  return mins > 0 ? `${horas}h ${mins}min` : `${horas}h`;
-}
 
 /**
  * Fase 6-buscador (17-ago-2026) -- "Ver horarios" agrupado por
@@ -66,7 +58,7 @@ export function TarjetaCooperativaAgrupada({
   useEffect(() => {
     listarParadasDeViaje(activo.viajeId).then(setParadas);
   }, [activo.viajeId]);
-  const duracion = calcularDuracion(activo.horaSalidaProgramada, activo.horaLlegadaEstimada);
+  const estimacion = estimarTrayecto(activo);
   const hayVariosHorarios = viajes.length > 1;
 
   return (
@@ -139,24 +131,30 @@ export function TarjetaCooperativaAgrupada({
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
               <span className="h-px flex-1 bg-brand-dark/25" />
               <span className="flex shrink-0 flex-col items-center gap-0.5">
-                {duracion && (
-                  <span className="text-[10px] font-medium text-brand-dark/50">Aprox. {duracion}</span>
+                {estimacion && (
+                  <span className="text-[10px] font-medium text-brand-dark/50">
+                    {estimacion.aproximado ? "Aprox. " : ""}
+                    {formatearDuracion(estimacion.minutos)}
+                  </span>
                 )}
                 <Image src="/img/bus-trayecto.png" alt="" width={44} height={15} className="shrink-0" />
-                {activo.distanciaKm && (
-                  <span className="text-[10px] text-brand-dark/35">{activo.distanciaKm} km</span>
-                )}
+                {estimacion?.km ? (
+                  <span className="text-[10px] text-brand-dark/35">
+                    {activo.distanciaKm ? "" : "≈ "}
+                    {estimacion.km} km
+                  </span>
+                ) : null}
               </span>
               <span className="h-px flex-1 bg-brand-dark/25" />
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" />
             </span>
-            {activo.horaLlegadaEstimada && (
+            {estimacion && (
               <div className="max-w-[100px] shrink-0 sm:max-w-[140px]">
                 <span className="block text-[10px] font-semibold uppercase tracking-wide text-brand-dark/40">
-                  Llegada
+                  {estimacion.llegadaEsReal ? "Llegada" : "Llegada aprox."}
                 </span>
                 <span className="block text-lg font-bold text-brand-dark">
-                  {formatearHora(activo.horaLlegadaEstimada)}
+                  {formatearHora(estimacion.llegadaIso)}
                 </span>
                 <span className="block text-xs text-brand-cobalto/80">{activo.destinoNombre}</span>
               </div>
@@ -171,7 +169,7 @@ export function TarjetaCooperativaAgrupada({
               a una cooperativa de otra en la misma ruta (ej. Machala
               -> Quito via Naranjal, vs. via Riobamba). */}
           <a
-            href={`https://www.google.com/maps/dir/?api=1&origin=${activo.origenLatitud},${activo.origenLongitud}&destination=${activo.destinoLatitud},${activo.destinoLongitud}`}
+            href={urlMapaTrayecto(activo)}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-1 inline-block text-xs font-semibold text-brand-cobalto underline decoration-dotted underline-offset-2 hover:text-brand-dark"
