@@ -12,7 +12,9 @@ import {
   type FilaVentaDelDia,
   type FilaVentaPorDia,
   type ViajeCoopResumen,
+  subirLogoCoop,
 } from "@/lib/api";
+import { SelectorImagen } from "@/components/SelectorImagen";
 import { obtenerToken, decodificarToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
 
@@ -449,41 +451,34 @@ export default function PanelEmpresaDashboard() {
       <div className="overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
         <h2 className="font-display text-base font-bold text-brand-dark">Logo de la cooperativa</h2>
         <p className="mt-1 text-sm text-brand-dark/70">
-          Se muestra junto al nombre de tu cooperativa en los resultados de búsqueda del pasajero. Pega el enlace de
-          una imagen ya subida (por ejemplo, a Cloudinary) — no se sube el archivo desde aquí todavía.
+          Se muestra junto al nombre de tu cooperativa en los resultados de búsqueda del pasajero. Súbelo desde tu
+          computador o celular; la imagen se reduce automáticamente para que cargue rápido.
         </p>
 
         {cargandoLogo ? (
           <p className="mt-4 text-sm text-brand-dark/50">Cargando...</p>
         ) : (
-          <form onSubmit={guardarLogo} className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
-            {logoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element -- URL externa dinámica, no un asset local
-              <img
-                src={logoUrl}
-                alt="Vista previa del logo"
-                className="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-black/10"
-              />
-            )}
-            <div className="flex-1">
-              <label htmlFor="panel-logo-url" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-                URL de la imagen
-              </label>
-              <input
-                id="panel-logo-url"
-                type="text"
-                value={logoUrl}
-                onChange={(e) => setLogoUrl(e.target.value)}
-                placeholder="https://res.cloudinary.com/tu-cuenta/logo.png"
-                className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
-              />
-            </div>
+          <form onSubmit={guardarLogo} className="mt-4 space-y-4">
+            <SelectorImagen
+              id="panel-logo-url"
+              valor={logoUrl}
+              onCambio={setLogoUrl}
+              redonda
+              subir={async (archivo) => {
+                const token = obtenerToken();
+                if (!token) throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");
+                const url = await subirLogoCoop(token, archivo);
+                setMensajeExito("Logo actualizado.");
+                return url;
+              }}
+              onError={setErrorLogo}
+            />
             <button
               type="submit"
               disabled={guardandoLogo}
-              className="h-[42px] rounded-lg bg-brand-amber px-4 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+              className="rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40 disabled:opacity-50"
             >
-              {guardandoLogo ? "Guardando..." : "Guardar"}
+              {guardandoLogo ? "Guardando..." : "Guardar enlace"}
             </button>
           </form>
         )}

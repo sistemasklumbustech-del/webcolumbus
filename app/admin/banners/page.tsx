@@ -9,7 +9,9 @@ import {
   type BannerPropio,
   type FiltrosBanners,
   type ResultadoBanners,
+  subirImagenBannerAdmin,
 } from "@/lib/api";
+import { SelectorImagen } from "@/components/SelectorImagen";
 import { obtenerToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
 
@@ -156,16 +158,16 @@ id="banner-enlace"
           />
         </div>
         <div className="sm:col-span-2">
-          <label htmlFor="banner-imagen" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-            URL de la imagen
-          </label>
-          <input
-id="banner-imagen"
-            type="text"
-            value={imagenUrl}
-            onChange={(e) => setImagenUrl(e.target.value)}
-            placeholder="https://res.cloudinary.com/tu-cuenta/banner.png"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Imagen del banner</span>
+          <SelectorImagen
+            id="banner-imagen"
+            valor={imagenUrl}
+            onCambio={setImagenUrl}
+            subir={async (archivo) => {
+              const token = obtenerToken();
+              if (!token) throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");
+              return subirImagenBannerAdmin(token, archivo);
+            }}
           />
         </div>
 

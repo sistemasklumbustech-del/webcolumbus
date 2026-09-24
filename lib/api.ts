@@ -4,6 +4,8 @@
  * reemplaza por una variable de entorno real (NEXT_PUBLIC_API_URL) — no
  * se hardcodea la URL de producción aquí porque todavía no existe.
  */
+import { comprimirImagen } from "@/lib/comprimir-imagen";
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export interface PuntoOperacion {
@@ -786,7 +788,7 @@ export async function subirComprobantePago(
   archivo: File,
 ): Promise<{ comprobanteUrl: string }> {
   const formData = new FormData();
-  formData.append("comprobante", archivo);
+  formData.append("comprobante", await comprimirImagen(archivo));
   const res = await fetch(`${API_URL}/compras/${compraId}/comprobante`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
@@ -1334,7 +1336,7 @@ export async function subirComprobanteVentanillaCoop(
   archivo: File,
 ): Promise<{ comprobanteUrl: string }> {
   const formData = new FormData();
-  formData.append("comprobante", archivo);
+  formData.append("comprobante", await comprimirImagen(archivo));
   const res = await fetch(`${API_URL}/coop/ventanilla/comprobante`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
@@ -2323,7 +2325,7 @@ export async function actualizarMiIdentidad(
  */
 export async function subirFotoPerfil(token: string, archivo: File): Promise<string> {
   const formData = new FormData();
-  formData.append("foto", archivo);
+  formData.append("foto", await comprimirImagen(archivo, 800));
   const res = await fetch(`${API_URL}/auth/perfil/foto`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
@@ -4015,3 +4017,27 @@ export const verificarCuentaCobro = (token: string, id: string) =>
   pedirCuentaCobro<{ ok: boolean }>(token, `/admin/cuentas-cobro/${id}/verificar`, "PATCH");
 export const rechazarCuentaCobro = (token: string, id: string, motivo: string) =>
   pedirCuentaCobro<{ ok: boolean }>(token, `/admin/cuentas-cobro/${id}/rechazar`, "PATCH", { motivo });
+
+async function subirImagen(token: string, ruta: string, campo: string, archivo: File, lado: number): Promise<string> {
+  const formData = new FormData();
+  formData.append(campo, await comprimirImagen(archivo, lado));
+  const res = await fetch(`${API_URL}${ruta}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo subir la imagen.");
+  }
+  return cuerpo.url as string;
+}
+
+/** Sube el logo de la cooperativa desde un archivo; el servidor ya lo deja guardado en el perfil. */
+export const subirLogoCoop = (token: string, archivo: File) =>
+  subirImagen(token, "/coop/perfil/logo", "logo", archivo, 800);
+
+/** Sube la imagen de un banner desde un archivo y devuelve su URL. */
+export const subirImagenBannerAdmin = (token: string, archivo: File) =>
+  subirImagen(token, "/admin/banners-propios/imagen", "imagen", archivo, 1920);
