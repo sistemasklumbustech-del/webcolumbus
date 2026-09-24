@@ -1245,6 +1245,8 @@ export interface FiltrosViajesCoop {
   estado?: "programado" | "en_curso" | "finalizado" | "cancelado";
   rutaId?: string;
   busqueda?: string;
+  /** Orden por salida; por defecto, las más recientes primero. */
+  orden?: "asc" | "desc";
   pagina: number;
   limite: number;
 }
@@ -1266,6 +1268,7 @@ export async function listarViajesCoop(
   if (filtros.estado) params.set("estado", filtros.estado);
   if (filtros.rutaId) params.set("rutaId", filtros.rutaId);
   if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  if (filtros.orden) params.set("orden", filtros.orden);
   params.set("pagina", String(filtros.pagina));
   params.set("limite", String(filtros.limite));
 
