@@ -8,6 +8,7 @@ import {
   listarUnidadesCoop,
   listarViajesCoop,
   cancelarViajeCoop,
+  confirmarLlegadaViaje,
   cambiarUnidadViajeCoop,
   asignarConductorViajeCoop,
   listarConductoresCoop,
@@ -385,6 +386,8 @@ export default function ViajesPage() {
   const [pagina, setPagina] = useState(1);
   const [resultado, setResultado] = useState<ResultadoViajesCoop | null>(null);
   const [cargandoViajes, setCargandoViajes] = useState(false);
+  // "Ahora" se toma al cargar la lista (no durante el render) para resaltar los viajes en curso cuya hora de llegada ya pasó.
+  const [ahoraMs, setAhoraMs] = useState(0);
 
   function cargarCatalogos() {
     const token = obtenerToken();
@@ -413,12 +416,37 @@ export default function ViajesPage() {
 
   useEffect(cargarCatalogos, []);
 
+  // El correo "¿Ya llegó el bus?" enlaza con ?estado=en_curso: se abre ya
+  // filtrado por los viajes en curso, con un rango de fechas que los incluya.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("estado") !== "en_curso") return;
+    setEstadoFiltro("en_curso");
+    setDesdeFiltro(hoyEcuador(-3));
+    setHastaFiltro(hoyEcuador(1));
+    setAplicados({ desde: hoyEcuador(-3), hasta: hoyEcuador(1), estado: "en_curso", pagina: 1, limite: LIMITE_PAGINA });
+  }, []);
+
+  async function confirmarLlegada(v: ViajeCoopResumen) {
+    const token = obtenerToken();
+    if (!token) return;
+    try {
+      await confirmarLlegadaViaje(token, v.id);
+      setMensajeExito("Llegada confirmada — el viaje quedó finalizado.");
+      cargarViajes();
+    } catch (err) {
+      setMensajeError(err instanceof Error ? err.message : "No se pudo confirmar la llegada.");
+    }
+  }
+
   const cargarViajes = useCallback(() => {
     const token = obtenerToken();
     if (!token) return;
     setCargandoViajes(true);
     listarViajesCoop(token, { ...aplicados, pagina, limite: LIMITE_PAGINA })
-      .then(setResultado)
+      .then((r) => {
+        setAhoraMs(Date.now());
+        setResultado(r);
+      })
       .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar los viajes."))
       .finally(() => setCargandoViajes(false));
   }, [aplicados, pagina]);
@@ -794,11 +822,34 @@ id="viaje-fecha"
                     >
                       {v.estado}
                     </span>
+                    {v.estado === "en_curso" && v.llegadaEstimada && (
+                      <span className="mt-1 block text-[11px] text-brand-dark/50">
+                        Llegada estimada:{" "}
+                        {new Date(v.llegadaEstimada).toLocaleTimeString("es-EC", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone: "America/Guayaquil",
+                        })}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-3 text-right font-semibold text-brand-dark">
                     {formatearDolares(v.precioBase)}
                   </td>
                   <td className="px-6 py-3 text-right">
+                    {v.estado === "en_curso" && esAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => confirmarLlegada(v)}
+                        className={`mr-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                          v.llegadaEstimada && new Date(v.llegadaEstimada).getTime() <= ahoraMs
+                            ? "bg-brand-amber text-brand-dark hover:brightness-95"
+                            : "border border-brand-light text-brand-dark/70 hover:bg-brand-light/40"
+                        }`}
+                      >
+                        Confirmar llegada
+                      </button>
+                    )}
                     <MenuAccionesViaje
                       viaje={v}
                       unidadesActivas={(unidades ?? []).filter((u) => u.activo)}

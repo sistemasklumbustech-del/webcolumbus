@@ -1224,6 +1224,8 @@ export interface ViajeCoopResumen {
   tipoVehiculoNombre: string;
   conductorId: string | null;
   conductorNombre: string | null;
+  /** Hora estimada de llegada (ISO). */
+  llegadaEstimada?: string;
 }
 
 /** Paginación real (22-sep-2026) -- antes traía todos los viajes de la cooperativa de una sola vez. */
@@ -3861,6 +3863,7 @@ export interface AlertasOperacion {
   reclamos: { abiertos: number; enRevision: number };
   viajesAtrasados: ViajeEnAlerta[];
   viajesBajaOcupacion: ViajeEnAlerta[];
+  viajesPendientesLlegada: ViajeEnAlerta[];
 }
 
 function paramsOperacion(filtros: FiltrosOperacion & { pagina?: number; limite?: number }): string {
@@ -3926,4 +3929,14 @@ export async function exportarOperacionAdmin(token: string, filtros: FiltrosOper
   enlace.click();
   enlace.remove();
   window.URL.revokeObjectURL(url);
+}
+
+/** La cooperativa confirma que el bus de un viaje en curso llegó a su destino: pasa a "finalizado". */
+export async function confirmarLlegadaViaje(token: string, viajeId: string): Promise<void> {
+  const res = await fetch(`${API_URL}/coop/viajes/${viajeId}/confirmar-llegada`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo confirmar la llegada.");
 }

@@ -225,6 +225,7 @@ export default function OperacionPage() {
     (alertas.pagosPendientes.cantidad > 0 ||
       alertas.reclamos.abiertos > 0 ||
       alertas.viajesAtrasados.length > 0 ||
+      alertas.viajesPendientesLlegada.length > 0 ||
       alertas.viajesBajaOcupacion.length > 0);
 
   return (
@@ -281,6 +282,18 @@ export default function OperacionPage() {
                     <li key={v.viajeId} className="break-words">
                       {v.cooperativa} · {v.ruta} · salida {v.horaSalida} ·{" "}
                       <span className="font-semibold text-red-700">{v.minutosAtraso} min de atraso</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {alertas.viajesPendientesLlegada.length > 0 && (
+              <div>
+                <p className="font-semibold text-brand-dark">En curso, esperando que la cooperativa confirme la llegada</p>
+                <ul className="mt-1 space-y-1 text-brand-dark/80">
+                  {alertas.viajesPendientesLlegada.map((v) => (
+                    <li key={v.viajeId} className="break-words">
+                      {v.cooperativa} · {v.ruta} · salida {v.horaSalida}
                     </li>
                   ))}
                 </ul>
