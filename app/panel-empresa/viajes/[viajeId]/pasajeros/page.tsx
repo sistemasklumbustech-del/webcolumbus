@@ -44,6 +44,19 @@ export default function ManifiestoViajePage() {
       .catch((err) => setError(err instanceof Error ? err.message : "No se pudo cargar la lista de pasajeros."));
   }, [params.viajeId]);
 
+  // Buscador para ubicar rápido a alguien al abordar (la lista de un viaje es acotada por sus asientos, así que se filtra aquí mismo).
+  const [busqueda, setBusqueda] = useState("");
+  const [soloPendientes, setSoloPendientes] = useState(false);
+  const termino = busqueda.trim().toLowerCase();
+  const pasajerosVisibles = (pasajeros ?? []).filter(
+    (p) =>
+      (!soloPendientes || p.estadoBoleto === "vigente") &&
+      (termino === "" ||
+        p.nombreCompleto.toLowerCase().includes(termino) ||
+        p.documento.toLowerCase().includes(termino) ||
+        p.numeroAsiento.toLowerCase() === termino),
+  );
+
   const vigentes = pasajeros?.filter((p) => p.estadoBoleto !== "cancelado").length ?? 0;
   const abordaron = pasajeros?.filter((p) => p.estadoBoleto === "usado").length ?? 0;
 
@@ -73,6 +86,39 @@ export default function ManifiestoViajePage() {
         )}
 
         {pasajeros !== null && pasajeros.length > 0 && (
+          <div className="flex flex-wrap items-end gap-3 border-b border-black/5 px-4 py-3 sm:px-6">
+            <div className="min-w-[200px] flex-1">
+              <label htmlFor="manifiesto-buscar" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                Buscar pasajero
+              </label>
+              <input
+                id="manifiesto-buscar"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder="Nombre, documento o número de asiento"
+                className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              />
+            </div>
+            <label className="flex items-center gap-2 pb-2 text-sm font-semibold text-brand-dark/80">
+              <input
+                type="checkbox"
+                checked={soloPendientes}
+                onChange={(e) => setSoloPendientes(e.target.checked)}
+                className="h-4 w-4 accent-brand"
+              />
+              Solo los que faltan por abordar
+            </label>
+            <p className="pb-2 text-xs text-brand-dark/50">
+              {pasajerosVisibles.length} de {pasajeros.length}
+            </p>
+          </div>
+        )}
+
+        {pasajeros !== null && pasajeros.length > 0 && pasajerosVisibles.length === 0 && (
+          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">No hay pasajeros con ese filtro.</p>
+        )}
+
+        {pasajeros !== null && pasajerosVisibles.length > 0 && (
           <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
             <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
               <tr>
@@ -85,7 +131,7 @@ export default function ManifiestoViajePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
-              {pasajeros.map((p) => (
+              {pasajerosVisibles.map((p) => (
                 <tr key={p.numeroAsiento}>
                   <td className="px-6 py-3 font-semibold text-brand-dark">{p.numeroAsiento}</td>
                   <td className="px-6 py-3 font-medium text-brand-dark">

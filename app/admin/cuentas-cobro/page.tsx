@@ -5,12 +5,14 @@ import {
   listarCuentasCobroAdmin,
   verificarCuentaCobro,
   rechazarCuentaCobro,
-  type CuentaCobro,
   type EstadoCuentaCobro,
+  type ResultadoCuentasCobro,
 } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
 import { ETIQUETA_ENTIDAD } from "@/lib/entidades-financieras";
 import { Toast } from "@/components/Toast";
+
+const LIMITE_PAGINA = 10;
 
 const claseCampo =
   "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
@@ -36,22 +38,50 @@ const NOMBRE_ESTADO: Record<string, string> = {
 /** Revisión de las cuentas bancarias donde las cooperativas reciben sus liquidaciones. */
 export default function CuentasCobroAdminPage() {
   const [estado, setEstado] = useState<EstadoCuentaCobro | "">("pendiente_verificacion");
-  const [cuentas, setCuentas] = useState<CuentaCobro[] | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [pagina, setPagina] = useState(1);
+  const [resultado, setResultado] = useState<ResultadoCuentasCobro | null>(null);
+  const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exito, setExito] = useState<string | null>(null);
   const [rechazando, setRechazando] = useState<string | null>(null);
   const [motivo, setMotivo] = useState("");
   const [trabajando, setTrabajando] = useState(false);
 
-  const cargar = useCallback(() => {
+  // Se aplica al cambiar cualquier filtro, sin recargar la página; la pequeña espera evita una consulta por letra.
+  const [version, setVersion] = useState(0);
+  const cargar = useCallback(() => setVersion((v) => v + 1), []);
+
+  useEffect(() => {
     const token = obtenerToken();
     if (!token) return;
-    listarCuentasCobroAdmin(token, estado || undefined)
-      .then(setCuentas)
-      .catch((e) => setError(e instanceof Error ? e.message : "No se pudieron cargar las cuentas."));
-  }, [estado]);
+    let vigente = true;
+    setCargando(true);
+    const espera = setTimeout(() => {
+      listarCuentasCobroAdmin(token, {
+        estado: estado || undefined,
+        busqueda: busqueda.trim() || undefined,
+        pagina,
+        limite: LIMITE_PAGINA,
+      })
+        .then((r) => {
+          if (vigente) setResultado(r);
+        })
+        .catch((e) => {
+          if (vigente) setError(e instanceof Error ? e.message : "No se pudieron cargar las cuentas.");
+        })
+        .finally(() => {
+          if (vigente) setCargando(false);
+        });
+    }, 250);
+    return () => {
+      vigente = false;
+      clearTimeout(espera);
+    };
+  }, [estado, busqueda, pagina, version]);
 
-  useEffect(cargar, [cargar]);
+  const cuentas = resultado?.filas ?? null;
+  const totalPaginas = Math.max(1, Math.ceil((resultado?.total ?? 0) / LIMITE_PAGINA));
 
   async function accion(fn: (token: string) => Promise<unknown>, ok: string) {
     const token = obtenerToken();
@@ -83,23 +113,48 @@ export default function CuentasCobroAdminPage() {
         </p>
       </div>
 
-      <div className="max-w-xs">
-        <label htmlFor="cc-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-          Estado
-        </label>
-        <select id="cc-estado" value={estado} onChange={(e) => setEstado(e.target.value as EstadoCuentaCobro | "")} className={claseCampo}>
-          {ESTADOS.map((e) => (
-            <option key={e.valor} value={e.valor}>
-              {e.etiqueta}
-            </option>
-          ))}
-        </select>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:max-w-2xl">
+        <div>
+          <label htmlFor="cc-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Estado
+          </label>
+          <select
+            id="cc-estado"
+            value={estado}
+            onChange={(e) => {
+              setEstado(e.target.value as EstadoCuentaCobro | "");
+              setPagina(1);
+            }}
+            className={claseCampo}
+          >
+            {ESTADOS.map((e) => (
+              <option key={e.valor} value={e.valor}>
+                {e.etiqueta}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="cc-buscar" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            Buscar
+          </label>
+          <input
+            id="cc-buscar"
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPagina(1);
+            }}
+            placeholder="Cooperativa, titular, RUC o correo"
+            className={claseCampo}
+          />
+        </div>
       </div>
 
       {cuentas === null ? (
         <p className="text-sm text-brand-dark/60">Cargando...</p>
       ) : cuentas.length === 0 ? (
-        <p className="rounded-2xl bg-white p-6 text-sm text-brand-dark/60 shadow-sm ring-1 ring-black/5">No hay cuentas en este estado.</p>
+        <p className="rounded-2xl bg-white p-6 text-sm text-brand-dark/60 shadow-sm ring-1 ring-black/5">No hay cuentas con estos filtros.</p>
       ) : (
         <ul className="space-y-3">
           {cuentas.map((c) => (
@@ -202,6 +257,32 @@ export default function CuentasCobroAdminPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {resultado !== null && resultado.total > 0 && (
+        <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+          <span>
+            {resultado.total} cuenta{resultado.total === 1 ? "" : "s"} · Página {pagina} de {totalPaginas}
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPagina((p) => Math.max(1, p - 1))}
+              disabled={pagina <= 1 || cargando}
+              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+              disabled={pagina >= totalPaginas || cargando}
+              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

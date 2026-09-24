@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { listarMisBoletos, calificarViaje, cancelarBoleto, descargarBoletoPdf, type MiBoleto } from "@/lib/api";
+import { listarMisBoletos, calificarViaje, cancelarBoleto, descargarBoletoPdf, type ResultadoMisBoletos } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
 import { CodigoQr } from "@/components/CodigoQr";
 import { SolicitarFactura } from "./SolicitarFactura";
 import { ReportarProblema } from "./ReportarProblema";
+
+const LIMITE_PAGINA = 10;
 
 function formatearFechaHora(iso: string) {
   return new Date(iso).toLocaleString("es-EC", {
@@ -211,18 +213,57 @@ function FormularioCalificar({ boletoId, onEnviado }: { boletoId: string; onEnvi
 }
 
 export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void }) {
-  const [boletos, setBoletos] = useState<MiBoleto[] | null>(null);
+  const [boletos, setBoletos] = useState<ResultadoMisBoletos | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [estado, setEstado] = useState<"" | "vigente" | "usado" | "cancelado">("");
+  const [busqueda, setBusqueda] = useState("");
+  const [desde, setDesde] = useState("");
+  const [hasta, setHasta] = useState("");
+  const [pagina, setPagina] = useState(1);
+  const [cargando, setCargando] = useState(true);
+  const [version, setVersion] = useState(0);
 
-  function cargar() {
+  // Recarga la lista actual (después de cancelar o calificar un boleto).
+  const cargar = () => setVersion((v) => v + 1);
+
+  // Se aplica al cambiar cualquier filtro, sin recargar la página; la pequeña espera evita una consulta por letra.
+  useEffect(() => {
     const token = tokenValido();
     if (!token) return;
-    listarMisBoletos(token)
-      .then(setBoletos)
-      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar tus boletos."));
-  }
+    let vigente = true;
+    setCargando(true);
+    const espera = setTimeout(() => {
+      listarMisBoletos(token, {
+        estado: estado || undefined,
+        busqueda: busqueda.trim() || undefined,
+        desde: desde || undefined,
+        hasta: hasta || undefined,
+        pagina,
+        limite: LIMITE_PAGINA,
+      })
+        .then((r) => {
+          if (!vigente) return;
+          setBoletos(r);
+          setError(null);
+        })
+        .catch((err) => {
+          if (vigente) setError(err instanceof Error ? err.message : "No se pudieron cargar tus boletos.");
+        })
+        .finally(() => {
+          if (vigente) setCargando(false);
+        });
+    }, 250);
+    return () => {
+      vigente = false;
+      clearTimeout(espera);
+    };
+  }, [estado, busqueda, desde, hasta, pagina, version]);
 
-  useEffect(cargar, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const hayFiltros = estado !== "" || busqueda.trim() !== "" || desde !== "" || hasta !== "";
+  const totalPaginas = Math.max(1, Math.ceil((boletos?.total ?? 0) / LIMITE_PAGINA));
+  const claseCampo =
+    "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium";
+  const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
 
   return (
     <>
@@ -238,6 +279,90 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
         </Link>
       </div>
 
+      <div className="mt-4 grid grid-cols-1 gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="sm:col-span-2 lg:col-span-1">
+          <label htmlFor="mb-buscar" className={claseEtiqueta}>
+            Buscar
+          </label>
+          <input
+            id="mb-buscar"
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPagina(1);
+            }}
+            placeholder="Ciudad o cooperativa"
+            className={claseCampo}
+          />
+        </div>
+        <div>
+          <label htmlFor="mb-estado" className={claseEtiqueta}>
+            Estado
+          </label>
+          <select
+            id="mb-estado"
+            value={estado}
+            onChange={(e) => {
+              setEstado(e.target.value as typeof estado);
+              setPagina(1);
+            }}
+            className={claseCampo}
+          >
+            <option value="">Todos</option>
+            <option value="vigente">Vigentes</option>
+            <option value="usado">Usados</option>
+            <option value="cancelado">Cancelados</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="mb-desde" className={claseEtiqueta}>
+            Salida desde
+          </label>
+          <input
+            id="mb-desde"
+            type="date"
+            value={desde}
+            onChange={(e) => {
+              setDesde(e.target.value);
+              setPagina(1);
+            }}
+            className={claseCampo}
+          />
+        </div>
+        <div>
+          <label htmlFor="mb-hasta" className={claseEtiqueta}>
+            Salida hasta
+          </label>
+          <input
+            id="mb-hasta"
+            type="date"
+            value={hasta}
+            min={desde || undefined}
+            onChange={(e) => {
+              setHasta(e.target.value);
+              setPagina(1);
+            }}
+            className={claseCampo}
+          />
+        </div>
+        <div className="flex items-end">
+          <button
+            type="button"
+            onClick={() => {
+              setEstado("");
+              setBusqueda("");
+              setDesde("");
+              setHasta("");
+              setPagina(1);
+            }}
+            disabled={!hayFiltros}
+            className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm font-semibold text-brand-dark/70 hover:bg-brand-light/40 disabled:opacity-40"
+          >
+            Limpiar
+          </button>
+        </div>
+      </div>
+
       {error && (
         <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
           {error}
@@ -246,7 +371,11 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
 
       {boletos === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
 
-      {boletos !== null && boletos.length === 0 && (
+      {boletos !== null && boletos.total === 0 && hayFiltros && (
+        <p className="mt-8 text-center text-sm text-brand-dark/50">No encontramos boletos con estos filtros.</p>
+      )}
+
+      {boletos !== null && boletos.total === 0 && !hayFiltros && (
         <div className="mt-8 text-center">
           <p className="text-sm text-brand-dark/50">Todavía no tienes boletos comprados.</p>
           <Link
@@ -258,8 +387,8 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
         </div>
       )}
 
-      <div className="mt-6 space-y-3">
-        {boletos?.map((b) => {
+      <div className={`mt-6 space-y-3 transition-opacity ${cargando && boletos !== null ? "opacity-60" : ""}`}>
+        {boletos?.filas.map((b) => {
           const referenciaLlegada = b.horaLlegadaEstimada ?? b.horaSalidaProgramada;
           const yaLlego = new Date() >= new Date(referenciaLlegada);
           return (
@@ -328,6 +457,32 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
           );
         })}
       </div>
+
+      {boletos !== null && boletos.total > 0 && (
+        <div className="mt-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+          <span>
+            {boletos.total} boleto{boletos.total === 1 ? "" : "s"} · Página {pagina} de {totalPaginas}
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPagina((p) => Math.max(1, p - 1))}
+              disabled={pagina <= 1 || cargando}
+              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+              disabled={pagina >= totalPaginas || cargando}
+              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

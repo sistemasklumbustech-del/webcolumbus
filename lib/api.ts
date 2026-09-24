@@ -2723,14 +2723,45 @@ export interface MiBoleto {
   puedeCalificar: boolean;
 }
 
-export async function listarMisBoletos(token: string): Promise<MiBoleto[]> {
-  const res = await fetch(`${API_URL}/calificaciones/mis-boletos`, {
+/** Filtros y paginación de "Mis boletos" (24-sep-2026). Fechas YYYY-MM-DD sobre la fecha de salida. */
+export interface FiltrosMisBoletos {
+  estado?: "vigente" | "usado" | "cancelado";
+  desde?: string;
+  hasta?: string;
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoMisBoletos {
+  filas: MiBoleto[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarMisBoletos(token: string, filtros: FiltrosMisBoletos): Promise<ResultadoMisBoletos> {
+  const params = new URLSearchParams();
+  if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.desde) params.set("desde", filtros.desde);
+  if (filtros.hasta) params.set("hasta", filtros.hasta);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+  const res = await fetch(`${API_URL}/calificaciones/mis-boletos?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   const cuerpo = await res.json();
-  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar tus boletos.");
-  return cuerpo as MiBoleto[];
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudieron cargar tus boletos.");
+  }
+  // Tolera un API todavía sin paginación (devolvía la lista completa) durante el despliegue.
+  if (Array.isArray(cuerpo)) {
+    return { filas: cuerpo as MiBoleto[], total: cuerpo.length, pagina: 1, limite: cuerpo.length || filtros.limite };
+  }
+  return cuerpo as ResultadoMisBoletos;
 }
 
 /**
@@ -4014,8 +4045,26 @@ async function pedirCuentaCobro<T>(token: string, ruta: string, metodo = "GET", 
 export const listarCuentasCobroCoop = (token: string) => pedirCuentaCobro<CuentaCobro[]>(token, "/coop/cuenta-cobro");
 export const registrarCuentaCobro = (token: string, datos: DatosCuentaCobro) =>
   pedirCuentaCobro<{ id: string }>(token, "/coop/cuenta-cobro", "POST", datos);
-export const listarCuentasCobroAdmin = (token: string, estado?: EstadoCuentaCobro) =>
-  pedirCuentaCobro<CuentaCobro[]>(token, `/admin/cuentas-cobro${estado ? `?estado=${estado}` : ""}`);
+export interface FiltrosCuentasCobro {
+  estado?: EstadoCuentaCobro;
+  busqueda?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoCuentasCobro {
+  filas: CuentaCobro[];
+  total: number;
+}
+
+export const listarCuentasCobroAdmin = (token: string, filtros: FiltrosCuentasCobro) => {
+  const params = new URLSearchParams();
+  if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+  return pedirCuentaCobro<ResultadoCuentasCobro>(token, `/admin/cuentas-cobro?${params.toString()}`);
+};
 export const verificarCuentaCobro = (token: string, id: string) =>
   pedirCuentaCobro<{ ok: boolean }>(token, `/admin/cuentas-cobro/${id}/verificar`, "PATCH");
 export const rechazarCuentaCobro = (token: string, id: string, motivo: string) =>
