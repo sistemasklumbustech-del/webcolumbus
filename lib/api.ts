@@ -3691,3 +3691,102 @@ export async function buscarAlternativas(params: {
   }
 }
 
+/* -------------------------------------------------------------------
+ * Auditoría de la plataforma (RF-021, 24-sep-2026) -- solo lectura, solo
+ * para administradores de plataforma.
+ * ------------------------------------------------------------------- */
+
+export interface RegistroAuditoria {
+  id: string;
+  creadoEn: string;
+  accion: string;
+  origen: "usuario" | "sistema";
+  resultado: "exito" | "fallo";
+  usuarioId: string | null;
+  usuarioNombre: string | null;
+  usuarioCorreo: string | null;
+  usuarioRol: string | null;
+  entidadTipo: string;
+  entidadId: string | null;
+  direccionIp: string | null;
+  detalle: Record<string, unknown> | null;
+}
+
+export interface FiltrosAuditoria {
+  accion?: string;
+  origen?: "usuario" | "sistema";
+  resultado?: "exito" | "fallo";
+  busqueda?: string;
+  ip?: string;
+  desde?: string;
+  hasta?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface ResultadoAuditoria {
+  filas: RegistroAuditoria[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+function paramsAuditoria(filtros: Partial<FiltrosAuditoria>): URLSearchParams {
+  const params = new URLSearchParams();
+  if (filtros.accion) params.set("accion", filtros.accion);
+  if (filtros.origen) params.set("origen", filtros.origen);
+  if (filtros.resultado) params.set("resultado", filtros.resultado);
+  if (filtros.busqueda) params.set("busqueda", filtros.busqueda);
+  if (filtros.ip) params.set("ip", filtros.ip);
+  if (filtros.desde) params.set("desde", filtros.desde);
+  if (filtros.hasta) params.set("hasta", filtros.hasta);
+  if (filtros.pagina) params.set("pagina", String(filtros.pagina));
+  if (filtros.limite) params.set("limite", String(filtros.limite));
+  return params;
+}
+
+export async function listarAuditoriaAdmin(token: string, filtros: FiltrosAuditoria): Promise<ResultadoAuditoria> {
+  const res = await fetch(`${API_URL}/admin/auditoria?${paramsAuditoria(filtros).toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo cargar la auditoría.");
+  }
+  return cuerpo as ResultadoAuditoria;
+}
+
+export async function listarAccionesAuditoriaAdmin(token: string): Promise<string[]> {
+  const res = await fetch(`${API_URL}/admin/auditoria/acciones`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar las acciones.");
+  return cuerpo as string[];
+}
+
+/** Descarga el CSV con los mismos filtros de la pantalla (hasta 10.000 registros). */
+export async function exportarAuditoriaAdmin(
+  token: string,
+  filtros: Omit<FiltrosAuditoria, "pagina" | "limite">,
+): Promise<void> {
+  const res = await fetch(`${API_URL}/admin/auditoria/exportar?${paramsAuditoria(filtros).toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const cuerpo = await res.json().catch(() => null);
+    throw new Error(cuerpo?.message ?? "No se pudo exportar la auditoría.");
+  }
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const enlace = document.createElement("a");
+  enlace.href = url;
+  enlace.download = "auditoria.csv";
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  window.URL.revokeObjectURL(url);
+}
