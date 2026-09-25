@@ -133,9 +133,29 @@ export default function ManifiestoViajePage() {
             <tbody className="divide-y divide-black/5">
               {pasajerosVisibles.map((p) => (
                 <tr key={p.numeroAsiento}>
-                  <td className="px-6 py-3 font-semibold text-brand-dark">{p.numeroAsiento}</td>
+                  <td className="px-6 py-3 font-semibold text-brand-dark">
+                    {p.numeroAsiento}
+                    {p.soloMujeres && (
+                      <span
+                        title="Asiento exclusivo para mujeres"
+                        className="ml-2 inline-block h-2.5 w-2.5 rounded-full bg-pink-500 align-middle"
+                        aria-label="Asiento exclusivo para mujeres"
+                      />
+                    )}
+                  </td>
                   <td className="px-6 py-3 font-medium text-brand-dark">
                     {p.nombreCompleto}
+                    {p.soloMujeres && p.estadoBoleto !== "cancelado" && (
+                      <span
+                        className={`ml-2 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          p.sexo === "femenino" ? "bg-pink-100 text-pink-700" : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {p.sexo === "femenino"
+                          ? "Asiento de mujeres"
+                          : "Asiento de mujeres — revisar"}
+                      </span>
+                    )}
                     {p.esMenorEdad && (
                       <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
                         Menor

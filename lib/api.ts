@@ -2591,6 +2591,10 @@ export async function listarVentasCoop(token: string, filtros: FiltrosVentasCoop
 }
 
 export interface PasajeroDeViaje {
+  /** Sexo declarado al comprar (solo se pide en asientos exclusivos para mujeres). */
+  sexo?: "femenino" | "masculino" | null;
+  /** El asiento es exclusivo para mujeres. */
+  soloMujeres?: boolean;
   numeroAsiento: string;
   nombreCompleto: string;
   documento: string;
