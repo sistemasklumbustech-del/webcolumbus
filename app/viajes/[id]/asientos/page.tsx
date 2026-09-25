@@ -11,6 +11,7 @@ import {
 } from "@/lib/api";
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
 import { MapaAsientosBus } from "@/components/MapaAsientosBus";
+import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
 
 /**
  * Vacío real de diseño encontrado el 29-jul-2026: hasta ahora esta
@@ -225,6 +226,11 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
             tieneBano={(mapa.tipoVehiculoAmenidades ?? []).includes("bano_a_bordo")}
           />
         </div>
+        {seleccionados.some((n) => esAsientoSoloMujeres(mapa, n)) && (
+          <p className="mt-3 rounded-lg bg-pink-50 px-3 py-2 text-xs font-medium text-pink-800 ring-1 ring-pink-200">
+            Elegiste un asiento exclusivo para mujeres. Al comprar te pediremos confirmar el sexo del pasajero.
+          </p>
+        )}
         {(esTramoIda || esTramoVuelta) && (
           <p className="mt-3 text-center text-sm font-semibold text-brand-cobalto">
             {esTramoIda ? "Tramo 1 de 2: Ida" : "Tramo 2 de 2: Vuelta"}

@@ -6,6 +6,8 @@ import Link from "next/link";
 import { crearCompra, cotizarCompra, listarMisCreditos, obtenerMapaAsientos, iniciarPagoManual, subirComprobantePago, listarMetodosPagoPorViaje, obtenerInfoPasarela, type InfoPasarela, type ResultadoCompra, type Cotizacion, type MiCredito, type MapaAsientos, type MetodoPagoDisponible, type TipoMetodoPago, type PasajeroCompraInput } from "@/lib/api";
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
 import { CodigoQr } from "@/components/CodigoQr";
+import { CampoSexoAsientoMujeres, type SexoPasajero } from "@/components/CampoSexoAsientoMujeres";
+import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
 
 const TARIFAS = [
   { valor: "adulto", etiqueta: "Adulto (tarifa completa)" },
@@ -37,6 +39,8 @@ interface DatosPasajero {
   tipoTarifa: (typeof TARIFAS)[number]["valor"];
   fechaNacimiento: string;
   esEmbarazada: boolean;
+  /** Solo se pide cuando el asiento es exclusivo para mujeres. */
+  sexo: SexoPasajero;
   adultoResponsableNombre: string;
   adultoResponsableDocumento: string;
   adultoResponsableTelefono: string;
@@ -53,6 +57,7 @@ function datosPasajeroVacio(viajeId: string, numeroAsiento: string): DatosPasaje
     tipoTarifa: "adulto",
     fechaNacimiento: "",
     esEmbarazada: false,
+    sexo: "",
     adultoResponsableNombre: "",
     adultoResponsableDocumento: "",
     adultoResponsableTelefono: "",
@@ -103,6 +108,8 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   const [creditos, setCreditos] = useState<MiCredito[]>([]);
   const [creditoElegidoId, setCreditoElegidoId] = useState("");
   const [mapa, setMapa] = useState<MapaAsientos | null>(null);
+  // Un mapa por cada viaje de la compra (ida y vuelta), para saber qué asientos son exclusivos para mujeres.
+  const [mapasPorViaje, setMapasPorViaje] = useState<Record<string, MapaAsientos>>({});
   const [metodosDisponibles, setMetodosDisponibles] = useState<MetodoPagoDisponible[]>([]);
   // "tarjeta" y "deuna_en_linea" se cobran en línea por la pasarela; los demás son métodos manuales de la cooperativa.
   const [metodoElegido, setMetodoElegido] = useState<TipoMetodoPago | "tarjeta" | "deuna_en_linea">("tarjeta");
@@ -146,6 +153,18 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
       .catch(() => {
         /* silencioso a propósito: si falla, simplemente no se muestra la alerta de política */
       });
+  }, [viajeId]);
+
+  useEffect(() => {
+    const ids = Array.from(new Set(paresAsiento.map((p) => p.viajeId)));
+    ids.forEach((id) => {
+      obtenerMapaAsientos(id)
+        .then((m) => setMapasPorViaje((actual) => ({ ...actual, [id]: m })))
+        .catch(() => {
+          /* silencioso: sin el mapa simplemente no se adelanta el aviso; el servidor igual lo exige al comprar */
+        });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viajeId]);
 
   useEffect(() => {
@@ -202,6 +221,17 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
         return;
       }
     }
+    for (const p of pasajerosData) {
+      if (!esAsientoSoloMujeres(mapasPorViaje[p.viajeId], p.numeroAsiento)) continue;
+      if (p.sexo === "") {
+        setError(`El asiento ${p.numeroAsiento} es exclusivo para mujeres: indica el sexo del pasajero.`);
+        return;
+      }
+      if (p.sexo === "masculino") {
+        setError(`El asiento ${p.numeroAsiento} es exclusivo para mujeres. Vuelve atrás y elige otro asiento.`);
+        return;
+      }
+    }
     setProcesando(true);
     setError(null);
     try {
@@ -216,6 +246,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
         tipoTarifa: p.tipoTarifa,
         fechaNacimiento: p.fechaNacimiento || undefined,
         esEmbarazada: p.esEmbarazada || undefined,
+        sexo: esAsientoSoloMujeres(mapasPorViaje[p.viajeId], p.numeroAsiento) && p.sexo !== "" ? p.sexo : undefined,
         autorizacionMenor:
           p.tipoTarifa === "nino"
             ? {
@@ -591,6 +622,14 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   ))}
                 </select>
               </div>
+              {esAsientoSoloMujeres(mapasPorViaje[p.viajeId], p.numeroAsiento) && (
+                <CampoSexoAsientoMujeres
+                  id={`checkout-sexo-${indice}`}
+                  numeroAsiento={p.numeroAsiento}
+                  valor={p.sexo}
+                  onCambio={(sexo) => actualizarPasajero(indice, { sexo })}
+                />
+              )}
               <div className="flex items-center gap-2 rounded-lg bg-brand-light/40 px-3 py-2.5">
                 <input
                   id={`checkout-embarazada-${indice}`}

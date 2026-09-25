@@ -1450,6 +1450,8 @@ export interface PasajeroCompraInput {
   tipoTarifa: "adulto" | "nino" | "tercera_edad" | "discapacidad";
   fechaNacimiento?: string;
   esEmbarazada?: boolean;
+  /** Obligatorio solo si el asiento es exclusivo para mujeres. */
+  sexo?: "femenino" | "masculino";
   autorizacionMenor?: AutorizacionMenorInput;
 }
 

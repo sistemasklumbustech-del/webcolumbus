@@ -16,6 +16,8 @@ import {
 } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
 import { MapaAsientosBus } from "@/components/MapaAsientosBus";
+import { CampoSexoAsientoMujeres, type SexoPasajero } from "@/components/CampoSexoAsientoMujeres";
+import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
 import { CodigoQr } from "@/components/CodigoQr";
 
 const TARIFAS = [
@@ -38,6 +40,8 @@ interface DatosPasajeroVentanilla {
   tipoDocumento: "cedula" | "pasaporte";
   documento: string;
   tipoTarifa: (typeof TARIFAS)[number]["valor"];
+  /** Solo se pide cuando el asiento es exclusivo para mujeres. */
+  sexo: SexoPasajero;
   adultoResponsableNombre: string;
   adultoResponsableDocumento: string;
 }
@@ -50,6 +54,7 @@ function vacio(numeroAsiento: string): DatosPasajeroVentanilla {
     tipoDocumento: "cedula",
     documento: "",
     tipoTarifa: "adulto",
+    sexo: "",
     adultoResponsableNombre: "",
     adultoResponsableDocumento: "",
   };
@@ -104,6 +109,7 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
       tipoDocumento: p.tipoDocumento,
       documento: p.documento.trim(),
       tipoTarifa: p.tipoTarifa,
+      sexo: esAsientoSoloMujeres(mapa, p.numeroAsiento) && p.sexo !== "" ? p.sexo : undefined,
       autorizacionMenor:
         p.tipoTarifa === "nino"
           ? {
@@ -119,6 +125,17 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
     e.preventDefault();
     const token = obtenerToken();
     if (!token || seleccionados.length === 0) return;
+    for (const p of pasajerosData) {
+      if (!esAsientoSoloMujeres(mapa, p.numeroAsiento)) continue;
+      if (p.sexo === "") {
+        setError(`El asiento ${p.numeroAsiento} es exclusivo para mujeres: indica el sexo del pasajero.`);
+        return;
+      }
+      if (p.sexo === "masculino") {
+        setError(`El asiento ${p.numeroAsiento} es exclusivo para mujeres. Elige otro asiento para este pasajero.`);
+        return;
+      }
+    }
     setProcesando(true);
     setError(null);
     try {
@@ -299,6 +316,14 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
               <p className="-mt-1 text-xs text-brand-dark/50">
                 Cédula solo para números ecuatorianos. Turistas y extranjeros: elige Pasaporte.
               </p>
+              {esAsientoSoloMujeres(mapa, p.numeroAsiento) && (
+                <CampoSexoAsientoMujeres
+                  id={`ventanilla-sexo-${p.numeroAsiento}`}
+                  numeroAsiento={p.numeroAsiento}
+                  valor={p.sexo}
+                  onCambio={(sexo) => actualizarPasajero(p.numeroAsiento, { sexo })}
+                />
+              )}
               <select
                 value={p.tipoTarifa}
                 onChange={(e) => actualizarPasajero(p.numeroAsiento, { tipoTarifa: e.target.value as DatosPasajeroVentanilla["tipoTarifa"] })}
