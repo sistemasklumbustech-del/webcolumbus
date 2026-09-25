@@ -14,6 +14,7 @@ import {
 } from "@/lib/api";
 import { obtenerToken, decodificarToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
+import { usePaginacionLocal, ControlesPaginacion } from "@/components/Paginacion";
 
 function formatearDolares(monto: number) {
   return new Intl.NumberFormat("es-EC", { style: "currency", currency: "USD" }).format(monto);
@@ -85,6 +86,13 @@ export default function AdminHome() {
   const [error, setError] = useState<string | null>(null);
 
   const [ventas, setVentas] = useState<FilaVentaNacional[] | null>(null);
+  // Buscador y páginas de "Ventas por cooperativa" (25-sep-2026); los totales de arriba usan la lista completa.
+  const [busquedaVentas, setBusquedaVentas] = useState("");
+  const terminoVentas = busquedaVentas.trim().toLowerCase();
+  const ventasFiltradas = (ventas ?? []).filter(
+    (v) => terminoVentas === "" || v.cooperativaNombre.toLowerCase().includes(terminoVentas),
+  );
+  const pagVentas = usePaginacionLocal(ventasFiltradas);
   const [errorVentas, setErrorVentas] = useState<string | null>(null);
 
   const [usuarios, setUsuarios] = useState<ConteoUsuarios | null>(null);
@@ -248,8 +256,25 @@ export default function AdminHome() {
       </div>
 
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="border-b border-black/5 px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 px-6 py-4">
           <h2 className="font-display text-base font-bold text-brand-dark">Ventas por cooperativa</h2>
+          {ventas !== null && ventas.length > 0 && (
+            <div className="w-full sm:w-64">
+              <label htmlFor="ventas-buscar" className="sr-only">
+                Buscar cooperativa
+              </label>
+              <input
+                id="ventas-buscar"
+                value={busquedaVentas}
+                onChange={(e) => {
+                  setBusquedaVentas(e.target.value);
+                  pagVentas.setPagina(1);
+                }}
+                placeholder="Buscar cooperativa"
+                className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              />
+            </div>
+          )}
         </div>
 
         {ventas === null && !errorVentas && (
@@ -262,7 +287,11 @@ export default function AdminHome() {
           </p>
         )}
 
-        {ventas !== null && ventas.length > 0 && (
+        {ventas !== null && ventas.length > 0 && ventasFiltradas.length === 0 && (
+          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">Ninguna cooperativa coincide con la búsqueda.</p>
+        )}
+
+        {ventasFiltradas.length > 0 && (
           <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
             <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
               <tr>
@@ -272,7 +301,7 @@ export default function AdminHome() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
-              {ventas.map((v, i) => (
+              {pagVentas.visibles.map((v, i) => (
                 <tr key={i}>
                   <td className="px-6 py-3 font-medium text-brand-dark">{v.cooperativaNombre}</td>
                   <td className="px-6 py-3 text-right text-brand-dark/70">{v.totalBoletos}</td>
@@ -284,6 +313,14 @@ export default function AdminHome() {
             </tbody>
           </table></div>
         )}
+        <ControlesPaginacion
+          pagina={pagVentas.pagina}
+          totalPaginas={pagVentas.totalPaginas}
+          total={pagVentas.total}
+          etiqueta="cooperativa"
+          onCambio={pagVentas.setPagina}
+          className="border-t border-black/5"
+        />
       </div>
 
       <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5">

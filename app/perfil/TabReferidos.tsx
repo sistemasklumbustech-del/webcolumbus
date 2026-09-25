@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { listarMisReferidos, type MiReferido, type MiPerfil } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
+import { usePaginacionLocal, ControlesPaginacion } from "@/components/Paginacion";
 
 function formatearFecha(iso: string) {
   return new Date(iso).toLocaleDateString("es-EC", {
@@ -22,6 +23,7 @@ function formatearFecha(iso: string) {
  */
 export function TabReferidos({ perfil }: { perfil: MiPerfil }) {
   const [referidos, setReferidos] = useState<MiReferido[] | null>(null);
+  const pagReferidos = usePaginacionLocal(referidos ?? []);
   const [error, setError] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
 
@@ -91,7 +93,7 @@ export function TabReferidos({ perfil }: { perfil: MiPerfil }) {
               )}
             </h2>
             <div className="mt-2 grid gap-2 md:grid-cols-2">
-              {referidos.map((r) => (
+              {pagReferidos.visibles.map((r) => (
                 <div
                   key={r.id}
                   className="flex items-center justify-between rounded-xl bg-brand-light/40 px-4 py-3"
@@ -112,6 +114,14 @@ export function TabReferidos({ perfil }: { perfil: MiPerfil }) {
                 </div>
               ))}
             </div>
+            <ControlesPaginacion
+              pagina={pagReferidos.pagina}
+              totalPaginas={pagReferidos.totalPaginas}
+              total={pagReferidos.total}
+              etiqueta="persona"
+              onCambio={pagReferidos.setPagina}
+              className="!px-0"
+            />
           </>
         )}
       </div>

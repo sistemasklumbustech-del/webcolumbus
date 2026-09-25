@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { obtenerSaldoWallet, listarMovimientosWallet, type MovimientoWallet } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
+import { usePaginacionLocal, ControlesPaginacion } from "@/components/Paginacion";
 
 function formatearFecha(iso: string) {
   return new Date(iso).toLocaleDateString("es-EC", {
@@ -29,6 +30,7 @@ const ETIQUETAS_TIPO: Record<string, { texto: string; positivo: boolean }> = {
 export function TabWallet() {
   const [saldo, setSaldo] = useState<number | null>(null);
   const [movimientos, setMovimientos] = useState<MovimientoWallet[] | null>(null);
+  const pagMovimientos = usePaginacionLocal(movimientos ?? []);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -89,7 +91,7 @@ export function TabWallet() {
           <>
             <h2 className="font-display text-sm font-bold text-brand-dark">Historial</h2>
             <div className="mt-2 grid gap-2 md:grid-cols-2">
-              {movimientos.map((m) => {
+              {pagMovimientos.visibles.map((m) => {
                 const etiqueta = ETIQUETAS_TIPO[m.tipo] ?? { texto: m.tipo, positivo: m.monto >= 0 };
                 return (
                   <div
@@ -111,6 +113,14 @@ export function TabWallet() {
                 );
               })}
             </div>
+            <ControlesPaginacion
+              pagina={pagMovimientos.pagina}
+              totalPaginas={pagMovimientos.totalPaginas}
+              total={pagMovimientos.total}
+              etiqueta="movimiento"
+              onCambio={pagMovimientos.setPagina}
+              className="!px-0"
+            />
           </>
         )}
       </div>

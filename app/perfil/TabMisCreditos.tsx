@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { listarMisCreditos, type MiCredito } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
+import { usePaginacionLocal, ControlesPaginacion } from "@/components/Paginacion";
 
 function formatearFecha(iso: string) {
   return new Date(iso).toLocaleDateString("es-EC", {
@@ -34,6 +35,8 @@ export function TabMisCreditos() {
 
   const disponibles = creditos?.filter((c) => !c.usadoEn) ?? [];
   const usados = creditos?.filter((c) => c.usadoEn) ?? [];
+  const pagDisponibles = usePaginacionLocal(disponibles);
+  const pagUsados = usePaginacionLocal(usados);
 
   return (
     <>
@@ -61,7 +64,7 @@ export function TabMisCreditos() {
         <div className="mt-6">
           <h2 className="font-display text-sm font-bold text-brand-dark">Disponibles</h2>
           <div className="mt-2 space-y-2">
-            {disponibles.map((c) => (
+            {pagDisponibles.visibles.map((c) => (
               <div
                 key={c.id}
                 className="flex items-center justify-between rounded-xl bg-brand-amber/10 px-4 py-3 ring-1 ring-brand-amber/30"
@@ -74,6 +77,14 @@ export function TabMisCreditos() {
               </div>
             ))}
           </div>
+          <ControlesPaginacion
+            pagina={pagDisponibles.pagina}
+            totalPaginas={pagDisponibles.totalPaginas}
+            total={pagDisponibles.total}
+            etiqueta="crédito"
+            onCambio={pagDisponibles.setPagina}
+            className="!px-0"
+          />
         </div>
       )}
 
@@ -81,7 +92,7 @@ export function TabMisCreditos() {
         <div className="mt-6">
           <h2 className="font-display text-sm font-bold text-brand-dark/50">Ya usados</h2>
           <div className="mt-2 space-y-2">
-            {usados.map((c) => (
+            {pagUsados.visibles.map((c) => (
               <div
                 key={c.id}
                 className="flex items-center justify-between rounded-xl bg-brand-light/30 px-4 py-3"
@@ -98,6 +109,14 @@ export function TabMisCreditos() {
               </div>
             ))}
           </div>
+          <ControlesPaginacion
+            pagina={pagUsados.pagina}
+            totalPaginas={pagUsados.totalPaginas}
+            total={pagUsados.total}
+            etiqueta="crédito"
+            onCambio={pagUsados.setPagina}
+            className="!px-0"
+          />
         </div>
       )}
     </>

@@ -17,6 +17,7 @@ import {
 import { SelectorImagen } from "@/components/SelectorImagen";
 import { obtenerToken, decodificarToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
+import { usePaginacionLocal, ControlesPaginacion } from "@/components/Paginacion";
 
 /** Día calendario de Ecuador, YYYY-MM-DD (mismo criterio que usa el backend). */
 function hoyEcuador() {
@@ -132,6 +133,18 @@ export default function PanelEmpresaDashboard() {
   const [periodo, setPeriodo] = useState(() => ({ desde: hoyEcuador(), hasta: hoyEcuador() }));
   const [cargandoVentas, setCargandoVentas] = useState(false);
   const [porDia, setPorDia] = useState<FilaVentaPorDia[] | null>(null);
+
+  // Detalle por ruta y vendedor: buscador y páginas (25-sep-2026). Los totales del período salen de otra consulta, no de esta lista.
+  const [busquedaDetalle, setBusquedaDetalle] = useState("");
+  const terminoDetalle = busquedaDetalle.trim().toLowerCase();
+  const filasFiltradas = (filas ?? []).filter(
+    (f) =>
+      terminoDetalle === "" ||
+      f.rutaNombre.toLowerCase().includes(terminoDetalle) ||
+      (f.vendedorNombre ?? "venta en línea").toLowerCase().includes(terminoDetalle),
+  );
+  const pagDetalle = usePaginacionLocal(filasFiltradas);
+  const pagViajesHoy = usePaginacionLocal(viajesHoy ?? []);
 
   const [ivaPorcentaje, setIvaPorcentaje] = useState("");
   const [ivaVisible, setIvaVisible] = useState(true);
@@ -371,8 +384,25 @@ export default function PanelEmpresaDashboard() {
           </div>
 
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="border-b border-black/5 px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 px-6 py-4">
           <h2 className="font-display text-base font-bold text-brand-dark">Detalle por ruta y vendedor</h2>
+          {filas !== null && filas.length > 0 && (
+            <div className="w-full sm:w-64">
+              <label htmlFor="detalle-buscar" className="sr-only">
+                Buscar por ruta o vendedor
+              </label>
+              <input
+                id="detalle-buscar"
+                value={busquedaDetalle}
+                onChange={(e) => {
+                  setBusquedaDetalle(e.target.value);
+                  pagDetalle.setPagina(1);
+                }}
+                placeholder="Buscar ruta o vendedor"
+                className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              />
+            </div>
+          )}
         </div>
 
         {(filas === null || cargandoVentas) && !error && (
@@ -385,7 +415,11 @@ export default function PanelEmpresaDashboard() {
           </p>
         )}
 
-        {filas !== null && filas.length > 0 && !cargandoVentas && (
+        {filas !== null && filas.length > 0 && filasFiltradas.length === 0 && !cargandoVentas && (
+          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">Ninguna fila coincide con la búsqueda.</p>
+        )}
+
+        {filasFiltradas.length > 0 && !cargandoVentas && (
           <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
             <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
               <tr>
@@ -396,7 +430,7 @@ export default function PanelEmpresaDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
-              {filas.map((fila, i) => (
+              {pagDetalle.visibles.map((fila, i) => (
                 <tr key={i}>
                   <td className="px-6 py-3 font-medium text-brand-dark">{fila.rutaNombre}</td>
                   <td className="px-6 py-3 text-brand-dark/70">
@@ -410,6 +444,16 @@ export default function PanelEmpresaDashboard() {
               ))}
             </tbody>
           </table></div>
+        )}
+        {!cargandoVentas && (
+          <ControlesPaginacion
+            pagina={pagDetalle.pagina}
+            totalPaginas={pagDetalle.totalPaginas}
+            total={pagDetalle.total}
+            etiqueta="fila"
+            onCambio={pagDetalle.setPagina}
+            className="border-t border-black/5"
+          />
         )}
       </div>
 
@@ -580,7 +624,7 @@ export default function PanelEmpresaDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5">
-                  {viajesHoy.map((v) => (
+                  {pagViajesHoy.visibles.map((v) => (
                     <tr key={v.id}>
                       <td className="px-4 py-3 font-semibold text-brand-dark">
                         {new Date(v.horaSalidaProgramada).toLocaleTimeString("es-EC", { hour: "2-digit", minute: "2-digit" })}
@@ -591,6 +635,14 @@ export default function PanelEmpresaDashboard() {
                   ))}
                 </tbody>
               </table></div>
+              <ControlesPaginacion
+                pagina={pagViajesHoy.pagina}
+                totalPaginas={pagViajesHoy.totalPaginas}
+                total={pagViajesHoy.total}
+                etiqueta="viaje"
+                onCambio={pagViajesHoy.setPagina}
+                className="border-t border-black/5"
+              />
             </div>
           )}
         </div>
