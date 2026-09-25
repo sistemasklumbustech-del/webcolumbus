@@ -279,8 +279,8 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
         </Link>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="sm:col-span-2 lg:col-span-1">
+      <div className="mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 sm:grid-cols-4">
+        <div className="col-span-2">
           <label htmlFor="mb-buscar" className={claseEtiqueta}>
             Buscar
           </label>
@@ -295,7 +295,7 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
             className={claseCampo}
           />
         </div>
-        <div>
+        <div className="col-span-2 sm:col-span-1">
           <label htmlFor="mb-estado" className={claseEtiqueta}>
             Estado
           </label>
@@ -314,7 +314,7 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
             <option value="cancelado">Cancelados</option>
           </select>
         </div>
-        <div>
+        <div className="col-span-1 sm:col-span-2 sm:col-start-1 sm:row-start-2">
           <label htmlFor="mb-desde" className={claseEtiqueta}>
             Salida desde
           </label>
@@ -329,7 +329,7 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
             className={claseCampo}
           />
         </div>
-        <div>
+        <div className="col-span-1 sm:col-span-2 sm:row-start-2">
           <label htmlFor="mb-hasta" className={claseEtiqueta}>
             Salida hasta
           </label>
@@ -345,7 +345,7 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
             className={claseCampo}
           />
         </div>
-        <div className="flex items-end">
+        <div className="col-span-2 flex items-end sm:col-span-1 sm:row-start-1">
           <button
             type="button"
             onClick={() => {

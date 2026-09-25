@@ -64,7 +64,7 @@ export function TabMisReclamos() {
   return (
     <>
       <p className="text-sm text-brand-dark/70">
-        Los reclamos que enviaste sobre tus viajes. Para reportar un problema, ve a &quot;Mis viajes&quot; y elige el
+        Los reclamos que enviaste sobre tus viajes. Para reportar un problema, ve a &quot;Mis boletos&quot; y elige el
         boleto.
       </p>
 

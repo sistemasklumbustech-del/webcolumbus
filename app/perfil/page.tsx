@@ -32,7 +32,7 @@ import { TabMisReclamos } from "./TabMisReclamos";
  */
 const PESTANAS = [
   { valor: "datos", etiqueta: "Mis datos" },
-  { valor: "boletos", etiqueta: "Mis viajes" },
+  { valor: "boletos", etiqueta: "Mis boletos" },
   { valor: "reclamos", etiqueta: "Mis reclamos" },
   { valor: "wallet", etiqueta: "Mi saldo" },
   { valor: "referidos", etiqueta: "Invitar y ganar" },
@@ -82,7 +82,8 @@ function MiCuenta() {
   }, [perfil]);
 
   function cambiarPestana(valor: Pestana) {
-    router.push(`/perfil?tab=${valor}`);
+    // scroll:false -- se queda donde el usuario tocó la opción, en vez de subir al inicio de la página.
+    router.push(`/perfil?tab=${valor}`, { scroll: false });
   }
 
   async function subirFotoDesdeHeader(archivo: File) {
