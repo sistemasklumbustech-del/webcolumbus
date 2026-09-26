@@ -104,7 +104,7 @@ export function Hero() {
       <header className="absolute left-0 right-0 top-6 z-20 flex items-center justify-between px-[5%]">
         <Image src="/img/logo-klumbus.png" alt="Klumbus" width={120} height={31} priority />
         <nav className="hidden items-center gap-8 sm:flex">
-          <a href="#" className="text-sm text-white/85 hover:text-white">
+          <a href="/rutas" className="text-sm text-white/85 hover:text-white">
             Rutas
           </a>
           <a href="#" className="text-sm text-white/85 hover:text-white">
@@ -147,7 +147,7 @@ export function Hero() {
 
       {menuAbierto && (
         <nav className="absolute left-0 right-0 top-[76px] z-20 mx-[5%] flex flex-col gap-1 rounded-xl bg-brand-dark/95 p-4 backdrop-blur-sm sm:hidden">
-          <a href="#" className="rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10">
+          <a href="/rutas" className="rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10">
             Rutas
           </a>
           <a href="#" className="rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10">

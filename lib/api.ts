@@ -4157,3 +4157,47 @@ export const revisarCargaMasiva = (token: string, archivo: File) =>
 
 export const importarCargaMasivaExcel = (token: string, archivo: File) =>
   enviarArchivoCargaMasiva<ResultadoImportacion>(token, "importar", archivo);
+
+/** Catálogo público de rutas con horarios (26-sep-2026) -- página "Rutas" del menú. */
+export interface HorarioCatalogo {
+  hora: string;
+  /** 0 = domingo … 6 = sábado. */
+  dias: number[];
+  tipoVehiculo: string | null;
+}
+
+export interface OpcionRutaCatalogo {
+  rutaId: string;
+  nombreRuta: string | null;
+  cooperativaId: string;
+  cooperativaNombre: string;
+  cooperativaLogoUrl: string | null;
+  precioReferencia: number;
+  duracionEstimadaMinutos: number | null;
+  distanciaKm: number | null;
+  origenId: string;
+  origenNombre: string;
+  origenLatitud: string | number | null;
+  origenLongitud: string | number | null;
+  destinoId: string;
+  destinoNombre: string;
+  destinoLatitud: string | number | null;
+  destinoLongitud: string | number | null;
+  horarios: HorarioCatalogo[];
+}
+
+export interface ParRutasCatalogo {
+  origenCiudad: string;
+  destinoCiudad: string;
+  opciones: OpcionRutaCatalogo[];
+}
+
+export async function obtenerCatalogoRutas(): Promise<ParRutasCatalogo[]> {
+  try {
+    const res = await fetch(`${API_URL}/catalogo-rutas`, { cache: "no-store" });
+    if (!res.ok) return [];
+    return (await res.json()) as ParRutasCatalogo[];
+  } catch {
+    return [];
+  }
+}
