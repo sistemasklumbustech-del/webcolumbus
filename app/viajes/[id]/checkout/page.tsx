@@ -395,35 +395,54 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   // 7-item29 (07-ago-2026) -- ahora recorre TODOS los boletos
   // devueltos, no solo el primero.
   if (resultado?.estado === "aprobado" && resultado.boletos && resultado.boletos.length > 0) {
+    const gruposPorClave = new Map<string, { clave: string; boletos: typeof resultado.boletos }>();
+    for (const b of resultado.boletos) {
+      const clave = `${b.rutaOrigenCiudad}>${b.rutaDestinoCiudad}|${b.horaSalidaProgramada}`;
+      const grupo = gruposPorClave.get(clave) ?? { clave, boletos: [] };
+      grupo.boletos.push(b);
+      gruposPorClave.set(clave, grupo);
+    }
+    const gruposConfirmados = [...gruposPorClave.values()].sort(
+      (a, b) =>
+        new Date(a.boletos[0].horaSalidaProgramada).getTime() - new Date(b.boletos[0].horaSalidaProgramada).getTime(),
+    );
+    const esIdaYVueltaConfirmada = gruposConfirmados.length === 2;
     return (
       <main className="flex flex-1 items-center justify-center bg-brand-light/40 px-4 py-16">
         <div className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-lg ring-1 ring-black/5">
           <p className="font-display text-lg font-bold text-brand-dark">
             {resultado.boletos.length > 1 ? "¡Boletos confirmados!" : "¡Boleto confirmado!"}
           </p>
-          {/* Hallazgo real del director (15-ago-2026, recorrido en vivo
-              de producción): faltaba cooperativa, ruta, hora, unidad y
-              a nombre de quién queda el boleto -- se toma del primer
-              boleto porque todos los boletos de una misma compra son
-              del mismo viaje. */}
-          <div className="mt-2 space-y-0.5 text-sm text-brand-dark/70">
-            <p className="font-semibold text-brand-dark">{resultado.boletos[0].cooperativaNombre}</p>
-            <p>{resultado.boletos[0].rutaOrigenCiudad} → {resultado.boletos[0].rutaDestinoCiudad}</p>
-            <p>
-              {new Date(resultado.boletos[0].horaSalidaProgramada).toLocaleDateString("es-EC", {
-                weekday: "long", day: "numeric", month: "long",
-              })}{" "}
-              ·{" "}
-              {new Date(resultado.boletos[0].horaSalidaProgramada).toLocaleTimeString("es-EC", {
-                hour: "numeric", minute: "2-digit",
-              })}
-            </p>
-            {resultado.boletos[0].unidadIdentificador && (
-              <p>Unidad {resultado.boletos[0].unidadIdentificador}</p>
-            )}
-          </div>
+          {/* Cada boleto se agrupa por SU viaje (ruta, fecha y hora): en una compra de
+              ida y vuelta los boletos son de viajes distintos, así que los datos del
+              viaje no pueden tomarse del primer boleto. Si hay dos viajes, el más
+              temprano es la IDA y el otro la VUELTA. */}
           <div className="mt-4 space-y-6">
-            {resultado.boletos.map((boleto) => (
+            {gruposConfirmados.map((grupo, indiceGrupo) => {
+              const viaje = grupo.boletos[0];
+              const salida = new Date(viaje.horaSalidaProgramada);
+              return (
+                <section key={grupo.clave} className="rounded-xl bg-brand-light/20 p-4 text-left ring-1 ring-brand-dark/10">
+                  {esIdaYVueltaConfirmada && (
+                    <span className="inline-block rounded-full bg-brand-amber px-3 py-0.5 text-xs font-bold tracking-wide text-brand-dark">
+                      {indiceGrupo === 0 ? "IDA" : "VUELTA"}
+                    </span>
+                  )}
+                  <p className="mt-1 font-display text-lg font-bold text-brand-dark">
+                    {viaje.rutaOrigenCiudad} → {viaje.rutaDestinoCiudad}
+                  </p>
+                  <p className="text-sm font-bold capitalize text-brand-dark">
+                    {salida.toLocaleDateString("es-EC", { weekday: "long", day: "numeric", month: "long" })}
+                  </p>
+                  <p className="text-sm font-bold text-brand-dark">
+                    Salida {salida.toLocaleTimeString("es-EC", { hour: "numeric", minute: "2-digit" })}
+                  </p>
+                  <p className="mt-1 text-xs text-brand-dark/60">
+                    {viaje.cooperativaNombre}
+                    {viaje.unidadIdentificador ? " · Unidad " + viaje.unidadIdentificador : ""}
+                  </p>
+                  <div className="mt-3 space-y-6">
+                    {grupo.boletos.map((boleto) => (
               <div key={boleto.codigoQr} className="border-t border-brand-dark/10 pt-4 first:border-t-0 first:pt-0">
                 <p className="flex items-center gap-2 text-sm text-brand-dark/70">
                   Asiento {boleto.numeroAsiento}
@@ -465,7 +484,11 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   <CodigoQr valor={boleto.codigoQr} />
                 </div>
               </div>
-            ))}
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
           <div className="mt-4 space-y-1 rounded-lg bg-brand-light/30 px-4 py-3 text-left text-sm">
             {!!resultado.creditoAplicado && resultado.creditoAplicado > 0 && (
