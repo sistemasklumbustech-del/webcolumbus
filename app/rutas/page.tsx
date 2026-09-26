@@ -158,6 +158,9 @@ export default function RutasPage() {
 
   useEffect(() => {
     obtenerCatalogoRutas().then(setCatalogo);
+    // Desde la página Cooperativas: /rutas?cooperativa=ID abre ya filtrada por esa cooperativa.
+    const idCoop = new URLSearchParams(window.location.search).get("cooperativa");
+    if (idCoop) setCooperativa(idCoop);
   }, []);
 
   const origenes = useMemo(() => Array.from(new Set((catalogo ?? []).map((p) => p.origenCiudad))).sort(), [catalogo]);

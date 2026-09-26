@@ -4201,3 +4201,66 @@ export async function obtenerCatalogoRutas(): Promise<ParRutasCatalogo[]> {
     return [];
   }
 }
+
+/** Cooperativas públicas (26-sep-2026) -- página "Cooperativas" del menú. */
+export interface FlotaPublica {
+  nombre: string;
+  categoria: string | null;
+  capacidadTotal: number;
+  amenidades: string[];
+  pisos: number;
+  unidades: number;
+}
+
+export interface CooperativaPublica {
+  id: string;
+  nombre: string;
+  logoUrl: string | null;
+  descripcion: string | null;
+  servicios: string[];
+  beneficios: string[];
+  flota: FlotaPublica[];
+  rutas: number;
+  ciudades: string[];
+}
+
+export async function obtenerCooperativasPublicas(): Promise<CooperativaPublica[]> {
+  try {
+    const res = await fetch(`${API_URL}/cooperativas-publicas`, { cache: "no-store" });
+    if (!res.ok) return [];
+    return (await res.json()) as CooperativaPublica[];
+  } catch {
+    return [];
+  }
+}
+
+/** Lo que la cooperativa escribe de sí misma desde su panel. */
+export interface PerfilPublicoCoop {
+  descripcion: string;
+  servicios: string[];
+  beneficios: string[];
+}
+
+export async function obtenerPerfilPublicoCoop(token: string): Promise<PerfilPublicoCoop> {
+  const res = await fetch(`${API_URL}/coop/perfil-publico`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo cargar el perfil público.");
+  return cuerpo as PerfilPublicoCoop;
+}
+
+export async function guardarPerfilPublicoCoop(token: string, perfil: PerfilPublicoCoop): Promise<PerfilPublicoCoop> {
+  const res = await fetch(`${API_URL}/coop/perfil-publico`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(perfil),
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo guardar el perfil público.");
+  }
+  return cuerpo as PerfilPublicoCoop;
+}
