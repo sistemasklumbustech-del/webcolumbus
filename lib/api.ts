@@ -4264,3 +4264,31 @@ export async function guardarPerfilPublicoCoop(token: string, perfil: PerfilPubl
   }
   return cuerpo as PerfilPublicoCoop;
 }
+
+/** Formulario "Ayuda" (26-sep-2026): la consulta llega al correo de soporte de la plataforma. */
+export type TemaAyuda = "compra" | "boleto" | "cancelacion" | "factura" | "cuenta" | "cooperativa" | "sugerencia" | "otro";
+
+export async function enviarConsultaAyuda(datos: {
+  nombre: string;
+  correo: string;
+  tema: TemaAyuda;
+  mensaje: string;
+  codigoReferencia?: string;
+  /** Campo trampa contra robots: debe ir vacío. */
+  sitioWeb?: string;
+}): Promise<{ referencia: string }> {
+  const res = await fetch(`${API_URL}/soporte/consulta`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(datos),
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (res.status === 429) {
+    throw new Error("Enviaste varias consultas seguidas. Espera unos minutos antes de intentar de nuevo.");
+  }
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo enviar tu consulta.");
+  }
+  return cuerpo as { referencia: string };
+}

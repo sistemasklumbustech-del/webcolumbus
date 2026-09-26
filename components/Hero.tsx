@@ -110,7 +110,7 @@ export function Hero() {
           <a href="/cooperativas" className="text-sm text-white/85 hover:text-white">
             Cooperativas
           </a>
-          <a href="#" className="text-sm text-white/85 hover:text-white">
+          <a href="/ayuda" className="text-sm text-white/85 hover:text-white">
             Ayuda
           </a>
           <a
@@ -153,7 +153,7 @@ export function Hero() {
           <a href="/cooperativas" className="rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10">
             Cooperativas
           </a>
-          <a href="#" className="rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10">
+          <a href="/ayuda" className="rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10">
             Ayuda
           </a>
           <a
