@@ -459,7 +459,7 @@ id="admin-cargo-plataforma"
                 type="email"
                 value={correoSoporte}
                 onChange={(e) => setCorreoSoporte(e.target.value)}
-                placeholder="soporte@columbus.com.ec"
+                placeholder="soporte@klumbustech.com"
                 className="w-64 rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
               />
             </div>

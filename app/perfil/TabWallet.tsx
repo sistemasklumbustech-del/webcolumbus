@@ -55,7 +55,7 @@ export function TabWallet() {
         <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand-amber/10" />
         <div className="pointer-events-none absolute -bottom-16 -left-8 h-36 w-36 rounded-full bg-white/5" />
         <div className="relative flex items-start justify-between">
-          <span className="font-display text-sm font-bold tracking-[0.2em] text-white/70">COLUMBUS</span>
+          <span className="font-display text-sm font-bold tracking-[0.2em] text-white/70">KLUMBUS</span>
           <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-brand-amber">
             Wallet
           </span>
