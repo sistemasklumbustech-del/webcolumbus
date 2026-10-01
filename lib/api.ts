@@ -4274,6 +4274,8 @@ export async function enviarConsultaAyuda(datos: {
   tema: TemaAyuda;
   mensaje: string;
   codigoReferencia?: string;
+  /** Si el usuario quiere dirigir la consulta a una cooperativa en particular, en vez de a soporte de la plataforma. */
+  cooperativaId?: string;
   /** Campo trampa contra robots: debe ir vacío. */
   sitioWeb?: string;
 }): Promise<{ referencia: string }> {

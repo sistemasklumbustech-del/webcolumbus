@@ -39,12 +39,20 @@ function TarjetaCooperativa({ c }: { c: CooperativaPublica }) {
             </p>
           </div>
         </div>
-        <Link
-          href={`/rutas?cooperativa=${c.id}`}
-          className="rounded-lg bg-brand-amber px-4 py-2 text-xs font-semibold text-brand-dark transition hover:brightness-95"
-        >
-          Ver rutas y horarios
-        </Link>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Link
+            href={`/ayuda?cooperativa=${c.id}`}
+            className="rounded-lg border border-brand-light px-4 py-2 text-xs font-semibold text-brand-dark transition hover:bg-brand-light/40"
+          >
+            Contactar
+          </Link>
+          <Link
+            href={`/rutas?cooperativa=${c.id}`}
+            className="rounded-lg bg-brand-amber px-4 py-2 text-xs font-semibold text-brand-dark transition hover:brightness-95"
+          >
+            Ver rutas y horarios
+          </Link>
+        </div>
       </header>
 
       <div className="space-y-5 px-5 py-4">

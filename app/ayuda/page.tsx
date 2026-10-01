@@ -5,8 +5,10 @@ import Link from "next/link";
 import {
   enviarConsultaAyuda,
   obtenerContactoSoporte,
+  obtenerCooperativasPublicas,
   obtenerMiPerfil,
   type ContactoSoporte,
+  type CooperativaPublica,
   type TemaAyuda,
 } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
@@ -61,8 +63,17 @@ export default function AyudaPage() {
   const [referencia, setReferencia] = useState<string | null>(null);
   const [contacto, setContacto] = useState<ContactoSoporte>({ correo: null, telefono: null });
 
+  // Consulta dirigida a una cooperativa (01-oct-2026): para quien no tiene cuenta ni boleto y
+  // no puede usar un reclamo. Llega al correo de contacto de esa cooperativa, no al de soporte.
+  const [cooperativas, setCooperativas] = useState<CooperativaPublica[]>([]);
+  const [cooperativaId, setCooperativaId] = useState("");
+
   useEffect(() => {
     obtenerContactoSoporte().then(setContacto);
+    obtenerCooperativasPublicas().then(setCooperativas);
+    // Desde la tarjeta de una cooperativa en /cooperativas: ?cooperativa=ID abre el formulario ya dirigido a ella.
+    const idCoop = new URLSearchParams(window.location.search).get("cooperativa");
+    if (idCoop) setCooperativaId(idCoop);
     // Si ya tiene sesión, se adelantan su nombre y su correo.
     const token = tokenValido();
     if (!token) return;
@@ -76,6 +87,8 @@ export default function AyudaPage() {
       });
   }, []);
 
+  const cooperativaElegida = cooperativas.find((c) => c.id === cooperativaId) ?? null;
+
   async function enviar(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -87,6 +100,7 @@ export default function AyudaPage() {
         tema,
         mensaje,
         codigoReferencia: codigoReferencia.trim() || undefined,
+        cooperativaId: cooperativaId || undefined,
         sitioWeb,
       });
       setReferencia(r.referencia);
@@ -137,6 +151,9 @@ export default function AyudaPage() {
           <div role="status" className="mt-3 rounded-2xl bg-emerald-50 p-6 ring-1 ring-emerald-200">
             <p className="font-display text-lg font-bold text-emerald-900">¡Recibimos tu consulta!</p>
             <p className="mt-1 text-sm text-emerald-900/80">
+              {cooperativaElegida
+                ? `Le escribimos directamente a ${cooperativaElegida.nombre}. `
+                : ""}
               Te responderemos al correo que indicaste. Tu número de referencia es{" "}
               <strong className="font-mono">{referencia}</strong>; guárdalo por si necesitas dar seguimiento.
             </p>
@@ -182,6 +199,29 @@ export default function AyudaPage() {
                 onChange={(e) => setCorreo(e.target.value)}
                 className={claseCampo}
               />
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="ayuda-cooperativa" className={claseEtiqueta}>
+                ¿Es sobre una cooperativa en particular? (opcional)
+              </label>
+              <select
+                id="ayuda-cooperativa"
+                value={cooperativaId}
+                onChange={(e) => setCooperativaId(e.target.value)}
+                className={claseCampo}
+              >
+                <option value="">No, es sobre Klumbus en general</option>
+                {cooperativas.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+              {cooperativaElegida && (
+                <p className="mt-1 text-xs text-brand-dark/50">
+                  Tu consulta le llegará directo a {cooperativaElegida.nombre}, no a Klumbus.
+                </p>
+              )}
             </div>
             <div>
               <label htmlFor="ayuda-tema" className={claseEtiqueta}>
