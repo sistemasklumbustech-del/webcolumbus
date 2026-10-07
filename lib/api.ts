@@ -1531,6 +1531,20 @@ export async function cotizarCompra(
 }
 
 /** Item 31, Fase 7 (11-ago-2026) -- compra como invitado: token puede ser null, y entonces se exige telefonoContacto o correoContacto. */
+/**
+ * Datos con los que se factura el pasaje (06-oct-2026). Mismo contrato que
+ * DatosFacturacionDto del backend: el servidor los valida completos (RUC,
+ * cédula, correo) y los guarda como copia fija en la compra.
+ */
+export interface DatosFacturacionInput {
+  tipoIdentificacion: "cedula" | "ruc" | "pasaporte";
+  identificacion: string;
+  razonSocial: string;
+  correo: string;
+  direccion?: string;
+  telefono?: string;
+}
+
 export async function crearCompra(
   pasajeros: PasajeroCompraInput[],
   token: string | null,
@@ -1541,6 +1555,7 @@ export async function crearCompra(
   sesionInvitadoId?: string,
   aceptoTerminos?: boolean,
   metodoPagoEnLinea?: "tarjeta" | "deuna",
+  datosFacturacion?: DatosFacturacionInput,
 ): Promise<ResultadoCompra> {
   const res = await fetch(`${API_URL}/compras`, {
     method: "POST",
@@ -1557,6 +1572,7 @@ export async function crearCompra(
       sesionInvitadoId,
       aceptoTerminos,
       metodoPagoEnLinea,
+      datosFacturacion,
     }),
   });
   const cuerpo = await res.json();

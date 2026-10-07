@@ -3,11 +3,20 @@
 import { Suspense, useState, useEffect, use as usePromise } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { crearCompra, cotizarCompra, listarMisCreditos, obtenerMapaAsientos, iniciarPagoManual, subirComprobantePago, listarMetodosPagoPorViaje, obtenerInfoPasarela, type InfoPasarela, type ResultadoCompra, type Cotizacion, type MiCredito, type MapaAsientos, type MetodoPagoDisponible, type TipoMetodoPago, type PasajeroCompraInput } from "@/lib/api";
+import { crearCompra, cotizarCompra, listarMisCreditos, obtenerMapaAsientos, iniciarPagoManual, subirComprobantePago, listarMetodosPagoPorViaje, obtenerInfoPasarela, type InfoPasarela, type ResultadoCompra, type Cotizacion, type MiCredito, type MapaAsientos, type MetodoPagoDisponible, type TipoMetodoPago, type PasajeroCompraInput, type DatosFacturacionInput } from "@/lib/api";
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
 import { CodigoQr } from "@/components/CodigoQr";
 import { CampoSexoAsientoMujeres, type SexoPasajero } from "@/components/CampoSexoAsientoMujeres";
 import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
+
+/**
+ * Los datos de factura se capturan ya (06-oct-2026) pero la emisión real de
+ * facturas todavía no existe, así que la sección queda oculta y no se envía
+ * nada hasta activar NEXT_PUBLIC_FACTURACION_DATOS=1. Así no se promete una
+ * factura que aún no se emite. Requiere que el backend ya tenga la migración
+ * 0058 y el campo `datosFacturacion`, o la compra sería rechazada.
+ */
+const FACTURACION_VISIBLE = process.env.NEXT_PUBLIC_FACTURACION_DATOS === "1";
 
 const TARIFAS = [
   { valor: "adulto", etiqueta: "Adulto (tarifa completa)" },
@@ -132,7 +141,16 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
     sesionInvitadoId?: string;
     idempotencyKey: string;
     pasajeros: PasajeroCompraInput[];
+    datosFacturacion?: DatosFacturacionInput;
   } | null>(null);
+  // Datos para la factura (06-oct-2026). Por defecto se usan los del primer
+  // pasajero; "otros" permite facturar con RUC o a nombre de otra persona.
+  const [facturaModo, setFacturaModo] = useState<"pasajero" | "otros">("pasajero");
+  const [facturaCorreo, setFacturaCorreo] = useState("");
+  const [facturaTipo, setFacturaTipo] = useState<"cedula" | "ruc" | "pasaporte">("ruc");
+  const [facturaIdentificacion, setFacturaIdentificacion] = useState("");
+  const [facturaRazonSocial, setFacturaRazonSocial] = useState("");
+  const [facturaDireccion, setFacturaDireccion] = useState("");
   // RF-024 -- solo se pide a quien compra como invitado; quien ya
   // tiene cuenta aceptó al registrarse.
   const [aceptoTerminos, setAceptoTerminos] = useState(false);
@@ -232,6 +250,33 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
         return;
       }
     }
+    // Datos de factura: opcionales mientras no exista la emisión real; si el
+    // cliente los llena, se validan aquí lo básico (el servidor valida el resto).
+    const correoFactura = (facturaCorreo.trim() || (token ? "" : correoContacto.trim())).toLowerCase();
+    let datosFacturacion: DatosFacturacionInput | undefined;
+    if (!FACTURACION_VISIBLE) {
+      datosFacturacion = undefined;
+    } else if (facturaModo === "otros") {
+      if (!facturaIdentificacion.trim() || facturaRazonSocial.trim().length < 3 || !correoFactura) {
+        setError("Para facturar con otros datos, completa la identificación, el nombre o razón social y el correo.");
+        return;
+      }
+      datosFacturacion = {
+        tipoIdentificacion: facturaTipo,
+        identificacion: facturaIdentificacion.trim(),
+        razonSocial: facturaRazonSocial.trim(),
+        correo: correoFactura,
+        direccion: facturaDireccion.trim() || undefined,
+      };
+    } else if (correoFactura && pasajerosData[0]) {
+      const primero = pasajerosData[0];
+      datosFacturacion = {
+        tipoIdentificacion: primero.tipoDocumento,
+        identificacion: primero.documento.trim(),
+        razonSocial: `${primero.nombres.trim()} ${primero.apellidos.trim()}`,
+        correo: correoFactura,
+      };
+    }
     setProcesando(true);
     setError(null);
     try {
@@ -259,7 +304,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
       }));
       const cot = await cotizarCompra(pasajeros, token, sesionInvitadoId);
       setCotizacion(cot);
-      setPendiente({ token, sesionInvitadoId, idempotencyKey, pasajeros });
+      setPendiente({ token, sesionInvitadoId, idempotencyKey, pasajeros, datosFacturacion });
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo calcular el total.");
     } finally {
@@ -270,7 +315,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   /** Se llama solo desde el modal de revisión, tras confirmación explícita del usuario. */
   async function confirmarPago() {
     if (!pendiente) return;
-    const { token, sesionInvitadoId, idempotencyKey, pasajeros } = pendiente;
+    const { token, sesionInvitadoId, idempotencyKey, pasajeros, datosFacturacion } = pendiente;
     setProcesando(true);
     setError(null);
     try {
@@ -285,6 +330,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           sesionInvitadoId,
           token ? undefined : aceptoTerminos,
           metodoElegido === "deuna_en_linea" ? "deuna" : "tarjeta",
+          datosFacturacion,
         );
         setResultado(resp);
         if (resp.estado === "rechazado") {
@@ -828,6 +874,98 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                 <p className="mt-1 text-xs text-brand-dark/50">
                   Solo se aplica si el crédito es de la misma cooperativa que este viaje.
                 </p>
+              </div>
+            )}
+            {FACTURACION_VISIBLE && (
+              <div className="space-y-3 rounded-lg border border-brand-dark/10 bg-brand-light/30 p-4">
+                <p className="text-sm font-semibold text-brand-dark">Datos para tu factura</p>
+                <div className="flex flex-col gap-2 text-sm text-brand-dark/80 sm:flex-row sm:gap-6">
+                  <label htmlFor="checkout-factura-modo-pasajero" className="flex items-center gap-2">
+                    <input
+                      id="checkout-factura-modo-pasajero"
+                      type="radio"
+                      name="checkout-factura-modo"
+                      checked={facturaModo === "pasajero"}
+                      onChange={() => setFacturaModo("pasajero")}
+                    />
+                    Con los datos del primer pasajero
+                  </label>
+                  <label htmlFor="checkout-factura-modo-otros" className="flex items-center gap-2">
+                    <input
+                      id="checkout-factura-modo-otros"
+                      type="radio"
+                      name="checkout-factura-modo"
+                      checked={facturaModo === "otros"}
+                      onChange={() => setFacturaModo("otros")}
+                    />
+                    Con otros datos (por ejemplo, con RUC)
+                  </label>
+                </div>
+                {facturaModo === "otros" && (
+                  <div className="space-y-3">
+                    <div>
+                      <label htmlFor="checkout-factura-tipo" className="block text-sm font-medium text-brand-dark/70">
+                        Tipo de identificación
+                      </label>
+                      <select
+                        id="checkout-factura-tipo"
+                        value={facturaTipo}
+                        onChange={(e) => setFacturaTipo(e.target.value as "cedula" | "ruc" | "pasaporte")}
+                        className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
+                      >
+                        <option value="ruc">RUC</option>
+                        <option value="cedula">Cédula</option>
+                        <option value="pasaporte">Pasaporte</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="checkout-factura-identificacion" className="block text-sm font-medium text-brand-dark/70">
+                        Número de identificación
+                      </label>
+                      <input
+                        id="checkout-factura-identificacion"
+                        value={facturaIdentificacion}
+                        onChange={(e) => setFacturaIdentificacion(e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="checkout-factura-razon" className="block text-sm font-medium text-brand-dark/70">
+                        Nombre o razón social
+                      </label>
+                      <input
+                        id="checkout-factura-razon"
+                        value={facturaRazonSocial}
+                        onChange={(e) => setFacturaRazonSocial(e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="checkout-factura-direccion" className="block text-sm font-medium text-brand-dark/70">
+                        Dirección (opcional)
+                      </label>
+                      <input
+                        id="checkout-factura-direccion"
+                        value={facturaDireccion}
+                        onChange={(e) => setFacturaDireccion(e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <label htmlFor="checkout-factura-correo" className="block text-sm font-medium text-brand-dark/70">
+                    Correo para la factura
+                  </label>
+                  <input
+                    id="checkout-factura-correo"
+                    type="email"
+                    value={facturaCorreo}
+                    onChange={(e) => setFacturaCorreo(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
+                    placeholder={tokenValido() ? "tu@correo.com" : correoContacto || "tu@correo.com"}
+                  />
+                </div>
               </div>
             )}
             {!tokenValido() && (
