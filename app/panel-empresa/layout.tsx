@@ -34,9 +34,11 @@ const ENLACES = [
   { href: "/panel-empresa/validar-qr", etiqueta: "Validar boleto", icono: IconoValidar },
   { href: "/panel-empresa/pagos-pendientes", etiqueta: "Pagos pendientes", icono: IconoPagos, soloAdmin: true },
   { href: "/panel-empresa/solicitudes-factura", etiqueta: "Facturas", icono: IconoFacturas, soloAdmin: true },
+  { href: "/panel-empresa/ventas-por-confirmar", etiqueta: "Ventas por confirmar", icono: IconoPorConfirmar, soloAdmin: true },
   { href: "/panel-empresa/reclamos", etiqueta: "Reclamos", icono: IconoReclamos, soloAdmin: true },
   { href: "/panel-empresa/configuracion", etiqueta: "Configuración", icono: IconoConfiguracion, soloAdmin: true },
   { href: "/panel-empresa/carga-masiva", etiqueta: "Carga masiva", icono: IconoCargaMasiva, soloAdmin: true },
+  { href: "/panel-empresa/credenciales-api", etiqueta: "Credenciales API", icono: IconoCredenciales, soloAdmin: true },
 ];
 
 function IconoPanel({ className }: { className?: string }) {
@@ -125,6 +127,22 @@ function IconoFacturas({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M6 2h9l3 3v17H6z" />
       <path d="M9 9h6M9 13h6M9 17h4" />
+    </svg>
+  );
+}
+function IconoPorConfirmar({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+function IconoCredenciales({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="8" cy="15" r="4" />
+      <path d="M11 12l9-9M16 7l3 3M14 9l2 2" />
     </svg>
   );
 }

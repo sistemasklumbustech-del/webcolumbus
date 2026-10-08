@@ -582,6 +582,94 @@ export interface ResultadoPruebaWebhook {
   respuesta: string;
 }
 
+/** Un pasajero de una venta, con lo necesario para encontrarla en el sistema de la cooperativa. */
+export interface PasajeroVentaPorConfirmar {
+  nombres: string;
+  apellidos: string;
+  documento: string;
+  asientoEtiqueta: string;
+  tipoTarifa: "adulto" | "nino" | "tercera_edad" | "discapacidad";
+  precioPagado: number;
+  tasaTerminal: number;
+  /** Identificador del viaje en el sistema de la cooperativa, si lo publicó por la API. */
+  viajeReferencia: string | null;
+  origenCiudad: string;
+  destinoCiudad: string;
+  horaSalidaProgramada: string;
+}
+
+/** Venta en línea que espera (o ya recibió) la factura y el código de tasa de la cooperativa. */
+export interface VentaPorConfirmar {
+  compraId: string;
+  creadoEn: string;
+  completadoEn: string | null;
+  /** Pasaron los 30 minutos sin que se reportara la factura y la tasa. */
+  vencida: boolean;
+  confirmada: boolean;
+  cliente: {
+    tipoIdentificacion: "cedula" | "ruc" | "pasaporte";
+    identificacion: string;
+    razonSocial: string;
+    correo: string | null;
+    direccion: string | null;
+  } | null;
+  pasajeros: PasajeroVentaPorConfirmar[];
+  totalAFacturar: number;
+  numeroFactura: string | null;
+  codigoTasa: string | null;
+}
+
+export interface ResultadoVentasPorConfirmar {
+  filas: VentaPorConfirmar[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarVentasPorConfirmar(
+  token: string,
+  vista: "por_confirmar" | "confirmadas",
+  pagina: number,
+  limite: number,
+): Promise<ResultadoVentasPorConfirmar> {
+  const params = new URLSearchParams({ vista, pagina: String(pagina), limite: String(limite) });
+  const res = await fetch(`${API_URL}/coop/ventas-por-confirmar?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar las ventas.");
+  return cuerpo as ResultadoVentasPorConfirmar;
+}
+
+export interface DatosConfirmacionVenta {
+  numeroFactura: string;
+  codigoTasa: string;
+  urlFactura?: string;
+}
+
+/** Carga a mano la factura y el código de tasa de una venta, igual que lo haría el sistema de la cooperativa por la API. */
+export async function confirmarVentaManual(
+  token: string,
+  compraId: string,
+  datos: DatosConfirmacionVenta,
+): Promise<void> {
+  const res = await fetch(`${API_URL}/coop/ventas-por-confirmar/${compraId}/confirmacion`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      numeroFactura: datos.numeroFactura,
+      codigoTasa: datos.codigoTasa,
+      urlFactura: datos.urlFactura?.trim() ? datos.urlFactura.trim() : undefined,
+    }),
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo guardar la confirmación.");
+  }
+}
+
 /** Genera un secreto de firma nuevo (el anterior deja de servir). Se muestra una sola vez. */
 export async function regenerarWebhookSecretoApi(
   token: string,
