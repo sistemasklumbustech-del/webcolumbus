@@ -7,6 +7,9 @@ import {
   rotarCredencialApi,
   revocarCredencialApi,
   actualizarWebhookCredencialApi,
+  regenerarWebhookSecretoApi,
+  probarWebhookCredencialApi,
+  type ResultadoPruebaWebhook,
   type FiltrosCredencialesApi,
   type ResultadoCredencialesApi,
   type CredencialApiRecienCreada,
@@ -23,6 +26,23 @@ function formatearFecha(iso: string) {
     month: "short",
     year: "numeric",
   });
+}
+
+/** Resultado de "Enviar prueba": lo que respondió el sistema de la cooperativa, o por qué no se pudo enviar. */
+function ResultadoPrueba({ valor }: { valor: ResultadoPruebaWebhook | string | undefined }) {
+  if (valor === undefined) return null;
+  const exito = typeof valor !== "string" && valor.entregado;
+  const texto =
+    typeof valor === "string"
+      ? valor
+      : valor.entregado
+        ? `Tu sistema respondió (${valor.respuesta}). ${valor.firmado ? "El aviso fue firmado." : "El aviso fue sin firma."}`
+        : `Tu sistema no aceptó el aviso: ${valor.respuesta}`;
+  return (
+    <p className={`mt-2 rounded-lg px-3 py-2 text-xs ${exito ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>
+      {texto}
+    </p>
+  );
 }
 
 /**
@@ -47,6 +67,12 @@ export default function CredencialesApiPage() {
   const [creando, setCreando] = useState(false);
   const [llaveRecienCreada, setLlaveRecienCreada] = useState<CredencialApiRecienCreada | null>(null);
   const [copiada, setCopiada] = useState(false);
+  // El secreto de firma también se muestra una sola vez: al crear/rotar la llave
+  // o al regenerarlo por separado.
+  const [secretoSuelto, setSecretoSuelto] = useState<string | null>(null);
+  const [secretoCopiado, setSecretoCopiado] = useState(false);
+  const [idConfirmandoSecreto, setIdConfirmandoSecreto] = useState<string | null>(null);
+  const [pruebas, setPruebas] = useState<Record<string, ResultadoPruebaWebhook | string>>({});
 
   const [idEnAccion, setIdEnAccion] = useState<string | null>(null);
   const [idConfirmandoRevocar, setIdConfirmandoRevocar] = useState<string | null>(null);
@@ -91,7 +117,9 @@ export default function CredencialesApiPage() {
     try {
       const resultado = await crearCredencialApi(token, webhookNuevo);
       setLlaveRecienCreada(resultado);
+      setSecretoSuelto(resultado.webhookSecreto);
       setCopiada(false);
+      setSecretoCopiado(false);
       setWebhookNuevo("");
       cargar();
     } catch (err) {
@@ -109,7 +137,9 @@ export default function CredencialesApiPage() {
     try {
       const resultado = await rotarCredencialApi(token, id);
       setLlaveRecienCreada(resultado);
+      setSecretoSuelto(resultado.webhookSecreto);
       setCopiada(false);
+      setSecretoCopiado(false);
       cargar();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo rotar la credencial.");
@@ -154,6 +184,54 @@ export default function CredencialesApiPage() {
       setError(err instanceof Error ? err.message : "No se pudo actualizar el webhook.");
     } finally {
       setIdEnAccion(null);
+    }
+  }
+
+  async function regenerarSecreto(id: string) {
+    const token = obtenerToken();
+    if (!token) return;
+    setIdEnAccion(id);
+    setError(null);
+    try {
+      const resultado = await regenerarWebhookSecretoApi(token, id);
+      setLlaveRecienCreada(null);
+      setSecretoSuelto(resultado.webhookSecreto);
+      setSecretoCopiado(false);
+      setIdConfirmandoSecreto(null);
+      cargar();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo generar el secreto.");
+    } finally {
+      setIdEnAccion(null);
+    }
+  }
+
+  async function probarWebhook(id: string) {
+    const token = obtenerToken();
+    if (!token) return;
+    setIdEnAccion(id);
+    setError(null);
+    try {
+      const resultado = await probarWebhookCredencialApi(token, id);
+      setPruebas((p) => ({ ...p, [id]: resultado }));
+    } catch (err) {
+      setPruebas((p) => ({
+        ...p,
+        [id]: err instanceof Error ? err.message : "No se pudo enviar la prueba.",
+      }));
+    } finally {
+      setIdEnAccion(null);
+    }
+  }
+
+  async function copiarSecreto() {
+    const secreto = secretoSuelto;
+    if (!secreto) return;
+    try {
+      await navigator.clipboard.writeText(secreto);
+      setSecretoCopiado(true);
+    } catch {
+      // Igual que la llave: sigue visible en pantalla para copiarla a mano.
     }
   }
 
@@ -214,6 +292,37 @@ export default function CredencialesApiPage() {
             className="mt-3 text-xs font-semibold text-amber-800 underline"
           >
             Ya la guardé, ocultar
+          </button>
+        </div>
+      )}
+
+      {secretoSuelto && (
+        <div className="mt-4 rounded-2xl bg-amber-50 p-6 ring-2 ring-amber-300">
+          <p className="font-display text-sm font-bold text-amber-900">
+            Secreto para verificar la firma de los webhooks — tampoco lo vas a volver a ver
+          </p>
+          <p className="mt-1 text-xs text-amber-800">
+            Tu sistema lo usa para comprobar que cada aviso de venta viene de Klumbus. Si lo pierdes,
+            genera uno nuevo desde la llave; el anterior deja de servir en ese momento.
+          </p>
+          <div className="mt-3 flex items-center gap-2 rounded-lg bg-white px-3 py-2.5 ring-1 ring-amber-200">
+            <code className="flex-1 overflow-x-auto whitespace-nowrap font-mono text-sm text-brand-dark">
+              {secretoSuelto}
+            </code>
+            <button
+              type="button"
+              onClick={copiarSecreto}
+              className="shrink-0 rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-dark"
+            >
+              {secretoCopiado ? "Copiado" : "Copiar"}
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSecretoSuelto(null)}
+            className="mt-3 text-xs font-semibold text-amber-800 underline"
+          >
+            Ya lo guardé, ocultar
           </button>
         </div>
       )}
@@ -336,6 +445,39 @@ export default function CredencialesApiPage() {
                     Guardar
                   </button>
                 </div>
+
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {c.firmaWebhookActiva ? (
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                      Avisos firmados
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+                      Avisos sin firma
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => probarWebhook(c.id)}
+                    disabled={idEnAccion === c.id || !c.webhookUrl || webhookEditando[c.id] !== undefined}
+                    title={
+                      !c.webhookUrl
+                        ? "Configura y guarda una URL primero"
+                        : webhookEditando[c.id] !== undefined
+                          ? "Guarda los cambios de la URL primero"
+                          : undefined
+                    }
+                    className="rounded-lg bg-brand-light px-3 py-1.5 text-xs font-semibold text-brand-dark transition hover:bg-brand-light/70 disabled:opacity-40"
+                  >
+                    Enviar prueba
+                  </button>
+                </div>
+                {!c.firmaWebhookActiva && (
+                  <p className="mt-1 text-xs text-brand-dark/50">
+                    Esta llave es anterior a la firma: sus avisos llegan sin ella. Genera un secreto para activarla.
+                  </p>
+                )}
+                <ResultadoPrueba valor={pruebas[c.id]} />
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2">
@@ -347,6 +489,38 @@ export default function CredencialesApiPage() {
                 >
                   {idEnAccion === c.id ? "Rotando..." : "Rotar"}
                 </button>
+
+                {idConfirmandoSecreto === c.id ? (
+                  <>
+                    <span className="self-center text-xs text-brand-dark/70">
+                      {c.firmaWebhookActiva ? "El secreto actual dejará de servir. ¿Seguro?" : "¿Generar secreto?"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => regenerarSecreto(c.id)}
+                      disabled={idEnAccion === c.id}
+                      className="rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-dark disabled:opacity-40"
+                    >
+                      Sí, generar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIdConfirmandoSecreto(null)}
+                      className="rounded-lg px-3 py-1.5 text-xs font-semibold text-brand-dark/70"
+                    >
+                      Cancelar
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIdConfirmandoSecreto(c.id)}
+                    disabled={idEnAccion === c.id}
+                    className="rounded-lg bg-brand-light px-3 py-1.5 text-xs font-semibold text-brand-dark transition hover:bg-brand-light/70 disabled:opacity-40"
+                  >
+                    {c.firmaWebhookActiva ? "Nuevo secreto de firma" : "Activar firma"}
+                  </button>
+                )}
 
                 {idConfirmandoRevocar === c.id ? (
                   <>

@@ -39,6 +39,7 @@ const ENLACES = [
   { href: "/admin/reportes/conciliacion", etiqueta: "Conciliación", icono: IconoConciliacion },
   { href: "/admin/administradores", etiqueta: "Administradores", icono: IconoAdministradores },
   { href: "/admin/operacion", etiqueta: "Operación", icono: IconoOperacion },
+  { href: "/admin/postpago", etiqueta: "Facturas y tasas", icono: IconoPostpago },
   { href: "/admin/auditoria", etiqueta: "Auditoría", icono: IconoAuditoria },
 ];
 
@@ -72,6 +73,14 @@ function IconoOperacion({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M3 12h4l3-8 4 16 3-8h4" />
+    </svg>
+  );
+}
+function IconoPostpago({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 3h9l3 3v15H6z" />
+      <path d="M9 10h6M9 14h6M9 18h3" />
     </svg>
   );
 }

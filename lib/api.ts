@@ -561,6 +561,8 @@ export interface CredencialApiCooperativa {
   tipo: "api_key";
   apiKeyPrefix: string;
   webhookUrl: string | null;
+  /** true si los webhooks de esta llave van firmados. Las llaves anteriores a la firma no. */
+  firmaWebhookActiva: boolean;
   activo: boolean;
   creadoEn: string;
   revocadoEn: string | null;
@@ -570,6 +572,42 @@ export interface CredencialApiRecienCreada {
   id: string;
   apiKeyPrefix: string;
   apiKeyCompleta: string;
+  /** Secreto para verificar la firma de los webhooks. Solo llega aquí, una vez. */
+  webhookSecreto: string;
+}
+
+export interface ResultadoPruebaWebhook {
+  entregado: boolean;
+  firmado: boolean;
+  respuesta: string;
+}
+
+/** Genera un secreto de firma nuevo (el anterior deja de servir). Se muestra una sola vez. */
+export async function regenerarWebhookSecretoApi(
+  token: string,
+  id: string,
+): Promise<{ webhookSecreto: string }> {
+  const res = await fetch(`${API_URL}/coop/credenciales-api/${id}/webhook-secreto`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo generar el secreto.");
+  return cuerpo as { webhookSecreto: string };
+}
+
+/** Envía un evento de prueba firmado a la URL del webhook de esa llave. */
+export async function probarWebhookCredencialApi(
+  token: string,
+  id: string,
+): Promise<ResultadoPruebaWebhook> {
+  const res = await fetch(`${API_URL}/coop/credenciales-api/${id}/webhook-prueba`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo enviar la prueba.");
+  return cuerpo as ResultadoPruebaWebhook;
 }
 
 export interface FiltrosCredencialesApi {
@@ -1799,6 +1837,87 @@ export interface CooperativaDetalle {
   contactoCorreo: string | null;
   contactoTelefono: string | null;
   fechaAfiliacion: string | null;
+  modoOperacion: ModoOperacion;
+}
+
+/**
+ * Qué hace Klumbus por la cooperativa (07-oct-2026):
+ * - plataforma_completa: Klumbus cobra, factura y registra la tasa en el SIAT.
+ * - intermediario_con_cobro: Klumbus cobra; la cooperativa factura y registra la tasa.
+ * - intermediario_venta: la cooperativa cobra; Klumbus solo vende (aún no disponible).
+ */
+export type ModoOperacion = "plataforma_completa" | "intermediario_con_cobro" | "intermediario_venta";
+
+export async function cambiarModoOperacionAdmin(
+  token: string,
+  id: string,
+  modoOperacion: ModoOperacion,
+): Promise<void> {
+  const res = await fetch(`${API_URL}/admin/cooperativas/${id}/modo-operacion`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ modoOperacion }),
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo cambiar el modo de operación.");
+  }
+}
+
+export type TipoTareaPostpago =
+  | "factura_pasaje"
+  | "registro_tasa"
+  | "factura_plataforma"
+  | "confirmacion_cooperativa";
+export type EstadoTareaPostpago = "pendiente" | "en_proceso" | "exitosa" | "agotada";
+
+/** Tarea posterior al pago (factura, tasa del terminal, confirmación de la cooperativa). */
+export interface TareaPostpago {
+  id: string;
+  compraId: string;
+  cooperativaId: string | null;
+  tipo: TipoTareaPostpago;
+  estado: EstadoTareaPostpago;
+  intentos: number;
+  maxIntentos: number;
+  proximoIntentoEn: string;
+  ultimoError: string | null;
+  creadoEn: string;
+  completadoEn: string | null;
+}
+
+export interface ResultadoTareasPostpago {
+  filas: TareaPostpago[];
+  total: number;
+  pagina: number;
+  limite: number;
+}
+
+export async function listarTareasPostpagoAdmin(
+  token: string,
+  filtros: { estado?: EstadoTareaPostpago; pagina: number; limite: number },
+): Promise<ResultadoTareasPostpago> {
+  const params = new URLSearchParams();
+  if (filtros.estado) params.set("estado", filtros.estado);
+  params.set("pagina", String(filtros.pagina));
+  params.set("limite", String(filtros.limite));
+  const res = await fetch(`${API_URL}/admin/postpago/tareas?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudieron cargar las tareas.");
+  return cuerpo as ResultadoTareasPostpago;
+}
+
+export async function reintentarTareaPostpagoAdmin(token: string, id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/admin/postpago/tareas/${id}/reintentar`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo reintentar la tarea.");
 }
 
 export interface FiltrosCooperativas {

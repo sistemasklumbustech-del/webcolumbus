@@ -5,6 +5,8 @@ import {
   buscarCooperativasAdmin,
   crearCooperativaAdmin,
   cambiarEstadoCooperativaAdmin,
+  cambiarModoOperacionAdmin,
+  type ModoOperacion,
   type CooperativaDetalle,
   type FiltrosCooperativas,
   type ResultadoCooperativas,
@@ -29,6 +31,36 @@ const COLOR_ESTADO: Record<string, string> = {
 
 const LIMITE_PAGINA = 25;
 
+const MODOS: { valor: ModoOperacion; titulo: string; detalle: string; disponible: boolean }[] = [
+  {
+    valor: "plataforma_completa",
+    titulo: "Plataforma completa",
+    detalle:
+      "Klumbus cobra, emite la factura del pasaje y registra la tasa en el SIAT 3000. Para cooperativas sin sistema propio.",
+    disponible: true,
+  },
+  {
+    valor: "intermediario_con_cobro",
+    titulo: "Intermediario con cobro",
+    detalle:
+      "Klumbus cobra y liquida. La cooperativa factura y registra la tasa con su sistema, y lo reporta a Klumbus.",
+    disponible: true,
+  },
+  {
+    valor: "intermediario_venta",
+    titulo: "Intermediario de venta",
+    detalle:
+      "La cooperativa cobra con su propia pasarela y Klumbus solo vende y cobra su comisión. Aún no está disponible.",
+    disponible: false,
+  },
+];
+
+const ETIQUETA_MODO: Record<ModoOperacion, string> = {
+  plataforma_completa: "Plataforma completa",
+  intermediario_con_cobro: "Intermediario con cobro",
+  intermediario_venta: "Intermediario de venta",
+};
+
 export default function CooperativasAdminPage() {
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +80,10 @@ export default function CooperativasAdminPage() {
   const [cambio, setCambio] = useState<{ cooperativa: CooperativaDetalle; estado: "aprobada" | "suspendida" } | null>(null);
   const [motivoCambio, setMotivoCambio] = useState("");
   const [aplicandoCambio, setAplicandoCambio] = useState(false);
+
+  // Modo de operación: confirmación en un modal, igual que suspender/reactivar.
+  const [cambioModo, setCambioModo] = useState<{ cooperativa: CooperativaDetalle; modo: ModoOperacion } | null>(null);
+  const [aplicandoModo, setAplicandoModo] = useState(false);
 
   const [guardando, setGuardando] = useState(false);
   const [errorForm, setErrorForm] = useState<string | null>(null);
@@ -83,6 +119,24 @@ export default function CooperativasAdminPage() {
       setMensajeError(err instanceof Error ? err.message : "No se pudo cambiar el estado.");
     } finally {
       setAplicandoCambio(false);
+    }
+  }
+
+  async function confirmarCambioModo() {
+    const token = obtenerToken();
+    if (!token || !cambioModo) return;
+    setAplicandoModo(true);
+    try {
+      await cambiarModoOperacionAdmin(token, cambioModo.cooperativa.id, cambioModo.modo);
+      setMensajeExito(
+        `"${cambioModo.cooperativa.nombreComercial}" ahora opera como: ${ETIQUETA_MODO[cambioModo.modo]}.`,
+      );
+      setCambioModo(null);
+      cargar();
+    } catch (err) {
+      setMensajeError(err instanceof Error ? err.message : "No se pudo cambiar el modo de operación.");
+    } finally {
+      setAplicandoModo(false);
     }
   }
 
@@ -382,6 +436,7 @@ export default function CooperativasAdminPage() {
                 <th className="px-6 py-3">RUC</th>
                 <th className="px-6 py-3">Contacto</th>
                 <th className="px-6 py-3">Estado</th>
+                <th className="px-6 py-3">Modo de operación</th>
                 <th className="px-6 py-3 text-right">Acciones</th>
               </tr>
             </thead>
@@ -404,6 +459,15 @@ export default function CooperativasAdminPage() {
                     >
                       {ETIQUETA_ESTADO[c.estado] ?? c.estado}
                     </span>
+                  </td>
+                  <td className="px-6 py-3 text-xs text-brand-dark/80">
+                    <p>{ETIQUETA_MODO[c.modoOperacion] ?? c.modoOperacion}</p>
+                    <button
+                      onClick={() => setCambioModo({ cooperativa: c, modo: c.modoOperacion })}
+                      className="mt-0.5 font-semibold text-brand underline"
+                    >
+                      Cambiar
+                    </button>
                   </td>
                   <td className="px-6 py-3 text-right">
                     {c.estado === "aprobada" && (
@@ -457,6 +521,63 @@ export default function CooperativasAdminPage() {
           </div>
         )}
       </div>
+
+      {cambioModo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onMouseDown={() => setCambioModo(null)}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(e) => e.stopPropagation()}
+            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <h2 className="font-display text-lg font-bold text-brand-dark">Modo de operación</h2>
+            <p className="mt-1 text-sm text-brand-dark/70">{cambioModo.cooperativa.nombreComercial}</p>
+            <div className="mt-4 space-y-2">
+              {MODOS.map((m) => (
+                <label
+                  key={m.valor}
+                  className={`flex gap-3 rounded-xl border p-3 text-sm ${
+                    cambioModo.modo === m.valor ? "border-brand bg-brand-light/30" : "border-brand-light"
+                  } ${m.disponible ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+                >
+                  <input
+                    type="radio"
+                    name="modo-operacion"
+                    value={m.valor}
+                    checked={cambioModo.modo === m.valor}
+                    disabled={!m.disponible}
+                    onChange={() => setCambioModo({ ...cambioModo, modo: m.valor })}
+                    className="mt-1"
+                  />
+                  <span>
+                    <span className="block font-semibold text-brand-dark">{m.titulo}</span>
+                    <span className="block text-xs text-brand-dark/70">{m.detalle}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-brand-dark/50">
+              Aplica a las compras nuevas. Las compras ya hechas conservan lo que se les asignó. El cambio queda en la auditoría.
+            </p>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setCambioModo(null)}
+                disabled={aplicandoModo}
+                className="flex-1 rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarCambioModo}
+                disabled={aplicandoModo || cambioModo.modo === cambioModo.cooperativa.modoOperacion}
+                className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+              >
+                {aplicandoModo ? "Guardando..." : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {cambio && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onMouseDown={() => setCambio(null)}>
