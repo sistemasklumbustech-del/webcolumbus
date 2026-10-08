@@ -6,6 +6,7 @@ import Link from "next/link";
 import { crearCompra, cotizarCompra, listarMisCreditos, obtenerMapaAsientos, iniciarPagoManual, subirComprobantePago, listarMetodosPagoPorViaje, obtenerInfoPasarela, type InfoPasarela, type ResultadoCompra, type Cotizacion, type MiCredito, type MapaAsientos, type MetodoPagoDisponible, type TipoMetodoPago, type PasajeroCompraInput, type DatosFacturacionInput } from "@/lib/api";
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
 import { CodigoQr } from "@/components/CodigoQr";
+import { AccesoAnden, useCodigosAnden } from "@/components/AccesoAnden";
 import { CampoSexoAsientoMujeres, type SexoPasajero } from "@/components/CampoSexoAsientoMujeres";
 import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
 
@@ -114,6 +115,8 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resultado, setResultado] = useState<ResultadoCompra | null>(null);
+  // Código de acceso al andén (tasa del terminal): llega después del pago, así que se consulta aparte.
+  const codigosAnden = useCodigosAnden(resultado?.estado === "aprobado" ? resultado.compraId : null);
   const [creditos, setCreditos] = useState<MiCredito[]>([]);
   const [creditoElegidoId, setCreditoElegidoId] = useState("");
   const [mapa, setMapa] = useState<MapaAsientos | null>(null);
@@ -528,7 +531,13 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                 </div>
                 <div className="mt-3">
                   <CodigoQr valor={boleto.codigoQr} />
+                  {codigosAnden[boleto.id] && codigosAnden[boleto.id].estadoTasa !== "no_aplica" && (
+                    <p className="mt-1 text-center text-xs font-semibold text-brand-dark/60">Tu boleto · se valida al abordar</p>
+                  )}
                 </div>
+                {codigosAnden[boleto.id] && (
+                  <AccesoAnden estado={codigosAnden[boleto.id].estadoTasa} codigo={codigosAnden[boleto.id].codigoTasa} />
+                )}
               </div>
                     ))}
                   </div>

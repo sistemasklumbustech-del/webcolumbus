@@ -1604,6 +1604,33 @@ export interface BoletoEmitido {
   esVip: boolean;
 }
 
+/**
+ * Estado del código de acceso al andén (la tasa del terminal, SIAT 3000) de un boleto:
+ * lista (ya hay QR), en_proceso (se está generando), en_revision (una persona lo revisa)
+ * o no_aplica (esa cooperativa no usa este flujo).
+ */
+export type EstadoTasaBoleto = "lista" | "en_proceso" | "en_revision" | "no_aplica";
+
+/** Boleto tal como lo devuelve el recibo de una compra; trae el estado del código de andén. */
+export interface BoletoDeRecibo {
+  boletoId: string;
+  codigoQr: string;
+  numeroAsiento: string;
+  cooperativaNombre: string;
+  codigoTasa: string | null;
+  estadoTasa: EstadoTasaBoleto;
+}
+
+export async function obtenerReciboCompra(token: string, compraId: string): Promise<{ boletos: BoletoDeRecibo[] }> {
+  const res = await fetch(`${API_URL}/compras/${compraId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const cuerpo = await res.json();
+  if (!res.ok) throw new Error(cuerpo?.message ?? "No se pudo cargar la compra.");
+  return cuerpo as { boletos: BoletoDeRecibo[] };
+}
+
 export interface ResultadoCompra {
   compraId: string;
   estado: "aprobado" | "rechazado";
@@ -2950,6 +2977,9 @@ export interface MiBoleto {
   horaLlegadaEstimada: string | null;
   yaCalificado: boolean;
   puedeCalificar: boolean;
+  /** Código de acceso al andén (20 dígitos) y en qué va. */
+  codigoTasa: string | null;
+  estadoTasa: EstadoTasaBoleto;
 }
 
 /** Filtros y paginación de "Mis boletos" (24-sep-2026). Fechas YYYY-MM-DD sobre la fecha de salida. */

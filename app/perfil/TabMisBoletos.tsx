@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { listarMisBoletos, calificarViaje, cancelarBoleto, descargarBoletoPdf, type ResultadoMisBoletos } from "@/lib/api";
+import { listarMisBoletos, calificarViaje, cancelarBoleto, descargarBoletoPdf, type MiBoleto, type ResultadoMisBoletos } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
 import { CodigoQr } from "@/components/CodigoQr";
+import { AccesoAnden } from "@/components/AccesoAnden";
 import { SolicitarFactura } from "./SolicitarFactura";
 import { ReportarProblema } from "./ReportarProblema";
 
@@ -36,6 +37,23 @@ function BotonMostrarQr({ codigoQr }: { codigoQr: string }) {
           <CodigoQr valor={codigoQr} />
         </div>
       )}
+    </div>
+  );
+}
+
+/** Código de acceso al andén (tasa del terminal): el QR del torniquete, distinto del QR del boleto. */
+function BotonMostrarAnden({ estado, codigo }: { estado: MiBoleto["estadoTasa"]; codigo: string | null }) {
+  const [mostrando, setMostrando] = useState(false);
+  if (estado === "no_aplica") return null;
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setMostrando((v) => !v)}
+        className="block text-xs font-semibold text-brand underline decoration-dotted underline-offset-2 hover:text-brand-dark"
+      >
+        {mostrando ? "Ocultar acceso al andén" : estado === "lista" ? "Ver acceso al andén" : "Acceso al andén (en proceso)"}
+      </button>
+      {mostrando && <AccesoAnden estado={estado} codigo={codigo} />}
     </div>
   );
 }
@@ -412,6 +430,7 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
               </span>
 
               {b.estado === "vigente" && <BotonMostrarQr codigoQr={b.codigoQr} />}
+              {b.estado === "vigente" && <BotonMostrarAnden estado={b.estadoTasa} codigo={b.codigoTasa} />}
               {b.estado === "vigente" && (
                 <BotonDescargarPdf boletoId={b.boletoId} onError={setError} />
               )}
