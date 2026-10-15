@@ -116,7 +116,7 @@ export function CampoFecha({ etiqueta, valor, minimo, onCambio }: Props) {
 
   return (
     <div ref={contenedorRef} className="relative">
-      <label htmlFor={idCampo} className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-white/60">
+      <label htmlFor={idCampo} className="block text-[11px] text-muted-2 md:text-xs">
         {etiqueta}
       </label>
       <button
@@ -126,7 +126,7 @@ export function CampoFecha({ etiqueta, valor, minimo, onCambio }: Props) {
         onClick={() => setAbierto((a) => !a)}
         aria-haspopup="dialog"
         aria-expanded={abierto}
-        className="w-full rounded-lg border border-white/20 bg-white/10 px-2.5 py-2 text-left text-sm text-white transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-brand-medium md:w-32 md:border-0 md:bg-transparent md:p-0 md:hover:bg-transparent md:focus:ring-0"
+        className="block w-full p-0 text-left text-sm font-semibold text-ink focus:outline-none md:text-[15px]"
       >
         {formatoCorto(valor)}
       </button>
@@ -138,8 +138,8 @@ export function CampoFecha({ etiqueta, valor, minimo, onCambio }: Props) {
             ref={popoverRef}
             role="dialog"
             aria-label={etiqueta}
-            style={{ position: "fixed", top: posicion.top, left: posicion.left }}
-            className="z-[100] rounded-b-2xl border border-t-0 border-white/15 bg-brand-dark/40 p-3 shadow-xl shadow-black/30 backdrop-blur-md"
+            style={{ position: "fixed", top: posicion.top + 14, left: posicion.left }}
+            className="z-[100] rounded-card border border-line bg-white p-3 shadow-float"
           >
             <DayPicker
               mode="single"
@@ -153,26 +153,26 @@ export function CampoFecha({ etiqueta, valor, minimo, onCambio }: Props) {
                 setAbierto(false);
               }}
               classNames={{
-                root: "text-white",
+                root: "text-ink",
                 months: "flex gap-4",
                 month: "space-y-2",
-                month_caption: "flex items-center justify-center py-1 text-sm font-semibold text-white capitalize",
+                month_caption: "flex items-center justify-center py-1 text-sm font-semibold text-ink capitalize",
                 nav: "flex items-center justify-between absolute inset-x-0 top-0 px-1",
                 button_previous:
-                  "flex h-7 w-7 items-center justify-center rounded-md text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-30",
+                  "flex h-8 w-8 items-center justify-center rounded-ctrl text-muted-2 hover:bg-kbbg hover:text-ink disabled:opacity-30",
                 button_next:
-                  "flex h-7 w-7 items-center justify-center rounded-md text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-30",
+                  "flex h-8 w-8 items-center justify-center rounded-ctrl text-muted-2 hover:bg-kbbg hover:text-ink disabled:opacity-30",
                 chevron: "fill-current",
                 weekdays: "flex",
-                weekday: "w-8 text-center text-[10px] font-semibold uppercase text-white/40",
+                weekday: "w-9 text-center text-[11px] font-semibold uppercase text-muted-3",
                 week: "flex",
                 day: "p-0.5",
                 day_button:
-                  "flex h-8 w-8 items-center justify-center rounded-lg text-sm text-white/85 transition hover:bg-white/15",
-                today: "font-bold text-brand-amber",
-                selected: "[&>button]:bg-brand-amber [&>button]:text-brand-dark [&>button]:font-bold [&>button]:hover:bg-brand-amber",
-                outside: "text-white/25",
-                disabled: "text-white/20 hover:bg-transparent cursor-not-allowed",
+                  "flex h-9 w-9 items-center justify-center rounded-ctrl text-sm text-ink transition hover:bg-kbbg",
+                today: "font-bold underline decoration-kbyellow decoration-2 underline-offset-4",
+                selected: "[&>button]:bg-kbyellow [&>button]:text-ink [&>button]:font-bold [&>button]:hover:bg-kbyellow",
+                outside: "text-muted-3",
+                disabled: "text-line-2 hover:bg-transparent cursor-not-allowed",
               }}
             />
           </div>,

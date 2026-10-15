@@ -23,10 +23,10 @@ const ETIQUETA_ESTADO: Record<string, string> = {
 };
 
 const COLOR_ESTADO: Record<string, string> = {
-  aprobada: "bg-emerald-100 text-emerald-700",
-  pendiente_revision: "bg-amber-100 text-amber-700",
-  suspendida: "bg-red-100 text-red-700",
-  dada_de_baja: "bg-slate-200 text-slate-600",
+  aprobada: "kb-status--ok",
+  pendiente_revision: "kb-status--wait",
+  suspendida: "kb-status--error",
+  dada_de_baja: "kb-status--off",
 };
 
 const LIMITE_PAGINA = 25;
@@ -223,17 +223,17 @@ export default function CooperativasAdminPage() {
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
       <Toast mensaje={mensajeError} onCerrar={() => setMensajeError(null)} tipo="error" />
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Cooperativas</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="text-2xl font-bold text-brand-dark">Cooperativas</h1>
+        <p className="mt-1 text-sm text-muted-2">
           Alta de una nueva cooperativa junto con su primer usuario administrador (RF-ADMIN-001).
         </p>
       </div>
 
-      <form onSubmit={crear} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-        <h2 className="font-display text-base font-bold text-brand-dark">Datos de la cooperativa</h2>
+      <form onSubmit={crear} className="kb-card kb-on-white p-6">
+        <h2 className="text-base font-bold text-brand-dark">Datos de la cooperativa</h2>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <label htmlFor="coop-ruc" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="coop-ruc" className="kb-label">
               RUC
             </label>
             <input
@@ -242,11 +242,11 @@ export default function CooperativasAdminPage() {
               value={ruc}
               onChange={(e) => setRuc(e.target.value)}
               placeholder="0790123456001"
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="coop-razon-social" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="coop-razon-social" className="kb-label">
               Razón social
             </label>
             <input
@@ -255,11 +255,11 @@ export default function CooperativasAdminPage() {
               value={razonSocial}
               onChange={(e) => setRazonSocial(e.target.value)}
               placeholder="Cooperativa de Transportes X S.A."
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="coop-nombre-comercial" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="coop-nombre-comercial" className="kb-label">
               Nombre comercial
             </label>
             <input
@@ -268,25 +268,25 @@ export default function CooperativasAdminPage() {
               value={nombreComercial}
               onChange={(e) => setNombreComercial(e.target.value)}
               placeholder="Transportes X"
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="coop-modelo-integracion" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="coop-modelo-integracion" className="kb-label">
               Modelo de integración
             </label>
             <select
               id="coop-modelo-integracion"
               value={modeloIntegracion}
               onChange={(e) => setModeloIntegracion(e.target.value as "modelo_a" | "modelo_b")}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             >
               <option value="modelo_a">Modelo A</option>
               <option value="modelo_b">Modelo B</option>
             </select>
           </div>
           <div>
-            <label htmlFor="coop-contacto-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="coop-contacto-nombre" className="kb-label">
               Contacto — nombre (opcional)
             </label>
             <input
@@ -294,11 +294,11 @@ export default function CooperativasAdminPage() {
               type="text"
               value={contactoNombre}
               onChange={(e) => setContactoNombre(e.target.value)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="coop-contacto-correo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="coop-contacto-correo" className="kb-label">
               Contacto — correo (opcional)
             </label>
             <input
@@ -306,18 +306,18 @@ export default function CooperativasAdminPage() {
               type="email"
               value={contactoCorreo}
               onChange={(e) => setContactoCorreo(e.target.value)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
         </div>
 
-        <h2 className="mt-6 font-display text-base font-bold text-brand-dark">Primer usuario administrador</h2>
-        <p className="mt-1 text-xs text-brand-dark/50">
+        <h2 className="mt-6 text-base font-bold text-brand-dark">Primer usuario administrador</h2>
+        <p className="mt-1 text-xs text-muted-2">
           Con estas credenciales la cooperativa entra por primera vez a su Panel Empresa.
         </p>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <label htmlFor="coop-usuario-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="coop-usuario-nombre" className="kb-label">
               Nombre completo
             </label>
             <input
@@ -325,11 +325,11 @@ export default function CooperativasAdminPage() {
               type="text"
               value={nombreUsuario}
               onChange={(e) => setNombreUsuario(e.target.value)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="coop-usuario-correo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="coop-usuario-correo" className="kb-label">
               Correo
             </label>
             <input
@@ -337,11 +337,11 @@ export default function CooperativasAdminPage() {
               type="email"
               value={correoUsuario}
               onChange={(e) => setCorreoUsuario(e.target.value)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="coop-usuario-password" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="coop-usuario-password" className="kb-label">
               Contraseña
             </label>
             <CampoPassword
@@ -353,36 +353,36 @@ export default function CooperativasAdminPage() {
           </div>
         </div>
 
-        {errorForm && <p className="mt-4 text-sm font-medium text-red-600">{errorForm}</p>}
+        {errorForm && <p className="mt-4 text-sm font-medium text-kberror">{errorForm}</p>}
 
         <button
           type="submit"
           disabled={guardando}
-          className="mt-6 h-[42px] rounded-lg bg-brand px-5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+          className="mt-6 kb-btn kb-btn--dark !h-[42px] !px-5 !text-sm disabled:opacity-50"
         >
           {guardando ? "Creando..." : "Crear cooperativa"}
         </button>
       </form>
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
       <form
         onSubmit={filtrar}
-        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
+        className="grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
       >
         <div>
-          <label htmlFor="coop-filtro-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="coop-filtro-estado" className="kb-label">
             Estado
           </label>
           <select
             id="coop-filtro-estado"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           >
             <option value="">Todos</option>
             <option value="pendiente_revision">Pendiente de revisión</option>
@@ -392,7 +392,7 @@ export default function CooperativasAdminPage() {
           </select>
         </div>
         <div className="lg:col-span-2">
-          <label htmlFor="coop-filtro-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="coop-filtro-busqueda" className="kb-label">
             Buscar
           </label>
           <input
@@ -400,22 +400,22 @@ export default function CooperativasAdminPage() {
             value={busquedaFiltro}
             onChange={(e) => setBusquedaFiltro(e.target.value)}
             placeholder="Nombre, razón social, RUC o contacto"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           />
         </div>
-        <div className="flex gap-2">
-          <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" className="flex-1 kb-btn kb-btn--dark !h-10 !px-4 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiarFiltros} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </div>
       </form>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="border-b border-black/5 px-6 py-4">
-          <h2 className="font-display text-base font-bold text-brand-dark">
+      <div className="overflow-hidden kb-card kb-on-white">
+        <div className="border-b border-line px-6 py-4">
+          <h2 className="text-base font-bold text-brand-dark">
             {resultado === null
               ? "Cargando..."
               : `${resultado.total} cooperativa${resultado.total === 1 ? "" : "s"} con estos filtros`}
@@ -423,44 +423,44 @@ export default function CooperativasAdminPage() {
         </div>
 
         {resultado !== null && resultado.filas.length === 0 && !cargando && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
+          <p className="px-6 py-8 text-center text-sm text-muted-2">
             No hay cooperativas que coincidan con estos filtros.
           </p>
         )}
 
         {resultado !== null && resultado.filas.length > 0 && (
-          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+            <thead>
               <tr>
-                <th className="px-6 py-3">Nombre comercial</th>
-                <th className="px-6 py-3">RUC</th>
-                <th className="px-6 py-3">Contacto</th>
-                <th className="px-6 py-3">Estado</th>
-                <th className="px-6 py-3">Modo de operación</th>
-                <th className="px-6 py-3 text-right">Acciones</th>
+                <th className="px-4 py-3">Nombre comercial</th>
+                <th className="px-4 py-3">RUC</th>
+                <th className="px-4 py-3">Contacto</th>
+                <th className="px-4 py-3">Estado</th>
+                <th className="px-4 py-3">Modo de operación</th>
+                <th className="px-4 py-3 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/5">
+            <tbody>
               {resultado.filas.map((c) => (
                 <tr key={c.id}>
-                  <td className="px-6 py-3 font-medium text-brand-dark">{c.nombreComercial}</td>
-                  <td className="px-6 py-3 text-brand-dark/70">{c.ruc}</td>
-                  <td className="px-6 py-3 text-xs text-brand-dark/70">
+                  <td className="px-4 py-3 font-medium text-brand-dark">{c.nombreComercial}</td>
+                  <td className="px-4 py-3 text-muted-2">{c.ruc}</td>
+                  <td className="px-4 py-3 text-xs text-muted-2">
                     {c.contactoNombre && <p>{c.contactoNombre}</p>}
                     {c.contactoCorreo && <p>{c.contactoCorreo}</p>}
                     {c.contactoTelefono && <p>{c.contactoTelefono}</p>}
                     {!c.contactoNombre && !c.contactoCorreo && !c.contactoTelefono && (
-                      <span className="text-brand-dark/30">Sin contacto</span>
+                      <span className="text-muted-3">Sin contacto</span>
                     )}
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-4 py-3">
                     <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLOR_ESTADO[c.estado] ?? "bg-slate-100 text-slate-700"}`}
+                      className={`kb-status ${COLOR_ESTADO[c.estado] ?? "kb-status--off"}`}
                     >
                       {ETIQUETA_ESTADO[c.estado] ?? c.estado}
                     </span>
                   </td>
-                  <td className="px-6 py-3 text-xs text-brand-dark/80">
+                  <td className="px-4 py-3 text-xs text-ink">
                     <p>{ETIQUETA_MODO[c.modoOperacion] ?? c.modoOperacion}</p>
                     <button
                       onClick={() => setCambioModo({ cooperativa: c, modo: c.modoOperacion })}
@@ -469,11 +469,11 @@ export default function CooperativasAdminPage() {
                       Cambiar
                     </button>
                   </td>
-                  <td className="px-6 py-3 text-right">
+                  <td className="px-4 py-3 text-right">
                     {c.estado === "aprobada" && (
                       <button
                         onClick={() => setCambio({ cooperativa: c, estado: "suspendida" })}
-                        className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50"
+                        className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-kberror"
                       >
                         Suspender
                       </button>
@@ -481,7 +481,7 @@ export default function CooperativasAdminPage() {
                     {(c.estado === "suspendida" || c.estado === "pendiente_revision") && (
                       <button
                         onClick={() => setCambio({ cooperativa: c, estado: "aprobada" })}
-                        className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                        className="kb-btn !h-9 !px-3 !text-xs bg-ok text-white"
                       >
                         {c.estado === "suspendida" ? "Reactivar" : "Aprobar"}
                       </button>
@@ -494,7 +494,7 @@ export default function CooperativasAdminPage() {
         )}
 
         {resultado !== null && resultado.total > 0 && (
-          <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+          <div className="flex items-center justify-between border-t border-line px-4 py-3 text-sm text-muted-2">
             <span>
               Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA))}
             </span>
@@ -502,7 +502,7 @@ export default function CooperativasAdminPage() {
               <button
                 onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 disabled={pagina <= 1 || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Anterior
               </button>
@@ -513,7 +513,7 @@ export default function CooperativasAdminPage() {
                   )
                 }
                 disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Siguiente
               </button>
@@ -523,21 +523,21 @@ export default function CooperativasAdminPage() {
       </div>
 
       {cambioModo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onMouseDown={() => setCambioModo(null)}>
+        <div className="kb-modal-bg" onMouseDown={() => setCambioModo(null)}>
           <div
             role="dialog"
             aria-modal="true"
             onMouseDown={(e) => e.stopPropagation()}
-            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
+            className="w-full max-w-lg kb-card kb-on-white p-6 shadow-xl"
           >
-            <h2 className="font-display text-lg font-bold text-brand-dark">Modo de operación</h2>
-            <p className="mt-1 text-sm text-brand-dark/70">{cambioModo.cooperativa.nombreComercial}</p>
+            <h2 className="text-lg font-bold text-brand-dark">Modo de operación</h2>
+            <p className="mt-1 text-sm text-muted-2">{cambioModo.cooperativa.nombreComercial}</p>
             <div className="mt-4 space-y-2">
               {MODOS.map((m) => (
                 <label
                   key={m.valor}
-                  className={`flex gap-3 rounded-xl border p-3 text-sm ${
-                    cambioModo.modo === m.valor ? "border-brand bg-brand-light/30" : "border-brand-light"
+                  className={`flex gap-3 rounded-ctrl border p-3 text-sm ${
+                    cambioModo.modo === m.valor ? "border-brand bg-kbbg" : "border-line"
                   } ${m.disponible ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
                 >
                   <input
@@ -551,26 +551,26 @@ export default function CooperativasAdminPage() {
                   />
                   <span>
                     <span className="block font-semibold text-brand-dark">{m.titulo}</span>
-                    <span className="block text-xs text-brand-dark/70">{m.detalle}</span>
+                    <span className="block text-xs text-muted-2">{m.detalle}</span>
                   </span>
                 </label>
               ))}
             </div>
-            <p className="mt-3 text-xs text-brand-dark/50">
+            <p className="mt-3 text-xs text-muted-2">
               Aplica a las compras nuevas. Las compras ya hechas conservan lo que se les asignó. El cambio queda en la auditoría.
             </p>
             <div className="mt-5 flex gap-3">
               <button
                 onClick={() => setCambioModo(null)}
                 disabled={aplicandoModo}
-                className="flex-1 rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+                className="flex-1 kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmarCambioModo}
                 disabled={aplicandoModo || cambioModo.modo === cambioModo.cooperativa.modoOperacion}
-                className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+                className="flex-1 kb-btn kb-btn--dark !h-10 !px-4 !text-sm disabled:opacity-50"
               >
                 {aplicandoModo ? "Guardando..." : "Guardar"}
               </button>
@@ -580,23 +580,23 @@ export default function CooperativasAdminPage() {
       )}
 
       {cambio && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onMouseDown={() => setCambio(null)}>
+        <div className="kb-modal-bg" onMouseDown={() => setCambio(null)}>
           <div
             role="dialog"
             aria-modal="true"
             onMouseDown={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            className="w-full max-w-md kb-card kb-on-white p-6 shadow-xl"
           >
-            <h2 className="font-display text-lg font-bold text-brand-dark">
+            <h2 className="text-lg font-bold text-brand-dark">
               {cambio.estado === "suspendida" ? "Suspender cooperativa" : "Habilitar cooperativa"}
             </h2>
-            <p className="mt-1 text-sm text-brand-dark/70">{cambio.cooperativa.nombreComercial}</p>
-            <p className="mt-3 rounded-lg bg-brand-light/30 px-3 py-2 text-sm text-brand-dark/80">
+            <p className="mt-1 text-sm text-muted-2">{cambio.cooperativa.nombreComercial}</p>
+            <p className="mt-3 rounded-lg bg-kbbg px-3 py-2 text-sm text-ink">
               {cambio.estado === "suspendida"
                 ? "Dejará de aparecer en las búsquedas y no podrá vender boletos (ni en línea ni en ventanilla). Su historial y los boletos ya vendidos no se tocan. Se puede reactivar cuando quieras."
                 : "Volverá a aparecer en las búsquedas y podrá vender boletos."}
             </p>
-            <label htmlFor="motivo-cambio-estado" className="mt-4 mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="motivo-cambio-estado" className="mt-4 kb-label">
               Motivo (opcional, queda en la auditoría)
             </label>
             <textarea
@@ -604,21 +604,21 @@ export default function CooperativasAdminPage() {
               value={motivoCambio}
               onChange={(e) => setMotivoCambio(e.target.value)}
               rows={2}
-              className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input !h-11 !text-sm"
             />
             <div className="mt-5 flex gap-3">
               <button
                 onClick={() => setCambio(null)}
                 disabled={aplicandoCambio}
-                className="flex-1 rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+                className="flex-1 kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmarCambioEstado}
                 disabled={aplicandoCambio}
-                className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-60 ${
-                  cambio.estado === "suspendida" ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"
+                className={`kb-btn flex-1 !h-11 !text-sm text-white disabled:opacity-60 ${
+                  cambio.estado === "suspendida" ? "bg-kberror" : "bg-ok"
                 }`}
               >
                 {aplicandoCambio ? "Guardando..." : cambio.estado === "suspendida" ? "Sí, suspender" : "Sí, habilitar"}

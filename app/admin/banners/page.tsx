@@ -123,16 +123,16 @@ export default function BannersAdminPage() {
       <Toast mensaje={mensajeError} onCerrar={() => setMensajeError(null)} tipo="error" />
 
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Banners propios</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="text-2xl font-bold text-brand-dark">Banners propios</h1>
+        <p className="mt-1 text-sm text-muted-2">
           Promoción de productos propios (DevX, Surebets24/7, el terminal, etc.) en la portada — no es venta a
           terceros, esa parte del sistema comercial llega más adelante.
         </p>
       </div>
 
-      <form onSubmit={crear} className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-2">
+      <form onSubmit={crear} className="grid grid-cols-1 gap-4 kb-card kb-on-white p-6 sm:grid-cols-2">
         <div>
-          <label htmlFor="banner-titulo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="banner-titulo" className="kb-label">
             Título (interno, no se muestra)
           </label>
           <input
@@ -141,11 +141,11 @@ id="banner-titulo"
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             placeholder="DevX — servicios de desarrollo"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="banner-enlace" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="banner-enlace" className="kb-label">
             Enlace al hacer clic
           </label>
           <input
@@ -154,11 +154,11 @@ id="banner-enlace"
             value={enlaceUrl}
             onChange={(e) => setEnlaceUrl(e.target.value)}
             placeholder="https://devx.example.com"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div className="sm:col-span-2">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Imagen del banner</span>
+          <span className="kb-label">Imagen del banner</span>
           <SelectorImagen
             id="banner-imagen"
             valor={imagenUrl}
@@ -171,36 +171,36 @@ id="banner-enlace"
           />
         </div>
 
-        {errorForm && <p className="sm:col-span-2 text-sm font-medium text-red-600">{errorForm}</p>}
+        {errorForm && <p className="sm:col-span-2 text-sm font-medium text-kberror">{errorForm}</p>}
 
         <button
           type="submit"
           disabled={guardando}
-          className="h-[42px] w-fit rounded-lg bg-brand px-5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50 sm:col-span-2"
+          className="kb-btn kb-btn--dark !h-[42px] w-fit !px-5 !text-sm disabled:opacity-50 sm:col-span-2"
         >
           {guardando ? "Creando..." : "Crear banner"}
         </button>
       </form>
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
       <form
         onSubmit={filtrar}
-        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
+        className="grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
       >
         <div>
-          <label htmlFor="banner-filtro-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="banner-filtro-estado" className="kb-label">
             Estado
           </label>
           <select
             id="banner-filtro-estado"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           >
             <option value="">Todos</option>
             <option value="activo">Activo</option>
@@ -208,7 +208,7 @@ id="banner-enlace"
           </select>
         </div>
         <div className="sm:col-span-2 lg:col-span-2">
-          <label htmlFor="banner-filtro-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="banner-filtro-busqueda" className="kb-label">
             Buscar
           </label>
           <input
@@ -216,54 +216,54 @@ id="banner-enlace"
             value={busquedaFiltro}
             onChange={(e) => setBusquedaFiltro(e.target.value)}
             placeholder="Título del banner"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           />
         </div>
-        <div className="flex gap-2">
-          <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" className="flex-1 kb-btn kb-btn--dark !h-10 !px-4 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiarFiltros} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </div>
       </form>
 
       <div className="space-y-3">
-        {resultado === null && <p className="text-sm text-brand-dark/50">Cargando...</p>}
+        {resultado === null && <p className="text-sm text-muted-2">Cargando...</p>}
         {resultado !== null && resultado.filas.length === 0 && !cargandoLista && (
-          <p className="rounded-2xl bg-white px-6 py-8 text-center text-sm text-brand-dark/50 shadow-sm ring-1 ring-black/5">
+          <p className="kb-card kb-on-white px-6 py-8 text-center text-sm text-muted-2">
             No hay banners que coincidan con estos filtros.
           </p>
         )}
         {resultado?.filas.map((b) => (
           <div
             key={b.id}
-            className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 sm:flex-row sm:items-center sm:gap-4"
+            className="flex flex-col gap-3 kb-card kb-on-white p-4 sm:flex-row sm:items-center sm:gap-4"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- URL externa dinámica, no un asset local */}
-            <img src={b.imagenUrl} alt={b.titulo} className="h-32 w-full rounded-lg object-cover ring-1 ring-black/5 sm:h-16 sm:w-28 sm:shrink-0" />
+            <img src={b.imagenUrl} alt={b.titulo} className="h-32 w-full rounded-lg object-cover ring-1 ring-line sm:h-16 sm:w-28 sm:shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-brand-dark">{b.titulo}</p>
-              <p className="truncate text-xs text-brand-dark/50">{b.enlaceUrl}</p>
+              <p className="truncate text-xs text-muted-2">{b.enlaceUrl}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span
-                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                  b.activo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                className={`kb-status ${
+                  b.activo ? "kb-status--ok" : "kb-status--off"
                 }`}
               >
                 {b.activo ? "Activo" : "Inactivo"}
               </span>
               <button
                 onClick={() => alternarActivo(b)}
-                className="rounded-lg border border-brand-light px-3 py-1.5 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 {b.activo ? "Desactivar" : "Activar"}
               </button>
               <button
                 onClick={() => eliminar(b)}
-                className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-kberror"
               >
                 Eliminar
               </button>
@@ -272,7 +272,7 @@ id="banner-enlace"
         ))}
 
         {resultado !== null && resultado.total > 0 && (
-          <div className="flex items-center justify-between rounded-2xl bg-white px-6 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+          <div className="flex items-center justify-between kb-card kb-on-white px-6 py-3 text-sm text-muted-2">
             <span>
               {resultado.total} banner(s) · Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA))}
             </span>
@@ -280,14 +280,14 @@ id="banner-enlace"
               <button
                 onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 disabled={pagina <= 1 || cargandoLista}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setPagina((p) => Math.min(Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)), p + 1))}
                 disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) || cargandoLista}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Siguiente
               </button>

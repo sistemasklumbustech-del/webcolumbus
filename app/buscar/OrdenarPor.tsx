@@ -8,11 +8,14 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
  * ordenar los resultados. Mismo patrón que FiltrosBusqueda -- actualiza
  * la URL, el ordenamiento real ocurre en el servidor (page.tsx),
  * nunca se inventa nada del lado del cliente.
+ *
+ * Rediseño final (oct-2026): chips en vez de lista desplegable; las
+ * mismas tres opciones y el mismo parámetro de URL.
  */
 const OPCIONES = [
-  { valor: "precio_asc", etiqueta: "Precio: menor primero" },
+  { valor: "precio_asc", etiqueta: "Más barato" },
   { valor: "precio_desc", etiqueta: "Precio: mayor primero" },
-  { valor: "salida_temprano", etiqueta: "Salida más temprano" },
+  { valor: "salida_temprano", etiqueta: "Más temprano" },
 ] as const;
 
 export function OrdenarPor() {
@@ -28,17 +31,18 @@ export function OrdenarPor() {
   }
 
   return (
-    <select
-      aria-label="Ordenar resultados"
-      value={valorActual}
-      onChange={(e) => cambiar(e.target.value)}
-      className="rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-cobalto"
-    >
+    <div role="group" aria-label="Ordenar resultados" className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {OPCIONES.map((o) => (
-        <option key={o.valor} value={o.valor}>
+        <button
+          key={o.valor}
+          type="button"
+          aria-pressed={valorActual === o.valor}
+          onClick={() => cambiar(o.valor)}
+          className={`kb-chip shrink-0 ${valorActual === o.valor ? "is-active" : ""}`}
+        >
           {o.etiqueta}
-        </option>
+        </button>
       ))}
-    </select>
+    </div>
   );
 }

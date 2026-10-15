@@ -40,21 +40,21 @@ export function TabMisCreditos() {
 
   return (
     <>
-      <p className="text-sm text-brand-dark/70">
+      <p className="text-sm text-muted-2">
         El saldo que te queda cuando reprogramas un boleto a un pasaje más barato. Se usa eligiéndolo
         en el checkout de tu próxima compra con esa misma cooperativa.
       </p>
 
       {error && (
-        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="mt-4 kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
-      {creditos === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+      {creditos === null && !error && <p className="mt-6 text-sm text-muted-2">Cargando...</p>}
 
       {creditos !== null && creditos.length === 0 && (
-        <p className="mt-8 text-center text-sm text-brand-dark/50">
+        <p className="mt-8 text-center text-sm text-muted-2">
           Todavía no tienes ningún crédito — aparecerá aquí si reprogramas un boleto a un pasaje más
           barato.
         </p>
@@ -62,18 +62,18 @@ export function TabMisCreditos() {
 
       {disponibles.length > 0 && (
         <div className="mt-6">
-          <h2 className="font-display text-sm font-bold text-brand-dark">Disponibles</h2>
+          <h2 className="text-sm font-bold text-brand-dark">Disponibles</h2>
           <div className="mt-2 space-y-2">
             {pagDisponibles.visibles.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between rounded-xl bg-brand-amber/10 px-4 py-3 ring-1 ring-brand-amber/30"
+                className="flex items-center justify-between rounded-ctrl bg-kbyellow-soft px-4 py-3"
               >
                 <div>
                   <p className="font-semibold text-brand-dark">{c.cooperativaNombre}</p>
-                  <p className="text-xs text-brand-dark/50">Desde {formatearFecha(c.creadoEn)}</p>
+                  <p className="text-xs text-muted-2">Desde {formatearFecha(c.creadoEn)}</p>
                 </div>
-                <p className="font-display text-lg font-bold text-brand-dark">${c.monto.toFixed(2)}</p>
+                <p className="text-lg font-bold text-brand-dark">${c.monto.toFixed(2)}</p>
               </div>
             ))}
           </div>
@@ -90,20 +90,20 @@ export function TabMisCreditos() {
 
       {usados.length > 0 && (
         <div className="mt-6">
-          <h2 className="font-display text-sm font-bold text-brand-dark/50">Ya usados</h2>
+          <h2 className="text-sm font-bold text-muted-2">Ya usados</h2>
           <div className="mt-2 space-y-2">
             {pagUsados.visibles.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between rounded-xl bg-brand-light/30 px-4 py-3"
+                className="flex items-center justify-between rounded-ctrl bg-kbbg px-4 py-3"
               >
                 <div>
-                  <p className="font-semibold text-brand-dark/70">{c.cooperativaNombre}</p>
-                  <p className="text-xs text-brand-dark/40">
+                  <p className="font-semibold text-muted-2">{c.cooperativaNombre}</p>
+                  <p className="text-xs text-muted-3">
                     Usado el {formatearFecha(c.usadoEn!)}
                   </p>
                 </div>
-                <p className="font-display text-lg font-bold text-brand-dark/40">
+                <p className="text-lg font-bold text-muted-3">
                   ${c.monto.toFixed(2)}
                 </p>
               </div>

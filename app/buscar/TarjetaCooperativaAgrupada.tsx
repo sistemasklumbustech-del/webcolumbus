@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { AMENIDADES_CATALOGO, listarParadasDeViaje, type ResultadoViaje, type ParadaTrayecto } from "@/lib/api";
 import { ResenasCooperativa } from "./ResenasCooperativa";
 import { estimarTrayecto, formatearDuracion, urlMapaTrayecto } from "@/lib/trayecto";
@@ -16,11 +15,11 @@ function formatearHora(iso: string): string {
     .toLocaleTimeString("es-EC", {
       hour: "2-digit",
       minute: "2-digit",
+      hourCycle: "h23",
       timeZone: "America/Guayaquil",
     })
-    .replace(/[\u202f\u00a0]/g, " ");
+    .replace(/[  ]/g, " ");
 }
-
 
 /**
  * Fase 6-buscador (17-ago-2026) -- "Ver horarios" agrupado por
@@ -33,9 +32,13 @@ function formatearHora(iso: string): string {
  * Componente cliente (necesita estado: qué horario está activo, si el
  * desplegable está abierto) -- recibe TODOS los viajes reales de una
  * misma cooperativa+tipo de vehículo para esta ruta/fecha, ya
- * agrupados en page.tsx (componente de servidor, mismo patrón real de
- * siempre: la agrupación ocurre sobre datos ya obtenidos, sin ningún
- * endpoint nuevo).
+ * agrupados en page.tsx (componente de servidor, mismo patrón real
+ * de siempre: la agrupación ocurre sobre datos ya obtenidos, sin
+ * ningún endpoint nuevo).
+ *
+ * Rediseño final (oct-2026, /diseno): tarjeta con línea de tiempo.
+ * En celular toda la tarjeta es el enlace a "Elegir asiento" (enlace
+ * extendido); en PC hay un botón amarillo a la derecha.
  */
 export function TarjetaCooperativaAgrupada({
   viajes,
@@ -60,216 +63,181 @@ export function TarjetaCooperativaAgrupada({
   }, [activo.viajeId]);
   const estimacion = estimarTrayecto(activo);
   const hayVariosHorarios = viajes.length > 1;
+  const agotado = activo.asientosDisponibles <= 0;
 
   return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5">
+    <div className={`relative overflow-hidden rounded-card bg-white shadow-card ${agotado ? "opacity-70" : ""}`}>
       {beneficiosReferidos && beneficiosReferidos.creditoReferidor > 0 && (
-        <div className="bg-emerald-50 px-5 py-2 text-xs font-medium text-emerald-800">
+        <div className="bg-ok-bg px-5 py-2 text-xs font-medium text-ok">
           🎁 Invita a un amigo y gana ${beneficiosReferidos.creditoReferidor.toFixed(2)} de crédito
         </div>
       )}
-      <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start">
-        {activo.cooperativaLogoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- URL externa dinámica (Cloudinary u otro), no un asset local
-          <img
-            src={activo.cooperativaLogoUrl}
-            alt={activo.cooperativaNombre}
-            className="h-12 w-auto max-w-[140px] shrink-0 rounded-md object-contain"
-          />
-        ) : (
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-cobalto-claro">
-            <span className="font-display text-sm font-bold text-brand-cobalto">
-              {activo.cooperativaNombre.slice(0, 2).toUpperCase()}
-            </span>
-          </div>
-        )}
-
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <p className="font-display text-xl font-bold text-brand-dark">{activo.cooperativaNombre}</p>
-            {activo.cooperativaCalificacionPromedio !== null && (
-              <span className="flex items-center gap-0.5 text-xs font-semibold text-amber-600">
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.367 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.445a1 1 0 00-1.176 0l-3.367 2.445c-.783.57-1.838-.196-1.538-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.163a1 1 0 00.95-.69l1.285-3.958z" />
-                </svg>
-                {activo.cooperativaCalificacionPromedio.toFixed(1)}
-                <span className="font-normal text-brand-dark/40">({activo.cooperativaCalificacionCantidad})</span>
+      <div className="flex flex-col gap-3.5 p-4 md:grid md:grid-cols-[170px_1fr_180px] md:items-center md:gap-5 md:px-6 md:py-5 xl:grid-cols-[230px_1fr_210px] xl:gap-7">
+        {/* Cooperativa */}
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            {activo.cooperativaLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- URL externa dinámica (Cloudinary u otro), no un asset local
+              <img
+                src={activo.cooperativaLogoUrl}
+                alt={activo.cooperativaNombre}
+                className="h-10 w-10 shrink-0 rounded-xl object-contain md:h-[46px] md:w-[46px] md:rounded-[14px]"
+              />
+            ) : (
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ink text-xs font-bold text-kbyellow md:h-[46px] md:w-[46px] md:rounded-[14px] md:text-[13px]">
+                {activo.cooperativaNombre.slice(0, 2).toUpperCase()}
               </span>
             )}
+            <div className="min-w-0 flex-1">
+              <p className="flex flex-wrap items-center gap-x-2 text-sm font-semibold md:text-[15px]">
+                {activo.cooperativaNombre}
+                {activo.cooperativaCalificacionPromedio !== null && (
+                  <span className="flex items-center gap-0.5 text-xs font-semibold text-ink">
+                    <svg viewBox="0 0 20 20" fill="#FDD514" stroke="#0B0D12" strokeWidth="1" className="h-3.5 w-3.5">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.367 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.445a1 1 0 00-1.176 0l-3.367 2.445c-.783.57-1.838-.196-1.538-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.163a1 1 0 00.95-.69l1.285-3.958z" />
+                    </svg>
+                    {activo.cooperativaCalificacionPromedio.toFixed(1)}
+                    <span className="font-normal text-muted-3">({activo.cooperativaCalificacionCantidad})</span>
+                  </span>
+                )}
+              </p>
+              <p className="text-xs text-muted-2">{activo.tipoVehiculoNombre}</p>
+            </div>
           </div>
-          <p className="text-sm text-brand-dark/70">{activo.tipoVehiculoNombre}</p>
           {activo.tipoVehiculoAmenidades.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1">
+            <div className="mt-3 flex flex-wrap gap-1.5">
               {activo.tipoVehiculoAmenidades.map((a) => (
-                <span key={a} className="rounded-full bg-brand-light/50 px-2 py-0.5 text-xs text-brand-dark/70">
+                <span key={a} className="rounded-[10px] bg-kbbg px-2 py-1 text-[11px] text-[#555B69]">
                   {AMENIDADES_CATALOGO.find((cat) => cat.valor === a)?.etiqueta ?? a}
                 </span>
               ))}
             </div>
           )}
+        </div>
 
-          <div className="mt-2 flex items-center gap-2">
-            <div className="max-w-[100px] shrink-0 text-right sm:max-w-[140px] sm:text-left">
-              {/* Etiquetas SALIDA/LLEGADA -- hallazgo real del director
-                  (24-ago-2026), comparando captura real contra su demo
-                  de referencia: sin esto, solo se veía la hora en
-                  negrita sin identificar qué es cada una. */}
-              <span className="block text-[10px] font-semibold uppercase tracking-wide text-brand-dark/40">
-                Salida
-              </span>
-              <span className="block text-lg font-bold text-brand-dark">
-                {formatearHora(activo.horaSalidaProgramada)}
-              </span>
-              <span className="block text-xs text-brand-cobalto/80">{activo.origenNombre}</span>
+        {/* Línea de tiempo */}
+        <div className="min-w-0">
+          <div className="kb-timeline !grid-cols-[auto_minmax(72px,1fr)_auto] md:gap-3.5">
+            <div>
+              <div className="whitespace-nowrap text-lg font-semibold tabular-nums md:text-[22px]">{formatearHora(activo.horaSalidaProgramada)}</div>
+              <div className="kb-timeline__city max-w-[120px]">{activo.origenNombre}</div>
             </div>
-            <span className="flex min-w-[64px] flex-1 items-center gap-1.5 sm:min-w-[90px]">
-              {/* Punto de salida verde, punto de llegada rojo -- orden
-                  real del director (24-ago-2026), mismo criterio visual
-                  de su demo de referencia. El bus va CENTRADO entre el
-                  texto de duración y el de distancia (antes iba a un
-                  lado del bloque de texto, no en medio). */}
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-              <span className="h-px flex-1 bg-brand-dark/25" />
-              <span className="flex shrink-0 flex-col items-center gap-0.5">
-                {estimacion && (
-                  <span className="text-[10px] font-medium text-brand-dark/50">
-                    {estimacion.aproximado ? "Aprox. " : ""}
-                    {formatearDuracion(estimacion.minutos)}
-                  </span>
-                )}
-                <Image src="/img/bus-trayecto.png" alt="" width={44} height={15} className="shrink-0" />
-                {estimacion?.km ? (
-                  <span className="text-[10px] text-brand-dark/35">
-                    {activo.distanciaKm ? "" : "≈ "}
-                    {estimacion.km} km
-                  </span>
-                ) : null}
-              </span>
-              <span className="h-px flex-1 bg-brand-dark/25" />
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" />
-            </span>
-            {estimacion && (
-              <div className="max-w-[100px] shrink-0 sm:max-w-[140px]">
-                <span className="block text-[10px] font-semibold uppercase tracking-wide text-brand-dark/40">
-                  {estimacion.llegadaEsReal ? "Llegada" : "Llegada aprox."}
+            <div className="flex flex-col items-center gap-[3px] whitespace-nowrap text-[11px] text-muted-2 md:text-xs">
+              {estimacion && (
+                <span>
+                  {estimacion.aproximado ? "Aprox. " : ""}
+                  {formatearDuracion(estimacion.minutos)}
                 </span>
-                <span className="block text-lg font-bold text-brand-dark">
-                  {formatearHora(estimacion.llegadaIso)}
+              )}
+              <div className="kb-timeline__line w-full">
+                <span className="kb-timeline__bus shrink-0 md:h-8 md:w-8">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B0D12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="4" y="3" width="16" height="15" rx="3" />
+                    <path d="M4 11h16M8 21v-3M16 21v-3" />
+                    <circle cx="8" cy="14.5" r=".6" />
+                    <circle cx="16" cy="14.5" r=".6" />
+                  </svg>
                 </span>
-                <span className="block text-xs text-brand-cobalto/80">{activo.destinoNombre}</span>
+              </div>
+              {estimacion?.km ? (
+                <span>
+                  {activo.distanciaKm ? "" : "≈ "}
+                  {estimacion.km} km
+                </span>
+              ) : null}
+            </div>
+            {estimacion ? (
+              <div className="text-right">
+                <div className="whitespace-nowrap text-lg font-semibold tabular-nums md:text-[22px]">{formatearHora(estimacion.llegadaIso)}</div>
+                <div className="kb-timeline__city ml-auto max-w-[120px]">
+                  {activo.destinoNombre}
+                  {!estimacion.llegadaEsReal ? " · aprox." : ""}
+                </div>
+              </div>
+            ) : (
+              <div className="text-right">
+                <div className="kb-timeline__city">{activo.destinoNombre}</div>
               </div>
             )}
           </div>
 
-          {/* Hallazgo real del director (21-ago-2026): la linea de
-              "Ruta: origen -> destino" repetia exactamente lo que ya
-              se ve arriba (con horas) -- se quita del todo. La linea
-              de paradas tambien repetia origen/destino; ahora solo
-              dice por donde pasa, que es el dato real que distingue
-              a una cooperativa de otra en la misma ruta (ej. Machala
-              -> Quito via Naranjal, vs. via Riobamba). */}
-          <a
-            href={urlMapaTrayecto(activo)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-1 inline-block text-xs font-semibold text-brand-cobalto underline decoration-dotted underline-offset-2 hover:text-brand-dark"
-          >
-            Ver trayecto en el mapa
-          </a>
-
-          {/* Por donde pasa esta ruta -- RF-COOP-002, Fase 1 (20-ago-2026). */}
-          {paradas.length > 0 && (
-            <p className="mt-1 text-xs text-brand-dark/50">
-              Vía {paradas.map((p) => p.ciudad).join(", ")}
-            </p>
-          )}
-
-          {activo.cooperativaCalificacionPromedio !== null && (
-            <ResenasCooperativa
-              cooperativaId={activo.cooperativaId}
-              cantidadTotal={activo.cooperativaCalificacionCantidad}
-            />
-          )}
-        </div>
-
-        <div className="flex flex-col gap-3 sm:items-end">
-          <div className="flex items-center justify-between gap-6 sm:flex-col sm:items-end sm:justify-start">
-            <div className="text-right">
-              {(esMejorPrecio || esTopCalificado) && (
-                <div className="mb-1 flex flex-wrap justify-end gap-1">
-                  {esMejorPrecio && (
-                    <span className="inline-block rounded-full bg-brand-cobalto px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                      Mejor precio
-                    </span>
-                  )}
-                  {esTopCalificado && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
-                      ★ Top calificado
-                    </span>
-                  )}
-                </div>
-              )}
-              <p className="font-display text-3xl font-extrabold text-brand-dark">${Number(activo.precioBase).toFixed(2)}</p>
-              <p className="text-xs text-brand-dark/50">
-                {activo.asientosDisponibles} asiento{activo.asientosDisponibles !== 1 ? "s" : ""} libre
-                {activo.asientosDisponibles !== 1 ? "s" : ""}
-              </p>
-            </div>
-            <Link
-              href={hrefsPorViaje[activo.viajeId]}
-              className="shrink-0 rounded-lg bg-brand-amber px-5 py-2.5 font-semibold text-brand-dark transition hover:brightness-95"
-            >
-              Elegir asiento
-            </Link>
+          {/* Por dónde pasa esta ruta -- RF-COOP-002, Fase 1 (20-ago-2026). */}
+          <div className="relative z-[2] mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-2">
+              <a
+                href={urlMapaTrayecto(activo)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-ink underline decoration-dotted underline-offset-2"
+              >
+                Ver trayecto en el mapa
+              </a>
+              {paradas.length > 0 && <span>Vía {paradas.map((p) => p.ciudad).join(", ")}</span>}
           </div>
 
-          {/* Movido aquí, debajo del botón (24-ago-2026, hallazgo real
-              del director comparando contra su demo de referencia):
-              antes vivía en la columna izquierda, junto al texto de la
-              ruta -- en la referencia real, "Ver horarios" acompaña la
-              acción de compra, no la descripción de la ruta.
-
-              Bug real de móvil encontrado y corregido en el camino
-              (mismo día): este bloque vivía como TERCER hijo dentro de
-              la fila `flex items-center justify-between` de arriba --
-              en móvil (donde ese contenedor sigue siendo fila, se
-              apila solo desde `sm:`), un hijo `w-full` compitiendo por
-              espacio con los otros 2 rompía todo el layout, cortando
-              "LLEGADA"/"Ver horarios" fuera de la pantalla. Corregido
-              sacándolo a un bloque HERMANO, siempre a ancho completo,
-              nunca compitiendo por espacio en una fila. */}
-          {hayVariosHorarios && (
-            <div className="w-full text-right">
-              <button
-                type="button"
-                onClick={() => setHorariosAbiertos((a) => !a)}
-                className="flex items-center gap-1 text-xs font-semibold text-brand-dark sm:justify-end"
-              >
-                🕐 Todos los horarios disponibles — {viajes.length} salidas hoy
-                <span className="text-brand-dark/40">{horariosAbiertos ? "▲" : "▼"}</span>
-              </button>
-              {horariosAbiertos && (
-                <div className="mt-2 flex flex-wrap justify-end gap-2">
-                  {viajes.map((v) => (
-                    <button
-                      key={v.viajeId}
-                      type="button"
-                      onClick={() => setViajeActivoId(v.viajeId)}
-                      className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
-                        v.viajeId === viajeActivoId
-                          ? "border-brand-cobalto bg-brand-cobalto/10 text-brand-cobalto"
-                          : "border-brand-light text-brand-dark/70 hover:border-brand-cobalto/40"
-                      }`}
-                    >
-                      {formatearHora(v.horaSalidaProgramada)}
-                    </button>
-                  ))}
-                </div>
-              )}
+          {activo.cooperativaCalificacionPromedio !== null && (
+            <div className="relative z-[2]">
+              <ResenasCooperativa
+                cooperativaId={activo.cooperativaId}
+                cantidadTotal={activo.cooperativaCalificacionCantidad}
+              />
             </div>
           )}
         </div>
+
+        {/* Precio y acción */}
+        <div className="flex items-center justify-between gap-3 border-t border-dashed border-line pt-3 md:flex-col md:items-end md:justify-center md:gap-1.5 md:border-l-[1.5px] md:border-t-0 md:pl-6 md:pt-0">
+          <div className="flex flex-col items-start gap-1.5 md:items-end">
+            <div className="flex flex-wrap gap-1.5 md:justify-end">
+              {esMejorPrecio && <span className="kb-tag kb-tag--yellow">Mejor precio</span>}
+              {esTopCalificado && <span className="kb-tag kb-tag--yellow">★ Top calificado</span>}
+              <span className={`kb-tag ${agotado ? "kb-tag--error" : "kb-tag--ok"}`}>
+                {agotado
+                  ? "Agotado"
+                  : `${activo.asientosDisponibles} ${activo.asientosDisponibles !== 1 ? "libres" : "libre"}`}
+              </span>
+            </div>
+          </div>
+          <div className="text-right md:flex md:flex-col md:items-end md:gap-1.5">
+            <p className="text-[19px] font-bold tabular-nums md:text-2xl">${Number(activo.precioBase).toFixed(2)}</p>
+            <p className="text-[11px] text-muted-2 md:-mt-1.5 md:text-xs">por persona</p>
+            <Link
+              href={hrefsPorViaje[activo.viajeId]}
+              className="kb-btn kb-btn--primary absolute inset-0 z-[1] h-auto bg-transparent p-0 md:static md:mt-1 md:h-12 md:w-full whitespace-nowrap md:bg-kbyellow md:px-4 xl:px-7"
+            >
+              <span className="sr-only md:not-sr-only">Elegir asiento</span>
+            </Link>
+          </div>
+        </div>
       </div>
+
+      {/* Todos los horarios de esta cooperativa para la ruta/fecha. */}
+      {hayVariosHorarios && (
+        <div className="relative z-[2] border-t border-dashed border-line px-4 py-3 md:px-6">
+          <button
+            type="button"
+            onClick={() => setHorariosAbiertos((a) => !a)}
+            aria-expanded={horariosAbiertos}
+            className="flex items-center gap-1.5 text-xs font-semibold text-ink"
+          >
+            Todos los horarios disponibles — {viajes.length} salidas hoy
+            <span className="text-muted-3">{horariosAbiertos ? "▲" : "▼"}</span>
+          </button>
+          {horariosAbiertos && (
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              {viajes.map((v) => (
+                <button
+                  key={v.viajeId}
+                  type="button"
+                  onClick={() => setViajeActivoId(v.viajeId)}
+                  className={`kb-chip tabular-nums ${v.viajeId === viajeActivoId ? "is-active" : ""}`}
+                >
+                  {formatearHora(v.horaSalidaProgramada)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

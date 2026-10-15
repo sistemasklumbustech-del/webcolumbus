@@ -29,15 +29,14 @@ export function CampoPassword({ value, onChange, placeholder, className, autoCom
         placeholder={placeholder}
         autoComplete={autoComplete}
         className={
-          className ??
-          "w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 pr-11 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          className ?? "kb-input !pr-12"
         }
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
-        className="absolute inset-y-0 right-0 flex items-center px-3 text-brand-dark/40 transition hover:text-brand-dark/70"
+        className="absolute inset-y-0 right-0 flex items-center px-3.5 text-muted-3 transition hover:text-muted-2"
       >
         {visible ? (
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">

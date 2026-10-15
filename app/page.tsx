@@ -4,10 +4,12 @@ import { DestinosPopulares } from "@/components/DestinosPopulares";
 import { TerminalesAliadas } from "@/components/TerminalesAliadas";
 import { FranjaBanners } from "@/components/FranjaBanners";
 import { RutasDisponibles } from "@/components/RutasDisponibles";
+import { BienvenidaMovil } from "@/components/BienvenidaMovil";
 
 export default function InicioPage() {
   return (
     <main className="flex-1">
+      <BienvenidaMovil />
       <Hero />
 
       <FranjaBanners />
@@ -18,26 +20,24 @@ export default function InicioPage() {
 
       <RutasDisponibles />
 
-      <section className="mx-auto max-w-screen-2xl px-4 pb-16 pt-24 sm:px-8 lg:px-12">
-        <h2 className="font-display text-xl font-bold text-brand-dark">
-          ¿Por qué Klumbus?
-        </h2>
-        <div className="mt-6 grid gap-6 md:grid-cols-3">
-          <div className="rounded-xl bg-brand-light p-5">
-            <p className="font-display text-lg font-bold text-brand-dark">Todas las cooperativas</p>
-            <p className="mt-1 text-sm text-brand-dark/70">
+      <section className="mx-auto max-w-[1280px] px-5 pb-14 pt-[30px] md:px-16 md:pt-14">
+        <h2 className="mb-3.5 text-[21px] font-semibold md:mb-[18px] md:text-2xl">¿Por qué Klumbus?</h2>
+        <div className="flex flex-col gap-2.5 md:grid md:grid-cols-3 md:gap-4">
+          <div className="rounded-[20px] bg-kbyellow-soft p-4 md:rounded-card md:p-6">
+            <p className="mb-1 text-[15px] font-semibold md:mb-1.5 md:text-[17px]">Todas las cooperativas</p>
+            <p className="text-[13px] text-[#4A4F5C] md:text-sm">
               Compara horarios y precios de distintas cooperativas para la misma ruta, en un solo lugar.
             </p>
           </div>
-          <div className="rounded-xl bg-brand-light p-5">
-            <p className="font-display text-lg font-bold text-brand-dark">Asiento elegido por ti</p>
-            <p className="mt-1 text-sm text-brand-dark/70">
+          <div className="rounded-[20px] bg-kbyellow-soft p-4 md:rounded-card md:p-6">
+            <p className="mb-1 text-[15px] font-semibold md:mb-1.5 md:text-[17px]">Asiento elegido por ti</p>
+            <p className="text-[13px] text-[#4A4F5C] md:text-sm">
               Ve el mapa real del bus y elige tu puesto antes de pagar.
             </p>
           </div>
-          <div className="rounded-xl bg-brand-light p-5">
-            <p className="font-display text-lg font-bold text-brand-dark">Boleto digital al instante</p>
-            <p className="mt-1 text-sm text-brand-dark/70">
+          <div className="rounded-[20px] bg-kbyellow-soft p-4 md:rounded-card md:p-6">
+            <p className="mb-1 text-[15px] font-semibold md:mb-1.5 md:text-[17px]">Boleto digital al instante</p>
+            <p className="text-[13px] text-[#4A4F5C] md:text-sm">
               Tu código QR llega apenas se confirma el pago — nada que imprimir.
             </p>
           </div>

@@ -41,12 +41,12 @@ function FormularioRestablecer() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-brand-light/40 px-4 py-16">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg ring-1 ring-black/5">
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Nueva contraseña</h1>
+    <main className="kb-on-white flex flex-1 items-center justify-center bg-kbbg px-4 py-16">
+      <div className="w-full max-w-sm kb-card kb-on-white p-8 shadow-lg ring-1 ring-line">
+        <h1 className="text-2xl font-bold text-brand-dark">Nueva contraseña</h1>
 
         {!token ? (
-          <p className="mt-4 text-sm font-medium text-red-600">
+          <p className="mt-4 text-sm font-medium text-kberror">
             Este enlace no es válido. Pedí uno nuevo desde{" "}
             <Link href="/recuperar-password" className="font-semibold text-brand hover:underline">
               recuperar contraseña
@@ -54,28 +54,28 @@ function FormularioRestablecer() {
             .
           </p>
         ) : listo ? (
-          <p className="mt-4 text-sm text-brand-dark/70">
+          <p className="mt-4 text-sm text-muted-2">
             Tu contraseña fue actualizada. Te llevamos a iniciar sesión...
           </p>
         ) : (
           <form onSubmit={enviar} className="mt-6 space-y-4">
             <div>
-              <label htmlFor="nueva-password" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="nueva-password" className="kb-label">
                 Nueva contraseña
               </label>
               <CampoPassword id="nueva-password" value={password} onChange={setPassword} autoComplete="new-password" />
             </div>
             <div>
-              <label htmlFor="confirmar-password" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="confirmar-password" className="kb-label">
                 Confirmar contraseña
               </label>
               <CampoPassword id="confirmar-password" value={confirmacion} onChange={setConfirmacion} autoComplete="new-password" />
             </div>
-            {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+            {error && <p className="text-sm font-medium text-kberror">{error}</p>}
             <button
               type="submit"
               disabled={cargando}
-              className="w-full rounded-lg bg-brand px-6 py-2.5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-60"
+              className="kb-btn kb-btn--dark w-full disabled:opacity-60"
             >
               {cargando ? "Guardando..." : "Guardar contraseña"}
             </button>

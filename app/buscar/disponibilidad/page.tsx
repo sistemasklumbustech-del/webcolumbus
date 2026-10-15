@@ -29,7 +29,7 @@ export default async function DisponibilidadPage({
     return (
       <main className="mx-auto max-w-3xl flex-1 px-4 py-16 text-center">
         <p className="text-brand-dark">Faltan datos de búsqueda. Vuelve al inicio e intenta de nuevo.</p>
-        <Link href="/" className="mt-4 inline-block font-semibold text-brand-cobalto underline">
+        <Link href="/" className="mt-4 inline-block font-semibold text-ink underline">
           Volver al inicio
         </Link>
       </main>
@@ -58,12 +58,12 @@ export default async function DisponibilidadPage({
     )}`;
 
   return (
-    <main className="flex-1 bg-brand-light/40">
+    <main className="flex-1 bg-transparent">
       <div className="bg-brand-dark px-4 py-4">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold text-white">
-              {origenCiudad ?? "Origen"} <span className="text-brand-amber">→</span> {destinoCiudad ?? "Destino"}
+            <h1 className="text-2xl font-bold text-white">
+              {origenCiudad ?? "Origen"} <span className="text-ink">→</span> {destinoCiudad ?? "Destino"}
             </h1>
             <p className="text-sm text-white/60">
               {esVuelta ? "Vuelta · " : ""}Todas las fechas y horarios disponibles
@@ -80,18 +80,18 @@ export default async function DisponibilidadPage({
 
       <div className="mx-auto max-w-4xl px-4 py-8">
         {resultado === null && (
-          <p className="rounded-lg bg-red-50 p-4 text-red-700">
+          <p className="rounded-lg bg-red-50 p-4 text-kberror">
             No pudimos cargar las fechas disponibles. Intenta de nuevo en un momento.
           </p>
         )}
 
         {resultado !== null && resultado.fechasCercanas.length === 0 && (
-          <div className="rounded-xl bg-white p-8 text-center shadow-sm">
-            <p className="font-display text-lg font-bold text-brand-dark">
+          <div className="rounded-card bg-white p-8 text-center shadow-card">
+            <p className="text-lg font-bold text-brand-dark">
               Aún no hay viajes programados para esta ruta.
             </p>
             {resultado.cooperativasEnLaRuta.length > 0 && (
-              <p className="mt-2 text-sm text-brand-dark/70">
+              <p className="mt-2 text-sm text-muted-2">
                 La ruta está publicada por {resultado.cooperativasEnLaRuta.join(", ")}, pero todavía no tiene viajes con
                 cupo en los próximos 45 días.
               </p>
@@ -101,7 +101,7 @@ export default async function DisponibilidadPage({
 
         {resultado !== null && resultado.fechasCercanas.length > 0 && (
           <>
-            <p className="mb-4 text-sm text-brand-dark/70">
+            <p className="mb-4 text-sm text-muted-2">
               {resultado.totalFechas} fecha{resultado.totalFechas === 1 ? "" : "s"} con viajes en los próximos 45 días.
               Toca una para ver los viajes de ese día.
             </p>
@@ -110,13 +110,13 @@ export default async function DisponibilidadPage({
                 <Link
                   key={f.fecha}
                   href={hrefFecha(f.fecha)}
-                  className="rounded-xl border border-brand-light bg-white p-4 shadow-sm transition hover:bg-brand-light/30"
+                  className="rounded-card border border-line bg-white p-4 shadow-card transition hover:bg-kbbg"
                 >
                   <div className="flex items-baseline justify-between gap-2">
-                    <p className="font-display font-bold capitalize text-brand-dark">{formatearFechaCorta(f.fecha)}</p>
+                    <p className="font-bold capitalize text-brand-dark">{formatearFechaCorta(f.fecha)}</p>
                     <p className="text-sm font-semibold text-brand-dark">desde ${f.precioDesde.toFixed(2)}</p>
                   </div>
-                  <p className="text-sm text-brand-dark/70">
+                  <p className="text-sm text-muted-2">
                     {f.cantidadViajes} viaje{f.cantidadViajes === 1 ? "" : "s"} · {f.cooperativas.join(", ")}
                   </p>
                   <ChipsHoras horas={f.horas} />

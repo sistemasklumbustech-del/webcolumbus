@@ -48,11 +48,7 @@ function BotonEstadoUnidad({
     <button
       onClick={alternar}
       disabled={guardando}
-      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold transition disabled:opacity-50 ${
-        unidad.activo
-          ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-          : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-      }`}
+      className={`kb-status transition disabled:opacity-50 ${unidad.activo ? "kb-status--ok" : "kb-status--off"}`}
     >
       {unidad.activo ? "Activa" : "Inactiva"}
     </button>
@@ -277,30 +273,30 @@ export default function UnidadesPage() {
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
       <Toast mensaje={mensajeError} onCerrar={() => setMensajeError(null)} tipo="error" />
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Unidades</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="text-2xl font-bold text-brand-dark">Unidades</h1>
+        <p className="mt-1 text-sm text-muted-2">
           Primero define los tipos de vehículo que operas (bus estándar, buseta, doble piso...), y luego
           registra cada unidad física con su placa y su identificador operativo.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
       {/* ─── Tipos de vehículo ─── */}
       <section className="space-y-4">
-        <h2 className="font-display text-lg font-bold text-brand-dark">Tipos de vehículo</h2>
+        <h2 className="text-lg font-bold text-brand-dark">Tipos de vehículo</h2>
 
         {esAdmin && (
         <form
           onSubmit={crearTipo}
-          className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-4 sm:items-end"
+          className="grid grid-cols-1 gap-4 kb-card kb-on-white p-6 sm:grid-cols-4 sm:items-end"
         >
           <div>
-            <label htmlFor="tipo-vehiculo-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="tipo-vehiculo-nombre" className="kb-label">
               Nombre
             </label>
             <input
@@ -309,18 +305,18 @@ export default function UnidadesPage() {
               value={nombreTipo}
               onChange={(e) => setNombreTipo(e.target.value)}
               placeholder="Ej. Bus estándar 2+2"
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="tipo-vehiculo-categoria" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="tipo-vehiculo-categoria" className="kb-label">
               Categoría
             </label>
             <select
               id="tipo-vehiculo-categoria"
               value={categoriaTipo}
               onChange={(e) => setCategoriaTipo(e.target.value as typeof categoriaTipo)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             >
               <option value="">Sin categoría</option>
               <option value="bus">Bus</option>
@@ -330,7 +326,7 @@ export default function UnidadesPage() {
             </select>
           </div>
           <div>
-            <label htmlFor="tipo-vehiculo-capacidad" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="tipo-vehiculo-capacidad" className="kb-label">
               Capacidad (asientos)
             </label>
             <input
@@ -342,19 +338,19 @@ export default function UnidadesPage() {
               title={capacidadAuto ? "Se calcula con los asientos de cada piso" : undefined}
               onChange={(e) => setCapacidad(e.target.value)}
               placeholder="40"
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <button
             type="submit"
             disabled={guardandoTipo}
-            className="h-[42px] rounded-lg bg-brand-amber px-4 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+            className="kb-btn kb-btn--primary !h-[42px] !px-4 !text-sm"
           >
             {guardandoTipo ? "Guardando..." : "Crear tipo de vehículo"}
           </button>
-          {errorTipo && <p className="sm:col-span-3 text-sm font-medium text-red-600">{errorTipo}</p>}
+          {errorTipo && <p className="sm:col-span-3 text-sm font-medium text-kberror">{errorTipo}</p>}
           <div className="sm:col-span-4">
-            <label id="tipo-vehiculo-amenidades-label" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label id="tipo-vehiculo-amenidades-label" className="kb-label">
               Amenidades
             </label>
             <div role="group" aria-labelledby="tipo-vehiculo-amenidades-label" className="flex flex-wrap gap-2">
@@ -365,8 +361,8 @@ export default function UnidadesPage() {
                   onClick={() => alternarAmenidadTipo(a.valor)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                     amenidadesTipo.includes(a.valor)
-                      ? "bg-brand-amber text-brand-dark"
-                      : "bg-brand-light/40 text-brand-dark/70"
+                      ? "bg-kbyellow text-brand-dark"
+                      : "bg-kbbg text-muted-2"
                   }`}
                 >
                   {a.etiqueta}
@@ -386,8 +382,8 @@ export default function UnidadesPage() {
             </button>
 
             {distribucionAbierta && (
-              <div className="mt-3 space-y-4 rounded-lg bg-brand-light/20 p-4">
-                <p className="text-xs text-brand-dark/60">
+              <div className="mt-3 space-y-4 rounded-lg bg-kbbg p-4">
+                <p className="text-xs text-muted-2">
                   Opcional -- si no lo configuras, se usa una cuadrícula 2+2 de un solo piso. Aquí puedes armar un bus
                   de uno o dos pisos, marcar asientos VIP o reservar filas del frente para mujeres.
                 </p>
@@ -403,16 +399,16 @@ export default function UnidadesPage() {
                     setCapacidadAuto(false);
                   }}
                 />
-                <details className="text-xs text-brand-dark/60">
+                <details className="text-xs text-muted-2">
                   <summary className="cursor-pointer font-semibold">Modo experto: ver o editar el JSON</summary>
                   <textarea
                     value={distribucionJson}
                     onChange={(e) => actualizarDistribucionJson(e.target.value)}
                     rows={10}
                     spellCheck={false}
-                    className="mt-2 w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 font-mono text-xs text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                    className="mt-2 w-full kb-input"
                   />
-                  {errorDistribucion && <p className="mt-1 text-xs font-medium text-red-600">{errorDistribucion}</p>}
+                  {errorDistribucion && <p className="mt-1 text-xs font-medium text-kberror">{errorDistribucion}</p>}
                 </details>
               </div>
             )}
@@ -420,15 +416,15 @@ export default function UnidadesPage() {
         </form>
         )}
 
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+        <div className="overflow-hidden kb-card kb-on-white">
           {tipos !== null && tipos.length === 0 && (
-            <p className="px-6 py-6 text-center text-sm text-brand-dark/50">
+            <p className="px-6 py-6 text-center text-sm text-muted-2">
               Todavía no has creado ningún tipo de vehículo.
             </p>
           )}
           {tipos !== null && tipos.length > 0 && (
-            <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+              <thead>
                 <tr>
                   <th className="px-6 py-3">Nombre</th>
                   <th className="px-6 py-3">Categoría</th>
@@ -436,17 +432,17 @@ export default function UnidadesPage() {
                   <th className="px-6 py-3 text-right">Capacidad</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/5">
+              <tbody>
                 {tipos.map((t) => (
                   <tr key={t.id}>
                     <td className="px-6 py-3 font-medium text-brand-dark">{t.nombre}</td>
-                    <td className="px-6 py-3 text-brand-dark/70">
+                    <td className="px-6 py-3 text-muted-2">
                       {t.categoria ? (
-                        <span className="rounded-full bg-brand-light px-2 py-0.5 text-xs font-semibold capitalize text-brand-dark">
+                        <span className="rounded-full bg-kbbg px-2 py-0.5 text-xs font-semibold capitalize text-brand-dark">
                           {t.categoria}
                         </span>
                       ) : (
-                        <span className="text-brand-dark/30">Sin categoría</span>
+                        <span className="text-muted-3">Sin categoría</span>
                       )}
                     </td>
                     <td className="px-6 py-3">
@@ -455,17 +451,17 @@ export default function UnidadesPage() {
                           {(t.amenidades ?? []).map((a) => (
                             <span
                               key={a}
-                              className="rounded-full bg-brand-light/50 px-2 py-0.5 text-xs text-brand-dark/70"
+                              className="rounded-full bg-kbbg px-2 py-0.5 text-xs text-muted-2"
                             >
                               {AMENIDADES_CATALOGO.find((cat) => cat.valor === a)?.etiqueta ?? a}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-brand-dark/30">Ninguna</span>
+                        <span className="text-muted-3">Ninguna</span>
                       )}
                     </td>
-                    <td className="px-6 py-3 text-right text-brand-dark/70">{t.capacidadTotal} asientos</td>
+                    <td className="px-6 py-3 text-right text-muted-2">{t.capacidadTotal} asientos</td>
                   </tr>
                 ))}
               </tbody>
@@ -476,22 +472,22 @@ export default function UnidadesPage() {
 
       {/* ─── Unidades ─── */}
       <section className="space-y-4">
-        <h2 className="font-display text-lg font-bold text-brand-dark">Unidades</h2>
+        <h2 className="text-lg font-bold text-brand-dark">Unidades</h2>
 
         {esAdmin && (
         <form
           onSubmit={crearUnidad}
-          className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
+          className="grid grid-cols-1 gap-4 kb-card kb-on-white p-6 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
         >
           <div>
-            <label htmlFor="unidad-tipo-vehiculo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="unidad-tipo-vehiculo" className="kb-label">
               Tipo de vehículo
             </label>
             <select
               id="unidad-tipo-vehiculo"
               value={tipoElegido}
               onChange={(e) => setTipoElegido(e.target.value)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             >
               <option value="">Selecciona...</option>
               {tipos?.map((t) => (
@@ -502,7 +498,7 @@ export default function UnidadesPage() {
             </select>
           </div>
           <div>
-            <label htmlFor="unidad-placa" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="unidad-placa" className="kb-label">
               Placa
             </label>
             <input
@@ -511,11 +507,11 @@ export default function UnidadesPage() {
               value={placa}
               onChange={(e) => setPlaca(e.target.value)}
               placeholder="ABC-1234"
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="unidad-identificador" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="unidad-identificador" className="kb-label">
               Identificador operativo (disco)
             </label>
             <input
@@ -524,40 +520,40 @@ export default function UnidadesPage() {
               value={identificador}
               onChange={(e) => setIdentificador(e.target.value)}
               placeholder="Disco 07"
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <button
             type="submit"
             disabled={guardandoUnidad || !tipos?.length}
-            className="h-[42px] rounded-lg bg-brand-amber px-4 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+            className="kb-btn kb-btn--primary !h-[42px] !px-4 !text-sm"
           >
             {guardandoUnidad ? "Guardando..." : "Crear unidad"}
           </button>
           {!tipos?.length && tipos !== null && (
-            <p className="sm:col-span-2 lg:col-span-4 text-sm text-brand-dark/50">
+            <p className="sm:col-span-2 lg:col-span-4 text-sm text-muted-2">
               Crea primero al menos un tipo de vehículo arriba.
             </p>
           )}
           {errorUnidad && (
-            <p className="sm:col-span-2 lg:col-span-4 text-sm font-medium text-red-600">{errorUnidad}</p>
+            <p className="sm:col-span-2 lg:col-span-4 text-sm font-medium text-kberror">{errorUnidad}</p>
           )}
         </form>
         )}
 
         <form
           onSubmit={filtrarUnidades}
-          className="flex flex-wrap items-end gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+          className="flex flex-wrap items-end gap-3 kb-card kb-on-white p-4"
         >
           <div>
-            <label htmlFor="unidades-estado-filtro" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="unidades-estado-filtro" className="kb-label">
               Estado
             </label>
             <select
               id="unidades-estado-filtro"
               value={activoFiltro}
               onChange={(e) => setActivoFiltro(e.target.value as "" | "true" | "false")}
-              className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="kb-input !h-11 !text-sm"
             >
               <option value="">Todas</option>
               <option value="true">Activa</option>
@@ -565,7 +561,7 @@ export default function UnidadesPage() {
             </select>
           </div>
           <div className="min-w-[220px] flex-1">
-            <label htmlFor="unidades-busqueda-filtro" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="unidades-busqueda-filtro" className="kb-label">
               Buscar
             </label>
             <input
@@ -573,26 +569,26 @@ export default function UnidadesPage() {
               value={busquedaFiltroUnidad}
               onChange={(e) => setBusquedaFiltroUnidad(e.target.value)}
               placeholder="Placa, identificador o tipo de vehículo"
-              className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input !h-11 !text-sm"
             />
           </div>
-          <button type="submit" className="rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95">
+          <button type="submit" className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiarFiltrosUnidades} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiarFiltrosUnidades} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </form>
 
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+        <div className="overflow-hidden kb-card kb-on-white">
           {resultadoUnidades !== null && resultadoUnidades.filas.length === 0 && !cargandoUnidades && (
-            <p className="px-6 py-6 text-center text-sm text-brand-dark/50">
+            <p className="px-6 py-6 text-center text-sm text-muted-2">
               No hay unidades que coincidan con estos filtros.
             </p>
           )}
           {resultadoUnidades !== null && resultadoUnidades.filas.length > 0 && (
-            <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+              <thead>
                 <tr>
                   <th className="px-6 py-3">Placa</th>
                   <th className="px-6 py-3">Identificador operativo</th>
@@ -600,12 +596,12 @@ export default function UnidadesPage() {
                   <th className="px-6 py-3">Estado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/5">
+              <tbody>
                 {resultadoUnidades.filas.map((u) => (
                   <tr key={u.id}>
                     <td className="px-6 py-3 font-medium text-brand-dark">{u.placa}</td>
-                    <td className="px-6 py-3 text-brand-dark/70">{u.identificadorOperativo}</td>
-                    <td className="px-6 py-3 text-brand-dark/70">{u.tipoVehiculoNombre}</td>
+                    <td className="px-6 py-3 text-muted-2">{u.identificadorOperativo}</td>
+                    <td className="px-6 py-3 text-muted-2">{u.tipoVehiculoNombre}</td>
                     <td className="px-6 py-3">
                       {esAdmin ? (
                         <BotonEstadoUnidad
@@ -618,8 +614,8 @@ export default function UnidadesPage() {
                         />
                       ) : (
                         <span
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                            u.activo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                          className={`kb-status ${
+                            u.activo ? "kb-status--ok" : "kb-status--off"
                           }`}
                         >
                           {u.activo ? "Activa" : "Inactiva"}
@@ -633,7 +629,7 @@ export default function UnidadesPage() {
           )}
 
           {resultadoUnidades !== null && resultadoUnidades.total > 0 && (
-            <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+            <div className="flex items-center justify-between border-t border-line px-6 py-3 text-sm text-muted-2">
               <span>
                 Página {paginaUnidades} de {Math.max(1, Math.ceil(resultadoUnidades.total / LIMITE_UNIDADES_PAGINA))}
               </span>
@@ -641,7 +637,7 @@ export default function UnidadesPage() {
                 <button
                   onClick={() => setPaginaUnidades((p) => Math.max(1, p - 1))}
                   disabled={paginaUnidades <= 1 || cargandoUnidades}
-                  className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                  className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
                 >
                   Anterior
                 </button>
@@ -655,7 +651,7 @@ export default function UnidadesPage() {
                     paginaUnidades >= Math.max(1, Math.ceil(resultadoUnidades.total / LIMITE_UNIDADES_PAGINA)) ||
                     cargandoUnidades
                   }
-                  className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                  className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
                 >
                   Siguiente
                 </button>

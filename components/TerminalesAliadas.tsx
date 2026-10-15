@@ -1,5 +1,4 @@
 import { listarTerminalesAliadas } from "@/lib/api";
-import { IconoTerminal } from "./ilustraciones";
 
 /**
  * Terminales aliadas -- Fase 2 de la sesión de frontend (16-ago-2026).
@@ -26,24 +25,26 @@ export async function TerminalesAliadas() {
   });
 
   return (
-    <section className="bg-brand-dark px-4 py-10 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-screen-2xl">
-        <h2 className="mb-4 text-xs font-bold uppercase tracking-wide text-brand-amber">
-          Terminales aliadas
-        </h2>
-        <div className="flex flex-wrap gap-2">
+    <section className="mt-[30px] bg-ink py-6 text-white md:mt-16 md:py-10">
+      <div className="mx-auto max-w-[1280px] px-5 md:px-16">
+        <span className="kb-eyebrow !text-kbyellow">Terminales aliadas</span>
+        <h2 className="mb-3.5 text-[21px] font-semibold md:mb-5 md:text-2xl">Sales desde estas terminales</h2>
+        <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] md:flex-wrap md:gap-2.5 md:overflow-visible [&::-webkit-scrollbar]:hidden">
           {ordenadas.map((terminal) => {
             const destacada = /machala/i.test(terminal.ciudad) || /machala/i.test(terminal.nombre);
             return (
               <span
                 key={terminal.id}
-                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm ${
-                  destacada
-                    ? "bg-brand-amber font-semibold text-brand-dark"
-                    : "bg-white/10 text-white/80"
+                className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-[9px] text-[13px] font-medium md:px-[18px] md:py-[11px] md:text-sm ${
+                  destacada ? "bg-kbyellow text-ink" : "bg-ink-2 shadow-[inset_0_0_0_1px_#262A35]"
                 }`}
               >
-                {destacada && <IconoTerminal tamano={20} className="shrink-0 rounded-full" />}
+                {destacada && (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 21s7-6 7-11a7 7 0 00-14 0c0 5 7 11 7 11z" />
+                    <circle cx="12" cy="10" r="2.5" />
+                  </svg>
+                )}
                 {terminal.nombre}
               </span>
             );

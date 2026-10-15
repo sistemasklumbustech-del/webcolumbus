@@ -28,17 +28,17 @@ function VerificacionCorreo() {
   }, [token]);
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-brand-light/40 px-4 py-16">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-lg ring-1 ring-black/5">
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Verificación de correo</h1>
+    <main className="kb-on-white flex flex-1 items-center justify-center bg-kbbg px-4 py-16">
+      <div className="w-full max-w-sm kb-card kb-on-white p-8 text-center shadow-lg ring-1 ring-line">
+        <h1 className="text-2xl font-bold text-brand-dark">Verificación de correo</h1>
 
-        {estado === "verificando" && <p className="mt-4 text-sm text-brand-dark/70">Verificando...</p>}
+        {estado === "verificando" && <p className="mt-4 text-sm text-muted-2">Verificando...</p>}
         {estado === "listo" && (
-          <p className="mt-4 text-sm text-brand-dark/70">
+          <p className="mt-4 text-sm text-muted-2">
             Tu correo quedó verificado. Ya podés usar todas las funciones de tu cuenta.
           </p>
         )}
-        {estado === "error" && <p className="mt-4 text-sm font-medium text-red-600">{error}</p>}
+        {estado === "error" && <p className="mt-4 text-sm font-medium text-kberror">{error}</p>}
 
         <p className="mt-6">
           <Link href="/" className="font-semibold text-brand hover:underline">

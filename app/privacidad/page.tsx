@@ -11,11 +11,11 @@ export const metadata = {
  */
 export default function PrivacidadPage() {
   return (
-    <main className="mx-auto max-w-2xl flex-1 px-4 py-12">
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Política de Privacidad</h1>
-      <p className="mt-1 text-sm text-brand-dark/50">Última actualización: agosto de 2026</p>
+    <main className="kb-on-white mx-auto max-w-2xl flex-1 px-4 py-12">
+      <h1 className="text-2xl font-bold text-brand-dark">Política de Privacidad</h1>
+      <p className="mt-1 text-sm text-muted-2">Última actualización: agosto de 2026</p>
 
-      <div className="prose prose-sm mt-8 max-w-none text-brand-dark/80 [&>h2]:mt-8 [&>h2]:font-display [&>h2]:text-lg [&>h2]:font-bold [&>h2]:text-brand-dark [&>p]:mt-3 [&>p]:leading-relaxed [&>ul]:mt-3 [&>ul]:list-disc [&>ul]:pl-5">
+      <div className="prose prose-sm mt-8 max-w-none text-ink [&>h2]:mt-8 [&>h2]:[&>h2]:text-lg [&>h2]:font-bold [&>h2]:text-brand-dark [&>p]:mt-3 [&>p]:leading-relaxed [&>ul]:mt-3 [&>ul]:list-disc [&>ul]:pl-5">
         <h2>1. Qué datos recolectamos</h2>
         <p>Para poder venderte un boleto real y que puedas abordar, necesitamos:</p>
         <ul>
@@ -62,7 +62,7 @@ export default function PrivacidadPage() {
         </p>
       </div>
 
-      <p className="mt-10 rounded-lg bg-brand-light/40 px-4 py-3 text-xs text-brand-dark/50">
+      <p className="mt-10 rounded-lg bg-kbbg px-4 py-3 text-xs text-muted-2">
         Este documento es un borrador redactado de buena fe según cómo opera la plataforma hoy.
         No sustituye una revisión legal formal.
       </p>

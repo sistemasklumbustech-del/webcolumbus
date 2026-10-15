@@ -55,28 +55,28 @@ function BloqueMenor({ menor, onVerificado }: { menor: InfoMenor; onVerificado: 
   }
 
   return (
-    <div className="mt-4 rounded-xl bg-amber-50 p-4 text-left ring-1 ring-amber-200">
-      <p className="text-sm font-bold text-amber-800">Pasajero menor de edad — RF-MENOR</p>
-      <p className="mt-1 text-sm text-amber-700">{ETIQUETA_ACOMPANAMIENTO[menor.tipoAcompanamiento]}</p>
+    <div className="kb-alert kb-alert--info mt-4 flex-col text-left">
+      <p className="text-sm font-bold text-[#7A5D00]">Pasajero menor de edad — RF-MENOR</p>
+      <p className="mt-1 text-sm text-[#7A5D00]">{ETIQUETA_ACOMPANAMIENTO[menor.tipoAcompanamiento]}</p>
       {menor.adultoAcompananteNombre && (
-        <p className="mt-1 text-sm text-amber-700">Acompañante: {menor.adultoAcompananteNombre}</p>
+        <p className="mt-1 text-sm text-[#7A5D00]">Acompañante: {menor.adultoAcompananteNombre}</p>
       )}
       {menor.adultoResponsableNombre && (
-        <p className="mt-1 text-sm text-amber-700">
+        <p className="mt-1 text-sm text-[#7A5D00]">
           Responsable: {menor.adultoResponsableNombre} — {menor.adultoResponsableDocumento}
           {menor.adultoResponsableTelefono && ` — ${menor.adultoResponsableTelefono}`}
         </p>
       )}
 
       {menor.yaVerificado ? (
-        <p className="mt-3 text-sm font-semibold text-emerald-700">✓ Documentos ya verificados.</p>
+        <p className="mt-3 text-sm font-semibold text-ok">✓ Documentos ya verificados.</p>
       ) : (
         <div className="mt-3 space-y-2">
-          <label className="flex items-center gap-2 text-sm text-amber-800">
+          <label className="flex items-center gap-2 text-sm text-[#7A5D00]">
             <input type="checkbox" checked={docIdentidad} onChange={(e) => setDocIdentidad(e.target.checked)} />
             Documento de identidad del menor verificado
           </label>
-          <label className="flex items-center gap-2 text-sm text-amber-800">
+          <label className="flex items-center gap-2 text-sm text-[#7A5D00]">
             <input
               type="checkbox"
               checked={docAutorizacion}
@@ -88,11 +88,11 @@ function BloqueMenor({ menor, onVerificado }: { menor: InfoMenor; onVerificado: 
             type="button"
             onClick={confirmar}
             disabled={guardando || (!docIdentidad && !docAutorizacion)}
-            className="rounded-lg bg-amber-600 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:opacity-50"
+            className="kb-btn kb-btn--dark !h-10 !px-4 !text-sm disabled:opacity-50"
           >
             {guardando ? "Guardando..." : "Confirmar verificación"}
           </button>
-          {error && <p className="text-xs font-medium text-red-600">{error}</p>}
+          {error && <p className="text-xs font-medium text-kberror">{error}</p>}
         </div>
       )}
     </div>
@@ -282,14 +282,14 @@ export default function ValidarQrPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Validar boleto</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="text-2xl font-bold text-brand-dark">Validar boleto</h1>
+        <p className="mt-1 text-sm text-muted-2">
           Escanea el código QR del boleto (o pégalo aquí) para confirmar el abordaje.
         </p>
       </div>
 
-      <form onSubmit={validar} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-        <label htmlFor="validar-qr-codigo" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+      <form onSubmit={validar} className="kb-card kb-on-white p-6">
+        <label htmlFor="validar-qr-codigo" className="mb-2 kb-label">
           Código QR
         </label>
         <div className="flex gap-3">
@@ -301,34 +301,34 @@ export default function ValidarQrPage() {
             onChange={(e) => setCodigo(e.target.value)}
             placeholder="Escanea o pega el código aquí..."
             autoFocus
-            className="flex-1 rounded-lg border border-brand-light bg-white px-4 py-3 text-lg text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="kb-input"
           />
           <button
             type="submit"
             disabled={validando || !codigo.trim()}
-            className="rounded-lg bg-brand-amber px-6 py-3 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+            className="rounded-lg bg-kbyellow px-6 py-3 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
           >
             {validando ? "Validando..." : "Validar"}
           </button>
         </div>
       </form>
 
-      <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+      <div className="kb-card kb-on-white p-6">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-2">
           ¿No tenés un escáner a mano?
         </p>
 
         {camaraActiva ? (
           <div className="space-y-3">
-            <div className="relative mx-auto aspect-square max-w-xs overflow-hidden rounded-xl bg-black">
+            <div className="relative mx-auto aspect-square max-w-xs overflow-hidden rounded-ctrl bg-black">
               <video ref={videoRef} muted playsInline className="h-full w-full object-cover" />
-              <div className="pointer-events-none absolute inset-6 rounded-xl border-2 border-brand-amber/80" />
+              <div className="pointer-events-none absolute inset-6 rounded-ctrl border-2 border-kbyellow" />
             </div>
-            <p className="text-center text-xs text-brand-dark/50">Apuntá al código QR del boleto...</p>
+            <p className="text-center text-xs text-muted-2">Apuntá al código QR del boleto...</p>
             <button
               type="button"
               onClick={detenerCamara}
-              className="mx-auto block rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 hover:bg-brand-light/40"
+              className="mx-auto block kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Cancelar
             </button>
@@ -342,11 +342,11 @@ export default function ValidarQrPage() {
               }}
               onDragLeave={() => setArrastrando(false)}
               onDrop={alSoltarEnZona}
-              className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-4 py-6 text-center transition ${
-                arrastrando ? "border-brand-amber bg-brand-amber/10" : "border-brand-light"
+              className={`flex flex-col items-center justify-center gap-3 rounded-ctrl border-2 border-dashed px-4 py-6 text-center transition ${
+                arrastrando ? "border-kbyellow bg-kbyellow" : "border-line"
               }`}
             >
-              <p className="text-sm text-brand-dark/60">
+              <p className="text-sm text-muted-2">
                 {decodificando
                   ? "Leyendo la imagen..."
                   : "Arrastrá una foto o captura del QR aquí, pegala (Ctrl+V), o:"}
@@ -356,7 +356,7 @@ export default function ValidarQrPage() {
                   type="button"
                   onClick={() => archivoInputRef.current?.click()}
                   disabled={decodificando}
-                  className="rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40 disabled:opacity-50"
+                  className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm disabled:opacity-50"
                 >
                   Subir imagen
                 </button>
@@ -364,7 +364,7 @@ export default function ValidarQrPage() {
                   type="button"
                   onClick={iniciarCamara}
                   disabled={decodificando}
-                  className="rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40 disabled:opacity-50"
+                  className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm disabled:opacity-50"
                 >
                   Usar cámara
                 </button>
@@ -377,36 +377,32 @@ export default function ValidarQrPage() {
                 className="hidden"
               />
             </div>
-            {errorImagen && <p className="mt-2 text-xs font-medium text-red-600">{errorImagen}</p>}
-            {errorCamara && <p className="mt-2 text-xs font-medium text-red-600">{errorCamara}</p>}
+            {errorImagen && <p className="mt-2 text-xs font-medium text-kberror">{errorImagen}</p>}
+            {errorCamara && <p className="mt-2 text-xs font-medium text-kberror">{errorCamara}</p>}
           </>
         )}
       </div>
 
       {ultimoResultado && (
         <div
-          className={`rounded-2xl p-6 text-center shadow-sm ring-1 ${
-            ultimoResultado.valido
-              ? "bg-emerald-50 ring-emerald-200"
-              : "bg-red-50 ring-red-200"
-          }`}
+          className={`rounded-card p-6 text-center ${ultimoResultado.valido ? "bg-ok-bg" : "bg-kberror-bg"}`}
         >
           <div
             className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full text-2xl font-bold ${
-              ultimoResultado.valido ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
+              ultimoResultado.valido ? "bg-ok text-white" : "bg-kberror text-white"
             }`}
           >
             {ultimoResultado.valido ? "✓" : "✕"}
           </div>
           <p
-            className={`mt-3 font-display text-lg font-bold ${
-              ultimoResultado.valido ? "text-emerald-700" : "text-red-700"
+            className={`mt-3 text-lg font-bold ${
+              ultimoResultado.valido ? "text-ok" : "text-kberror"
             }`}
           >
             {ultimoResultado.mensaje}
           </p>
           {ultimoResultado.pasajeroNombre && (
-            <p className="mt-1 text-base text-brand-dark/70">{ultimoResultado.pasajeroNombre}</p>
+            <p className="mt-1 text-base text-muted-2">{ultimoResultado.pasajeroNombre}</p>
           )}
           {ultimoResultado.menor && (
             <BloqueMenor
@@ -422,15 +418,15 @@ export default function ValidarQrPage() {
       )}
 
       {historial.length > 0 && (
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-          <div className="border-b border-black/5 px-6 py-4">
-            <h2 className="font-display text-sm font-bold text-brand-dark">Últimas validaciones</h2>
+        <div className="overflow-hidden kb-card kb-on-white">
+          <div className="border-b border-line px-6 py-4">
+            <h2 className="text-sm font-bold text-brand-dark">Últimas validaciones</h2>
           </div>
-          <ul className="divide-y divide-black/5">
+          <ul>
             {historial.map((h, i) => (
               <li key={i} className="flex items-center justify-between px-6 py-3 text-sm">
-                <span className="text-brand-dark/70">{h.pasajeroNombre ?? h.mensaje}</span>
-                <span className={`font-semibold ${h.valido ? "text-emerald-600" : "text-red-600"}`}>
+                <span className="text-muted-2">{h.pasajeroNombre ?? h.mensaje}</span>
+                <span className={`font-semibold ${h.valido ? "text-ok" : "text-kberror"}`}>
                   {h.valido ? "Válido" : "Rechazado"}
                 </span>
               </li>

@@ -33,7 +33,7 @@ function BotonMostrarQr({ codigoQr }: { codigoQr: string }) {
         {mostrando ? "Ocultar código QR" : "Ver código QR"}
       </button>
       {mostrando && (
-        <div className="mt-2 flex justify-center rounded-lg bg-brand-light/30 p-4">
+        <div className="mt-2 flex justify-center kb-on-white rounded-ctrl bg-kbbg p-4">
           <CodigoQr valor={codigoQr} />
         </div>
       )}
@@ -122,17 +122,17 @@ function BotonCancelar({
   if (confirmando) {
     return (
       <div className="mt-2 flex items-center gap-2">
-        <span className="text-xs text-brand-dark/70">¿Seguro que quieres cancelar este boleto?</span>
+        <span className="text-xs text-muted-2">¿Seguro que quieres cancelar este boleto?</span>
         <button
           onClick={confirmar}
           disabled={cancelando}
-          className="rounded-lg bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+          className="kb-btn !h-9 !px-3 !text-xs bg-kberror text-white disabled:opacity-50"
         >
           {cancelando ? "Cancelando..." : "Sí, cancelar"}
         </button>
         <button
           onClick={() => setConfirmando(false)}
-          className="rounded-lg border border-brand-light px-3 py-1 text-xs text-brand-dark/70 hover:bg-brand-light/40"
+          className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
         >
           No
         </button>
@@ -143,7 +143,7 @@ function BotonCancelar({
   return (
     <button
       onClick={() => setConfirmando(true)}
-      className="mt-2 text-xs font-semibold text-red-600 underline decoration-dotted underline-offset-2 hover:text-red-700"
+      className="mt-2 text-xs font-semibold text-kberror underline decoration-dotted underline-offset-2 hover:text-kberror"
     >
       Cancelar boleto
     </button>
@@ -162,7 +162,7 @@ function FormularioCalificar({ boletoId, onEnviado }: { boletoId: string; onEnvi
     return (
       <button
         onClick={() => setAbierto(true)}
-        className="rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-dark"
+        className="kb-btn kb-btn--dark !h-10 !px-4 !text-sm"
       >
         Calificar viaje
       </button>
@@ -189,7 +189,7 @@ function FormularioCalificar({ boletoId, onEnviado }: { boletoId: string; onEnvi
   }
 
   return (
-    <div className="mt-2 rounded-lg bg-brand-light/30 p-3">
+    <div className="mt-2 kb-on-white rounded-ctrl bg-kbbg p-3">
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -213,19 +213,19 @@ function FormularioCalificar({ boletoId, onEnviado }: { boletoId: string; onEnvi
             placeholder="Cuéntanos más (opcional)"
             rows={2}
             maxLength={500}
-            className="mt-2 w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="mt-2 kb-input"
           />
           <button
             type="button"
             onClick={enviar}
             disabled={enviando}
-            className="mt-2 rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+            className="mt-2 kb-btn kb-btn--dark !h-10 !px-4 !text-sm"
           >
             {enviando ? "Enviando..." : "Enviar"}
           </button>
         </>
       )}
-      {error && <p className="mt-2 text-xs font-medium text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs font-medium text-kberror">{error}</p>}
     </div>
   );
 }
@@ -280,24 +280,24 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
   const hayFiltros = estado !== "" || busqueda.trim() !== "" || desde !== "" || hasta !== "";
   const totalPaginas = Math.max(1, Math.ceil((boletos?.total ?? 0) / LIMITE_PAGINA));
   const claseCampo =
-    "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium";
-  const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+    "kb-input";
+  const claseEtiqueta = "kb-label";
 
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-brand-dark/70">
+        <p className="text-sm text-muted-2">
           Tu historial de viajes comprados. Podrás calificar cada uno después de la hora estimada de llegada.
         </p>
         <Link
           href="/"
-          className="shrink-0 rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95"
+          className="shrink-0 kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
         >
           Comprar un boleto
         </Link>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 sm:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-3 kb-card kb-on-white p-4 sm:grid-cols-4">
         <div className="col-span-2">
           <label htmlFor="mb-buscar" className={claseEtiqueta}>
             Buscar
@@ -363,7 +363,7 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
             className={claseCampo}
           />
         </div>
-        <div className="col-span-2 flex items-end sm:col-span-1 sm:row-start-1">
+        <div className="col-span-2 flex items-end sm:col-span-1 sm:col-start-4 sm:row-start-1">
           <button
             type="button"
             onClick={() => {
@@ -374,7 +374,7 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
               setPagina(1);
             }}
             disabled={!hayFiltros}
-            className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm font-semibold text-brand-dark/70 hover:bg-brand-light/40 disabled:opacity-40"
+            className="kb-btn kb-btn--outline w-full !h-[54px] !text-sm"
           >
             Limpiar
           </button>
@@ -382,23 +382,23 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
       </div>
 
       {error && (
-        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="mt-4 kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
-      {boletos === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+      {boletos === null && !error && <p className="mt-6 text-sm text-muted-2">Cargando...</p>}
 
       {boletos !== null && boletos.total === 0 && hayFiltros && (
-        <p className="mt-8 text-center text-sm text-brand-dark/50">No encontramos boletos con estos filtros.</p>
+        <p className="mt-8 text-center text-sm text-muted-2">No encontramos boletos con estos filtros.</p>
       )}
 
       {boletos !== null && boletos.total === 0 && !hayFiltros && (
         <div className="mt-8 text-center">
-          <p className="text-sm text-brand-dark/50">Todavía no tienes boletos comprados.</p>
+          <p className="text-sm text-muted-2">Todavía no tienes boletos comprados.</p>
           <Link
             href="/"
-            className="mt-4 inline-block rounded-lg bg-brand-amber px-5 py-2.5 text-sm font-semibold text-brand-dark transition hover:brightness-95"
+            className="mt-4 inline-block kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
           >
             Buscar pasajes
           </Link>
@@ -410,25 +410,29 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
           const referenciaLlegada = b.horaLlegadaEstimada ?? b.horaSalidaProgramada;
           const yaLlego = new Date() >= new Date(referenciaLlegada);
           return (
-            <div key={b.boletoId} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-              <p className="font-display font-bold text-brand-dark">
-                {b.origenCiudad} → {b.destinoCiudad}
-              </p>
-              <p className="text-sm text-brand-dark/70">
-                {b.cooperativaNombre} · Sale {formatearFechaHora(b.horaSalidaProgramada)}
-              </p>
-              <span
-                className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  b.estado === "cancelado"
-                    ? "bg-red-100 text-red-700"
-                    : b.estado === "usado"
-                      ? "bg-slate-100 text-slate-600"
-                      : "bg-emerald-100 text-emerald-700"
-                }`}
-              >
-                {b.estado === "cancelado" ? "Cancelado" : b.estado === "usado" ? "Usado" : "Vigente"}
-              </span>
-
+            <div key={b.boletoId} className="kb-card kb-on-white p-4 md:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-base font-semibold md:text-[17px]">
+                    {b.origenCiudad} → {b.destinoCiudad}
+                  </p>
+                  <p className="text-sm text-muted-2">
+                    {b.cooperativaNombre} · Sale {formatearFechaHora(b.horaSalidaProgramada)}
+                  </p>
+                </div>
+                <span
+                  className={`kb-status shrink-0 ${
+                    b.estado === "cancelado"
+                      ? "kb-status--error"
+                      : b.estado === "usado"
+                        ? "kb-status--off"
+                        : "kb-status--ok"
+                  }`}
+                >
+                  {b.estado === "cancelado" ? "Cancelado" : b.estado === "usado" ? "Usado" : "Vigente"}
+                </span>
+              </div>
+              <div className="mt-3 border-t border-dashed border-line pt-1">
               {b.estado === "vigente" && <BotonMostrarQr codigoQr={b.codigoQr} />}
               {b.estado === "vigente" && <BotonMostrarAnden estado={b.estadoTasa} codigo={b.codigoTasa} />}
               {b.estado === "vigente" && (
@@ -455,7 +459,7 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
 
               <div className="mt-3">
                 {b.estado !== "vigente" ? null : b.yaCalificado ? (
-                  <p className="text-sm font-medium text-emerald-600">Ya calificaste este viaje. ¡Gracias!</p>
+                  <p className="text-sm font-medium text-ok">Ya calificaste este viaje. ¡Gracias!</p>
                 ) : b.puedeCalificar ? (
                   <FormularioCalificar
                     boletoId={b.boletoId}
@@ -465,12 +469,13 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
                     }}
                   />
                 ) : (
-                  <p className="text-xs text-brand-dark/40">
+                  <p className="text-xs text-muted-3">
                     Podrás calificar este viaje después de tu llegada estimada
                     {b.horaLlegadaEstimada && ` (${formatearFechaHora(b.horaLlegadaEstimada)})`}
                     {!yaLlego && !b.horaLlegadaEstimada && ""}.
                   </p>
                 )}
+              </div>
               </div>
             </div>
           );
@@ -478,7 +483,7 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
       </div>
 
       {boletos !== null && boletos.total > 0 && (
-        <div className="mt-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+        <div className="mt-4 flex items-center justify-between kb-card kb-on-white px-4 py-3 text-sm text-muted-2">
           <span>
             {boletos.total} boleto{boletos.total === 1 ? "" : "s"} · Página {pagina} de {totalPaginas}
           </span>
@@ -487,7 +492,7 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
               type="button"
               onClick={() => setPagina((p) => Math.max(1, p - 1))}
               disabled={pagina <= 1 || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Anterior
             </button>
@@ -495,7 +500,7 @@ export function TabMisBoletos({ onExito }: { onExito: (mensaje: string) => void 
               type="button"
               onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
               disabled={pagina >= totalPaginas || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Siguiente
             </button>

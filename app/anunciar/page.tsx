@@ -42,9 +42,9 @@ export default function AnunciarPage() {
 
   if (enviado) {
     return (
-      <main className="mx-auto max-w-lg flex-1 px-4 py-20 text-center">
-        <p className="font-display text-2xl font-bold text-brand-dark">¡Listo!</p>
-        <p className="mt-2 text-sm text-brand-dark/70">
+      <main className="kb-on-white mx-auto max-w-lg flex-1 px-4 py-20 text-center">
+        <p className="text-2xl font-bold text-brand-dark">¡Listo!</p>
+        <p className="mt-2 text-sm text-muted-2">
           Recibimos tu solicitud. Nuestro equipo comercial se pondrá en contacto contigo pronto.
         </p>
       </main>
@@ -52,16 +52,16 @@ export default function AnunciarPage() {
   }
 
   return (
-    <main className="mx-auto max-w-lg flex-1 px-4 py-16">
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Anuncia con Klumbus</h1>
-      <p className="mt-2 text-sm text-brand-dark/70">
+    <main className="kb-on-white mx-auto max-w-lg flex-1 px-4 py-16">
+      <h1 className="text-2xl font-bold text-brand-dark">Anuncia con Klumbus</h1>
+      <p className="mt-2 text-sm text-muted-2">
         Miles de viajeros reales usan Klumbus cada semana para comparar y comprar pasajes de bus en
         Ecuador. Cuéntanos de tu negocio y te contactamos con las opciones disponibles.
       </p>
 
       <form onSubmit={enviar} className="mt-8 space-y-4">
         <div>
-          <label htmlFor="lead-empresa" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="lead-empresa" className="kb-label">
             Nombre de tu empresa
           </label>
           <input
@@ -70,22 +70,22 @@ export default function AnunciarPage() {
             minLength={2}
             value={nombreEmpresa}
             onChange={(e) => setNombreEmpresa(e.target.value)}
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-cobalto"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="lead-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="lead-nombre" className="kb-label">
             Tu nombre (opcional)
           </label>
           <input
             id="lead-nombre"
             value={contactoNombre}
             onChange={(e) => setContactoNombre(e.target.value)}
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-cobalto"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="lead-correo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="lead-correo" className="kb-label">
             Correo de contacto
           </label>
           <input
@@ -94,22 +94,22 @@ export default function AnunciarPage() {
             required
             value={contactoCorreo}
             onChange={(e) => setContactoCorreo(e.target.value)}
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-cobalto"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="lead-telefono" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="lead-telefono" className="kb-label">
             Teléfono (opcional)
           </label>
           <input
             id="lead-telefono"
             value={contactoTelefono}
             onChange={(e) => setContactoTelefono(e.target.value)}
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-cobalto"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="lead-mensaje" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="lead-mensaje" className="kb-label">
             Cuéntanos de tu negocio (opcional)
           </label>
           <textarea
@@ -117,16 +117,16 @@ export default function AnunciarPage() {
             rows={3}
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-cobalto"
+            className="w-full kb-input"
           />
         </div>
 
-        {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+        {error && <p className="text-sm font-medium text-kberror">{error}</p>}
 
         <button
           type="submit"
           disabled={enviando}
-          className="w-full rounded-lg bg-brand-dark px-6 py-3 text-base font-semibold text-white transition hover:bg-brand-dark/80 disabled:opacity-50"
+          className="kb-btn kb-btn--dark w-full disabled:opacity-50"
         >
           {enviando ? "Enviando..." : "Enviar solicitud"}
         </button>

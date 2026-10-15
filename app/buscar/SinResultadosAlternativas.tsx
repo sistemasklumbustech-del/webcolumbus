@@ -27,11 +27,11 @@ export function ChipsHoras({ horas }: { horas?: string[] }) {
   return (
     <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Horas de salida">
       {visibles.map((h) => (
-        <span key={h} className="rounded-md bg-brand-light px-2 py-0.5 text-xs font-semibold text-brand-dark">
+        <span key={h} className="rounded-md bg-kbbg px-2 py-0.5 text-xs font-semibold text-brand-dark">
           {h}
         </span>
       ))}
-      {resto > 0 && <span className="px-1 py-0.5 text-xs text-brand-dark/50">+{resto} más</span>}
+      {resto > 0 && <span className="px-1 py-0.5 text-xs text-muted-2">+{resto} más</span>}
     </div>
   );
 }
@@ -67,14 +67,14 @@ export function SinResultadosAlternativas({
   const otrosDestinos = hrefDestino ? alternativas.otrosDestinos : [];
 
   if (fechasCercanas.length === 0 && otrosDestinos.length === 0 && cooperativasEnLaRuta.length === 0) {
-    return mensajeSinNada ? <p className="text-sm text-brand-dark/70">{mensajeSinNada}</p> : null;
+    return mensajeSinNada ? <p className="text-sm text-muted-2">{mensajeSinNada}</p> : null;
   }
 
   return (
     <div className="space-y-6">
       {fechasCercanas.length > 0 && (
         <section>
-          <h3 className="font-display text-base font-bold text-brand-dark">
+          <h3 className="text-base font-bold text-brand-dark">
             Fechas con viajes para {origenCiudad ?? "tu origen"} → {destinoCiudad ?? "tu destino"}
           </h3>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -82,19 +82,19 @@ export function SinResultadosAlternativas({
               <Link
                 key={f.fecha}
                 href={hrefFecha(f.fecha)}
-                className="rounded-lg border border-brand-light bg-white p-3 transition hover:bg-brand-light/30"
+                className="rounded-ctrl border border-line bg-white p-3 transition hover:bg-kbbg"
               >
                 <p className="font-semibold capitalize text-brand-dark">{formatearFechaCorta(f.fecha)}</p>
-                <p className="text-sm text-brand-dark/70">
+                <p className="text-sm text-muted-2">
                   {textoViajes(f.cantidadViajes)} · desde ${f.precioDesde.toFixed(2)}
                 </p>
-                <p className="mt-1 break-words text-xs text-brand-dark/50">{formatearListaCooperativas(f.cooperativas)}</p>
+                <p className="mt-1 break-words text-xs text-muted-2">{formatearListaCooperativas(f.cooperativas)}</p>
                 <ChipsHoras horas={f.horas} />
               </Link>
             ))}
           </div>
           {hrefTodas && totalFechas > fechasCercanas.length && (
-            <Link href={hrefTodas} className="mt-3 inline-block text-sm font-semibold text-brand-cobalto underline underline-offset-2">
+            <Link href={hrefTodas} className="mt-3 inline-block text-sm font-semibold text-ink underline underline-offset-2">
               Ver las {totalFechas} fechas disponibles con todos sus horarios →
             </Link>
           )}
@@ -103,7 +103,7 @@ export function SinResultadosAlternativas({
 
       {otrosDestinos.length > 0 && hrefDestino && (
         <section>
-          <h3 className="font-display text-base font-bold text-brand-dark">
+          <h3 className="text-base font-bold text-brand-dark">
             Desde {origenCiudad ?? "tu origen"} sí hay viajes ese día a:
           </h3>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -111,13 +111,13 @@ export function SinResultadosAlternativas({
               <Link
                 key={d.destinoCiudad}
                 href={hrefDestino(d.destinoId, d.destinoCiudad)}
-                className="rounded-lg border border-brand-light bg-white p-3 transition hover:bg-brand-light/30"
+                className="rounded-ctrl border border-line bg-white p-3 transition hover:bg-kbbg"
               >
                 <p className="font-semibold text-brand-dark">{d.destinoCiudad}</p>
-                <p className="text-sm text-brand-dark/70">
+                <p className="text-sm text-muted-2">
                   {textoViajes(d.cantidadViajes)} · desde ${d.precioDesde.toFixed(2)}
                 </p>
-                <p className="mt-1 break-words text-xs text-brand-dark/50">{formatearListaCooperativas(d.cooperativas)}</p>
+                <p className="mt-1 break-words text-xs text-muted-2">{formatearListaCooperativas(d.cooperativas)}</p>
                 <ChipsHoras horas={d.horas} />
               </Link>
             ))}
@@ -126,7 +126,7 @@ export function SinResultadosAlternativas({
       )}
 
       {cooperativasEnLaRuta.length > 0 && (
-        <p className="text-sm text-brand-dark/70">
+        <p className="text-sm text-muted-2">
           Esta ruta está publicada por <span className="font-semibold">{cooperativasEnLaRuta.join(", ")}</span>
           {fechasCercanas.length === 0 ? ", pero por ahora no tiene viajes con cupo en las próximas semanas." : "."}
         </p>

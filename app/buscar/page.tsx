@@ -54,8 +54,8 @@ export default async function ResultadosBusquedaPage({
   if (!origenId || !destinoId || !fecha) {
     return (
       <main className="mx-auto max-w-3xl flex-1 px-4 py-16 text-center">
-        <p className="text-brand-dark">Faltan datos de búsqueda. Vuelve al inicio e intenta de nuevo.</p>
-        <Link href="/" className="mt-4 inline-block font-semibold text-brand-cobalto underline">
+        <p>Faltan datos de búsqueda. Vuelve al inicio e intenta de nuevo.</p>
+        <Link href="/" className="mt-4 inline-block font-semibold text-ink underline">
           Volver al inicio
         </Link>
       </main>
@@ -232,9 +232,25 @@ export default async function ResultadosBusquedaPage({
   //   la URL) -- el link de "Elegir asiento" de la vuelta lleva ambos
   //   tramos juntos hacia la pantalla de asientos del tramo de vuelta,
   //   que a su vez debe combinar los 2 en el checkout final.
-  function hrefParaIda(viajeId: string): string {
+  // Datos de solo lectura para el resumen de la pantalla de asientos (ruta,
+  // salida, cooperativa y tarifa de referencia). Son informativos: el precio
+  // real lo calcula el servidor al cotizar y comprar.
+  function datosResumen(r: ResultadoViaje): URLSearchParams {
+    const p = new URLSearchParams({
+      rOrigen: origenCiudad ?? "",
+      rDestino: destinoCiudad ?? "",
+      rSalida: r.horaSalidaProgramada,
+      rCoop: r.cooperativaNombre,
+      rPrecio: String(r.precioBase),
+    });
+    if (r.horaLlegadaEstimada) p.set("rLlegada", r.horaLlegadaEstimada);
+    return p;
+  }
+
+  function hrefParaIda(r: ResultadoViaje): string {
+    const viajeId = r.viajeId;
     if (!esIdaYVuelta) {
-      return `/viajes/${viajeId}/asientos`;
+      return `/viajes/${viajeId}/asientos?${datosResumen(r).toString()}`;
     }
     // Fase 7-idayvuelta (11-ago-2026) -- hallazgo real corregido: antes
     // esto saltaba directo de vuelta a /buscar, SIN dejar elegir
@@ -255,14 +271,17 @@ export default async function ResultadosBusquedaPage({
       params.set("vuelta_horaDesde", horaVueltaDesde);
       params.set("vuelta_horaHasta", horaVueltaHasta);
     }
+    datosResumen(r).forEach((valor, clave) => params.set(clave, valor));
     return `/viajes/${viajeId}/asientos?${params.toString()}`;
   }
 
-  function hrefParaVuelta(viajeId: string): string {
+  function hrefParaVuelta(r: ResultadoViaje): string {
+    const viajeId = r.viajeId;
     const params = new URLSearchParams({
       idaViajeId: idaViajeId ?? "",
       idaAsientos: idaAsientos ?? "",
     });
+    datosResumen(r).forEach((valor, clave) => params.set(clave, valor));
     return `/viajes/${viajeId}/asientos?${params.toString()}`;
   }
 
@@ -282,7 +301,7 @@ export default async function ResultadosBusquedaPage({
   // manifiesta al navegar de verdad, como hizo el director.
   const hrefsPorViaje: Record<string, string> = {};
   for (const r of resultadosAMostrar) {
-    hrefsPorViaje[r.viajeId] = mostrandoVuelta ? hrefParaVuelta(r.viajeId) : hrefParaIda(r.viajeId);
+    hrefsPorViaje[r.viajeId] = mostrandoVuelta ? hrefParaVuelta(r) : hrefParaIda(r);
   }
 
   // Filtro rápido por cooperativa (16-ago-2026, orden real de la
@@ -364,63 +383,49 @@ export default async function ResultadosBusquedaPage({
       );
 
   return (
-    <main className="flex-1 bg-brand-light/40">
-      {/* Franja oscura de resumen de ruta -- adaptación real de la
-          referencia del director (demo, 24-ago-2026): en el demo esto
-          es una franja oscura con el resumen de la ruta + botón
-          "Cambiar búsqueda", en vez de un link de texto simple sobre
-          fondo claro. Se usa nuestro vidrio oscuro real
-          (`bg-brand-dark`), no el rojo del demo -- decisión explícita
-          del director: mantener la marca real, no copiar el color.
-
-          Ajuste real (24-ago-2026, mismo día): el director señaló que
-          se veía "fúnebre y sin vida" -- negro liso, sin ningún acento
-          de color, comparado con el Hero (que sí resalta "sin filas ni
-          papeleo" en ámbar). Corregido con el mismo criterio: menos
-          padding vertical (py-6 -> py-4, franja más delgada) y la
-          flecha entre ciudades en `brand-amber`, mismo acento de marca
-          que ya usa el resto del sitio -- no un elemento nuevo
-          inventado. */}
-      <div className="bg-brand-dark px-4 py-4">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="font-display text-2xl font-bold text-white">
-                {origenCiudad ?? "Origen"} <span className="text-brand-amber">→</span> {destinoCiudad ?? "Destino"}
-              </h1>
-              <p className="text-sm text-white/60">
-                {mostrandoVuelta ? "Vuelta · " : ""}
-                {formatearFecha(fecha)} · {pasajeros ?? 1} pasajero{Number(pasajeros ?? 1) > 1 ? "s" : ""}
+    <main className="flex-1">
+      {/* Barra de resumen de ruta (diseño final): blanca, con el título de la
+          ruta y "Cambiar búsqueda". */}
+      <div className="border-b border-line bg-white">
+        <div className="mx-auto flex max-w-[1280px] flex-wrap items-center gap-4 px-5 py-3.5 md:px-16 md:py-[18px]">
+          <Link href="/" aria-label="Volver" className="kb-btn-round shrink-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-base font-semibold md:text-xl">
+              {origenCiudad ?? "Origen"} → {destinoCiudad ?? "Destino"}
+            </h1>
+            <p className="text-xs text-muted-2 md:text-[13px]">
+              {mostrandoVuelta ? "Vuelta · " : ""}
+              {formatearFecha(fecha)} · {pasajeros ?? 1} pasajero{Number(pasajeros ?? 1) > 1 ? "s" : ""}
+            </p>
+            {esIdaYVuelta && !mostrandoVuelta && fechaVuelta && (
+              <p className="text-xs text-muted-2 md:text-[13px]">
+                Vuelta: {vOrigenCiudad ?? "Origen"} → {vDestinoCiudad ?? "Destino"} · {formatearFecha(fechaVuelta)}
               </p>
-              {esIdaYVuelta && !mostrandoVuelta && fechaVuelta && (
-                <p className="text-sm text-white/60">
-                  Vuelta: {vOrigenCiudad ?? "Origen"} → {vDestinoCiudad ?? "Destino"} · {formatearFecha(fechaVuelta)}
-                </p>
-              )}
-            </div>
-            <Link
-              href="/"
-              className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
-            >
-              ← Cambiar búsqueda
-            </Link>
+            )}
           </div>
+          <Link href="/" className="kb-btn kb-btn--outline hidden h-[46px] md:inline-flex">
+            Cambiar búsqueda
+          </Link>
 
           {esIdaYVuelta && (
-            <div className="mt-3 flex items-center gap-2 text-sm font-semibold">
-              <span className={mostrandoVuelta ? "text-white/40" : "text-brand-medium"}>
+            <div className="flex basis-full items-center gap-2 text-sm font-semibold">
+              <span className={mostrandoVuelta ? "text-muted-3" : "rounded-full bg-kbyellow px-3 py-0.5 text-ink"}>
                 1. Ida{idaViajeId && mostrandoVuelta ? " ✓" : ""}
               </span>
-              <span className="text-white/30">→</span>
-              <span className={mostrandoVuelta ? "text-brand-medium" : "text-white/40"}>2. Vuelta</span>
+              <span className="text-muted-3">→</span>
+              <span className={mostrandoVuelta ? "rounded-full bg-kbyellow px-3 py-0.5 text-ink" : "text-muted-3"}>2. Vuelta</span>
             </div>
           )}
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-10">
+      <div className="mx-auto max-w-[1280px] px-5 py-5 md:px-16 md:py-6">
 
-        <div className="mt-6 lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-6">
+        <div className="lg:grid lg:grid-cols-[250px_1fr] lg:items-start lg:gap-6 xl:grid-cols-[290px_1fr]">
           {!mostrandoVuelta && (
             <>
               <div className="lg:hidden">
@@ -433,8 +438,8 @@ export default async function ResultadosBusquedaPage({
           )}
 
           <div className={mostrandoVuelta ? "lg:col-span-2" : ""}>
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-semibold text-brand-dark/70">
+            <div className="mb-3.5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <p className="text-sm text-muted-2">
                 {grupos.length} cooperativa{grupos.length !== 1 ? "s" : ""} disponible
                 {grupos.length !== 1 ? "s" : ""} para esta ruta
               </p>
@@ -444,13 +449,13 @@ export default async function ResultadosBusquedaPage({
             {!mostrandoVuelta && <FiltroCooperativaPills cooperativas={cooperativasUnicas} />}
 
             {ordenFueraDeFranja && (
-              <div className="mb-4 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
-                <p className="text-sm font-semibold text-amber-900">
+              <div className="kb-alert kb-alert--info mb-4 flex-col !gap-1">
+                <p className="text-sm font-semibold text-ink">
                   No hay viajes en la franja {franjaElegida ? `${franjaElegida.etiqueta.toLowerCase()} (${franjaElegida.horaDesde}–${franjaElegida.horaHasta})` : "de hora que elegiste"}, pero ese día sí hay estos horarios.
                 </p>
                 <Link
                   href={hrefBuscar({ horaDesde: null, horaHasta: null })}
-                  className="mt-1 inline-block text-sm font-semibold text-amber-900 underline"
+                  className="inline-block text-sm font-semibold text-ink underline"
                 >
                   Quitar el filtro de hora
                 </Link>
@@ -461,11 +466,11 @@ export default async function ResultadosBusquedaPage({
             {esIdaYVuelta && !mostrandoVuelta && fechaVuelta && !error && (
               <div className="mb-4">
                 {resultadosVuelta.length > 0 ? (
-                  <div className="rounded-xl bg-emerald-50 p-4 ring-1 ring-emerald-200">
-                    <p className="text-sm font-semibold text-emerald-900">
+                  <div className="kb-alert kb-alert--ok flex-col !gap-1">
+                    <p className="text-sm font-semibold">
                       ✓ Hay viajes de vuelta: {vOrigenCiudad} → {vDestinoCiudad}, {formatearFecha(fechaVuelta)}
                     </p>
-                    <p className="mt-1 text-xs text-emerald-800/80">
+                    <p className="text-xs">
                       {resultadosVuelta.length} viaje{resultadosVuelta.length === 1 ? "" : "s"} desde $
                       {Math.min(...resultadosVuelta.map((r) => Number(r.precioBase))).toFixed(2)} con{" "}
                       {Array.from(new Set(resultadosVuelta.map((r) => r.cooperativaNombre))).join(", ")}.{" "}
@@ -474,11 +479,11 @@ export default async function ResultadosBusquedaPage({
                     </p>
                   </div>
                 ) : (
-                  <div className="rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
-                    <p className="font-display text-base font-bold text-amber-900">
+                  <div className="kb-alert kb-alert--info flex-col !gap-1">
+                    <p className="text-base font-semibold text-ink">
                       Aún no hay ruta de vuelta programada: {vOrigenCiudad} → {vDestinoCiudad}, {formatearFecha(fechaVuelta)}
                     </p>
-                    <p className="mt-1 text-sm text-amber-900/80">
+                    <p className="text-sm">
                       Esto es lo que sí hay disponible para la vuelta. También puedes{" "}
                       <Link href={hrefSoloIda} className="font-semibold underline">
                         comprar solo la ida
@@ -486,7 +491,7 @@ export default async function ResultadosBusquedaPage({
                       .
                     </p>
                     {alternativasVuelta && (
-                      <div className="mt-4 rounded-lg bg-white p-4">
+                      <div className="mt-4 rounded-card bg-white p-4">
                         <SinResultadosAlternativas
                           alternativas={alternativasVuelta}
                           origenCiudad={vOrigenCiudad}
@@ -502,17 +507,17 @@ export default async function ResultadosBusquedaPage({
               </div>
             )}
 
-            <div className="space-y-4">
-              {error && <p className="rounded-lg bg-red-50 p-4 text-red-700">{error}</p>}
+            <div className="flex flex-col gap-3.5">
+              {error && <p className="kb-alert kb-alert--error">{error}</p>}
 
               {!error && grupos.length === 0 && (
-                <div className="rounded-xl bg-white p-8 text-center shadow-sm">
-                  <p className="font-display text-lg font-bold text-brand-dark">
+                <div className="rounded-card bg-white p-8 text-center shadow-card">
+                  <p className="text-lg font-semibold">
                     {mostrandoVuelta
                       ? "Aún no hay viajes de vuelta programados para esta fecha."
                       : "No encontramos viajes para esta fecha."}
                   </p>
-                  <p className="mt-1 text-sm text-brand-dark/70">
+                  <p className="mt-1 text-sm text-muted-2">
                     {mostrandoVuelta
                       ? "Tus asientos de ida siguen reservados unos minutos. Si hay otras fechas con viajes de vuelta, las verás debajo."
                       : "Prueba con otra fecha o cambia tu búsqueda. Si hay otras opciones, las verás debajo."}
@@ -521,7 +526,7 @@ export default async function ResultadosBusquedaPage({
               )}
 
               {!error && grupos.length === 0 && alternativas && (
-                <div className="rounded-xl bg-white p-6 shadow-sm">
+                <div className="rounded-card bg-white p-6 shadow-card">
                   <SinResultadosAlternativas
                     alternativas={alternativas}
                     origenCiudad={origenCiudad}

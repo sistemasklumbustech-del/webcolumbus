@@ -46,17 +46,17 @@ export default async function TerminosPage() {
   });
 
   return (
-    <main className="mx-auto max-w-2xl flex-1 px-4 py-12">
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Términos de Servicio</h1>
-      <p className="mt-1 text-sm text-brand-dark/50">
+    <main className="kb-on-white mx-auto max-w-2xl flex-1 px-4 py-12">
+      <h1 className="text-2xl font-bold text-brand-dark">Términos de Servicio</h1>
+      <p className="mt-1 text-sm text-muted-2">
         Versión {version.version} — vigente desde {fechaVigencia}
       </p>
 
-      <div className="prose prose-sm mt-8 max-w-none text-brand-dark/80 [&>div>h2]:mt-8 [&>div>h2]:font-display [&>div>h2]:text-lg [&>div>h2]:font-bold [&>div>h2]:text-brand-dark [&>div>p]:mt-3 [&>div>p]:leading-relaxed [&>div>ul]:mt-3 [&>div>ul]:list-disc [&>div>ul]:pl-5">
+      <div className="prose prose-sm mt-8 max-w-none text-ink [&>div>h2]:mt-8 [&>div>h2]:[&>div>h2]:text-lg [&>div>h2]:font-bold [&>div>h2]:text-brand-dark [&>div>p]:mt-3 [&>div>p]:leading-relaxed [&>div>ul]:mt-3 [&>div>ul]:list-disc [&>div>ul]:pl-5">
         {renderizarContenido(version.contenido)}
       </div>
 
-      <p className="mt-10 rounded-lg bg-brand-light/40 px-4 py-3 text-xs text-brand-dark/50">
+      <p className="mt-10 rounded-lg bg-kbbg px-4 py-3 text-xs text-muted-2">
         Este documento es un borrador redactado de buena fe según cómo opera la plataforma hoy.
         No sustituye una revisión legal formal.
       </p>

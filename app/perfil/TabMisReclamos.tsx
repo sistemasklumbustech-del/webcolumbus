@@ -14,10 +14,10 @@ import { tokenValido } from "@/lib/auth";
 const LIMITE_PAGINA = 10;
 
 const COLOR_ESTADO: Record<EstadoReclamo, string> = {
-  abierto: "bg-amber-100 text-amber-700",
-  en_revision: "bg-blue-100 text-blue-700",
-  resuelto: "bg-emerald-100 text-emerald-700",
-  rechazado: "bg-slate-100 text-slate-600",
+  abierto: "kb-status--wait",
+  en_revision: "kb-status--wait",
+  resuelto: "kb-status--ok",
+  rechazado: "kb-status--error",
 };
 
 function formatearFechaHora(iso: string) {
@@ -63,7 +63,7 @@ export function TabMisReclamos() {
 
   return (
     <>
-      <p className="text-sm text-brand-dark/70">
+      <p className="text-sm text-muted-2">
         Los reclamos que enviaste sobre tus viajes. Para reportar un problema, ve a &quot;Mis boletos&quot; y elige el
         boleto.
       </p>
@@ -71,7 +71,7 @@ export function TabMisReclamos() {
       <div className="mt-4 max-w-xs">
         <label
           htmlFor="mis-reclamos-estado"
-          className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70"
+          className="kb-label"
         >
           Estado
         </label>
@@ -82,7 +82,7 @@ export function TabMisReclamos() {
             setEstadoFiltro(e.target.value);
             setPagina(1);
           }}
-          className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          className="kb-input"
         >
           <option value="">Todos</option>
           <option value="abierto">Abiertos</option>
@@ -93,44 +93,44 @@ export function TabMisReclamos() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="mt-4 kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
-      {resultado === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+      {resultado === null && !error && <p className="mt-6 text-sm text-muted-2">Cargando...</p>}
 
       {resultado !== null && resultado.total === 0 && !cargando && (
-        <p className="mt-8 text-center text-sm text-brand-dark/50">
+        <p className="mt-8 text-center text-sm text-muted-2">
           {estadoFiltro ? "No tienes reclamos con este estado." : "Todavía no has enviado ningún reclamo."}
         </p>
       )}
 
       <div className="mt-6 space-y-3">
         {resultado?.filas.map((r) => (
-          <div key={r.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+          <div key={r.id} className="kb-card kb-on-white p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="font-display font-bold text-brand-dark">
+                <p className="font-bold text-brand-dark">
                   {r.origenCiudad} → {r.destinoCiudad}
                 </p>
-                <p className="text-sm text-brand-dark/70">
+                <p className="text-sm text-muted-2">
                   {r.cooperativaNombre} · {r.fechaSalida}
                 </p>
               </div>
-              <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLOR_ESTADO[r.estado]}`}>
+              <span className={`kb-status shrink-0 ${COLOR_ESTADO[r.estado]}`}>
                 {ETIQUETA_ESTADO_RECLAMO[r.estado]}
               </span>
             </div>
 
-            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-brand-dark/50">
+            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-2">
               {ETIQUETA_TIPO_RECLAMO[r.tipo]} · enviado {formatearFechaHora(r.creadoEn)}
             </p>
             <p className="mt-1 whitespace-pre-wrap break-words text-sm text-brand-dark">{r.descripcion}</p>
 
             {r.respuesta && (
-              <div className="mt-3 rounded-lg bg-brand-light/30 p-3 text-sm text-brand-dark">
-                <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/50">
+              <div className="mt-3 kb-on-white rounded-ctrl bg-kbbg p-3 text-sm text-brand-dark">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">
                   Respuesta de {r.cooperativaNombre}
                   {r.resueltoEn ? ` · ${formatearFechaHora(r.resueltoEn)}` : ""}
                 </p>
@@ -147,7 +147,7 @@ export function TabMisReclamos() {
       </div>
 
       {resultado !== null && resultado.total > LIMITE_PAGINA && (
-        <div className="mt-4 flex items-center justify-between text-sm text-brand-dark/70">
+        <div className="mt-4 flex items-center justify-between text-sm text-muted-2">
           <span>
             Página {pagina} de {totalPaginas}
           </span>
@@ -155,14 +155,14 @@ export function TabMisReclamos() {
             <button
               onClick={() => setPagina((p) => Math.max(1, p - 1))}
               disabled={pagina <= 1 || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Anterior
             </button>
             <button
               onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
               disabled={pagina >= totalPaginas || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Siguiente
             </button>

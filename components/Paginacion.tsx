@@ -43,7 +43,7 @@ export function ControlesPaginacion({
 }) {
   if (total === 0 || (ocultarSiUnaPagina && totalPaginas <= 1)) return null;
   return (
-    <div className={`flex items-center justify-between gap-3 px-4 py-3 text-sm text-brand-dark/70 sm:px-6 ${className}`}>
+    <div className={`flex items-center justify-between gap-3 px-4 py-3 text-sm text-muted-2 sm:px-6 ${className}`}>
       <span>
         {total} {etiqueta}
         {total === 1 ? "" : "s"} · Página {pagina} de {totalPaginas}
@@ -53,7 +53,7 @@ export function ControlesPaginacion({
           type="button"
           onClick={() => onCambio(Math.max(1, pagina - 1))}
           disabled={pagina <= 1 || cargando}
-          className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+          className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
         >
           Anterior
         </button>
@@ -61,7 +61,7 @@ export function ControlesPaginacion({
           type="button"
           onClick={() => onCambio(Math.min(totalPaginas, pagina + 1))}
           disabled={pagina >= totalPaginas || cargando}
-          className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+          className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
         >
           Siguiente
         </button>

@@ -27,10 +27,10 @@ const ETIQUETA_ESTADO: Record<EstadoReclamo, string> = {
 };
 
 const COLOR_ESTADO: Record<EstadoReclamo, string> = {
-  abierto: "bg-amber-100 text-amber-700",
-  en_revision: "bg-blue-100 text-blue-700",
-  resuelto: "bg-emerald-100 text-emerald-700",
-  rechazado: "bg-slate-100 text-slate-600",
+  abierto: "kb-status--wait",
+  en_revision: "kb-status--wait",
+  resuelto: "kb-status--ok",
+  rechazado: "kb-status--off",
 };
 
 function formatearDolares(monto: number) {
@@ -48,8 +48,8 @@ function formatearFechaHora(iso: string) {
 }
 
 const claseCampo =
-  "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
-const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+  "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+const claseEtiqueta = "kb-label";
 
 function TarjetaReclamo({
   reclamo,
@@ -112,52 +112,52 @@ function TarjetaReclamo({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+    <div className="kb-card kb-on-white p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="break-words font-display font-bold text-brand-dark">
+          <p className="break-words font-bold text-brand-dark">
             {ETIQUETA_TIPO_RECLAMO[reclamo.tipo as TipoReclamo] ?? reclamo.tipo}
           </p>
-          <p className="text-sm text-brand-dark/70">
+          <p className="text-sm text-muted-2">
             {reclamo.origenCiudad} → {reclamo.destinoCiudad} · {reclamo.fechaSalida}
           </p>
-          <p className="text-xs text-brand-dark/40">Recibido {formatearFechaHora(reclamo.creadoEn)}</p>
+          <p className="text-xs text-muted-3">Recibido {formatearFechaHora(reclamo.creadoEn)}</p>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLOR_ESTADO[reclamo.estado]}`}>
+        <span className={`shrink-0 kb-status ${COLOR_ESTADO[reclamo.estado]}`}>
           {ETIQUETA_ESTADO[reclamo.estado]}
         </span>
       </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-1 text-sm text-brand-dark/80 sm:grid-cols-2">
+      <div className="mt-3 grid grid-cols-1 gap-1 text-sm text-ink sm:grid-cols-2">
         <p className="break-words">
-          <span className="text-brand-dark/50">Pasajero: </span>
+          <span className="text-muted-2">Pasajero: </span>
           <span className="font-semibold">{reclamo.pasajeroNombre}</span>
         </p>
         <p className="break-words">
-          <span className="text-brand-dark/50">Boleto pagado: </span>
+          <span className="text-muted-2">Boleto pagado: </span>
           <span className="font-semibold">{formatearDolares(reclamo.montoBoleto)}</span>
         </p>
         {reclamo.pasajeroCorreo && (
           <p className="break-all">
-            <span className="text-brand-dark/50">Correo: </span>
+            <span className="text-muted-2">Correo: </span>
             {reclamo.pasajeroCorreo}
           </p>
         )}
         {reclamo.pasajeroTelefono && (
           <p className="break-words">
-            <span className="text-brand-dark/50">Teléfono: </span>
+            <span className="text-muted-2">Teléfono: </span>
             {reclamo.pasajeroTelefono}
           </p>
         )}
       </div>
 
-      <p className="mt-3 whitespace-pre-wrap break-words rounded-lg bg-brand-light/30 p-3 text-sm text-brand-dark">
+      <p className="mt-3 whitespace-pre-wrap break-words kb-on-white rounded-ctrl bg-kbbg p-3 text-sm text-brand-dark">
         {reclamo.descripcion}
       </p>
 
       {!abierto && reclamo.respuesta && (
-        <div className="mt-3 rounded-lg bg-emerald-50/60 p-3 text-sm text-brand-dark ring-1 ring-emerald-100">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/50">
+        <div className="mt-3 rounded-ctrl bg-ok-bg p-3 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">
             Tu respuesta{reclamo.resueltoEn ? ` · ${formatearFechaHora(reclamo.resueltoEn)}` : ""}
           </p>
           <p className="mt-1 whitespace-pre-wrap break-words">{reclamo.respuesta}</p>
@@ -173,14 +173,14 @@ function TarjetaReclamo({
             <button
               onClick={tomar}
               disabled={procesando}
-              className="rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/80 transition hover:bg-brand-light/40 disabled:opacity-50"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-ink disabled:opacity-50"
             >
               {procesando ? "Guardando..." : "Tomar (en revisión)"}
             </button>
           )}
           <button
             onClick={() => setRespondiendo(true)}
-            className="rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95"
+            className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
           >
             Responder
           </button>
@@ -188,7 +188,7 @@ function TarjetaReclamo({
       )}
 
       {abierto && respondiendo && (
-        <form onSubmit={enviarRespuesta} className="mt-4 space-y-3 rounded-xl bg-brand-light/20 p-4">
+        <form onSubmit={enviarRespuesta} className="mt-4 space-y-3 rounded-ctrl bg-kbbg p-4">
           <fieldset>
             <legend className={claseEtiqueta}>Decisión</legend>
             <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
@@ -243,7 +243,7 @@ function TarjetaReclamo({
                 onChange={(e) => setMonto(e.target.value)}
                 className={claseCampo}
               />
-              <p className="mt-1 text-xs text-brand-dark/50">
+              <p className="mt-1 text-xs text-muted-2">
                 Solo queda registrado y se le informa al pasajero. La devolución la coordinas tú fuera de la plataforma.
               </p>
             </div>
@@ -253,7 +253,7 @@ function TarjetaReclamo({
             <button
               type="submit"
               disabled={procesando}
-              className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+              className="kb-btn kb-btn--dark !h-10 !px-4 !text-sm disabled:opacity-50"
             >
               {procesando ? "Enviando..." : "Enviar respuesta"}
             </button>
@@ -261,7 +261,7 @@ function TarjetaReclamo({
               type="button"
               onClick={() => setRespondiendo(false)}
               disabled={procesando}
-              className="rounded-lg border border-brand-light px-4 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Cancelar
             </button>
@@ -341,9 +341,9 @@ export default function ReclamosPage() {
   const hayFiltros = !!(aplicados.estado || aplicados.tipo || aplicados.desde || aplicados.hasta || aplicados.busqueda);
 
   const contadores: { estado: EstadoReclamo; valor: number | undefined; color: string }[] = [
-    { estado: "abierto", valor: resumen?.abiertos, color: "text-amber-700" },
-    { estado: "en_revision", valor: resumen?.enRevision, color: "text-blue-700" },
-    { estado: "resuelto", valor: resumen?.resueltos, color: "text-emerald-700" },
+    { estado: "abierto", valor: resumen?.abiertos, color: "text-[#7A5D00]" },
+    { estado: "en_revision", valor: resumen?.enRevision, color: "text-ink" },
+    { estado: "resuelto", valor: resumen?.resueltos, color: "text-ok" },
     { estado: "rechazado", valor: resumen?.rechazados, color: "text-slate-600" },
   ];
 
@@ -353,8 +353,8 @@ export default function ReclamosPage() {
       <Toast mensaje={mensajeError} onCerrar={() => setMensajeError(null)} tipo="error" />
 
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Reclamos</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="text-2xl font-bold text-brand-dark">Reclamos</h1>
+        <p className="mt-1 text-sm text-muted-2">
           Reclamos de pasajeros sobre boletos de tu cooperativa. Respóndelos aquí: el pasajero recibe tu respuesta por
           correo. Si un reclamo procede, puedes registrar cuánto reconoces devolver (la devolución se coordina fuera de
           la plataforma).
@@ -367,12 +367,12 @@ export default function ReclamosPage() {
             key={c.estado}
             type="button"
             onClick={() => filtrarPorEstado(c.estado)}
-            className={`rounded-2xl bg-white p-4 text-left shadow-sm ring-1 transition hover:bg-brand-light/30 ${
-              aplicados.estado === c.estado ? "ring-2 ring-brand" : "ring-black/5"
+            className={`kb-card kb-on-white p-4 text-left transition ${
+              aplicados.estado === c.estado ? "ring-2 ring-ink" : "ring-0"
             }`}
           >
-            <p className={`font-display text-2xl font-extrabold ${c.color}`}>{c.valor ?? "—"}</p>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/50">
+            <p className={`text-2xl font-extrabold ${c.color}`}>{c.valor ?? "—"}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">
               {ETIQUETA_ESTADO[c.estado]}
             </p>
           </button>
@@ -381,7 +381,7 @@ export default function ReclamosPage() {
 
       <form
         onSubmit={filtrar}
-        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2"
+        className="grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2"
       >
         <div>
           <label htmlFor="reclamo-filtro-estado" className={claseEtiqueta}>
@@ -457,14 +457,14 @@ export default function ReclamosPage() {
         <div className="flex gap-2 sm:col-span-2">
           <button
             type="submit"
-            className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark sm:flex-none"
+            className="flex-1 kb-btn kb-btn--dark !h-10 !px-4 !text-sm sm:flex-none"
           >
             Filtrar
           </button>
           <button
             type="button"
             onClick={limpiarFiltros}
-            className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40"
+            className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
           >
             Limpiar
           </button>
@@ -472,15 +472,15 @@ export default function ReclamosPage() {
       </form>
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
-      {resultado === null && !error && <p className="text-sm text-brand-dark/50">Cargando...</p>}
+      {resultado === null && !error && <p className="text-sm text-muted-2">Cargando...</p>}
 
       {resultado !== null && resultado.total === 0 && !cargando && (
-        <p className="rounded-2xl bg-white px-6 py-8 text-center text-sm text-brand-dark/50 shadow-sm ring-1 ring-black/5">
+        <p className="kb-card kb-on-white px-6 py-8 text-center text-sm text-muted-2">
           {hayFiltros ? "No hay reclamos que coincidan con estos filtros." : "Todavía no has recibido ningún reclamo."}
         </p>
       )}
@@ -500,7 +500,7 @@ export default function ReclamosPage() {
       </div>
 
       {resultado !== null && resultado.total > 0 && (
-        <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+        <div className="flex items-center justify-between kb-card kb-on-white px-4 py-3 text-sm text-muted-2">
           <span>
             {resultado.total} reclamo(s) · Página {pagina} de {totalPaginas}
           </span>
@@ -508,14 +508,14 @@ export default function ReclamosPage() {
             <button
               onClick={() => setPagina((p) => Math.max(1, p - 1))}
               disabled={pagina <= 1 || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Anterior
             </button>
             <button
               onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
               disabled={pagina >= totalPaginas || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Siguiente
             </button>

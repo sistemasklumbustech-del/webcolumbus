@@ -9,6 +9,8 @@ import { CodigoQr } from "@/components/CodigoQr";
 import { AccesoAnden, useCodigosAnden } from "@/components/AccesoAnden";
 import { CampoSexoAsientoMujeres, type SexoPasajero } from "@/components/CampoSexoAsientoMujeres";
 import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
+import { leerResumenViaje } from "@/lib/resumen-viaje";
+import { LogoKlumbus } from "@/components/LogoKlumbus";
 
 /**
  * Los datos de factura se capturan ya (06-oct-2026) pero la emisión real de
@@ -379,42 +381,40 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   if (pagoManual) {
     const metodo = metodosDisponibles.find((m) => m.tipo === metodoElegido);
     return (
-      <main className="flex flex-1 items-center justify-center bg-brand-light/40 px-4 py-16">
-        <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg ring-1 ring-black/5">
+      <main className="flex flex-1 items-center justify-center px-5 py-10 md:py-16">
+        <div className="kb-card kb-on-white w-full max-w-md p-6 md:p-8">
           {comprobanteSubido ? (
-            <div className="text-center">
-              <h1 className="font-display text-xl font-bold text-brand-dark">
-                ¡Comprobante recibido!
-              </h1>
-              <p className="mt-2 text-sm text-brand-dark/70">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-ok-bg text-ok">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12l5 5L20 7" />
+                </svg>
+              </span>
+              <h1 className="text-xl font-semibold">¡Comprobante recibido!</h1>
+              <p className="text-sm text-muted-2">
                 Tu{pasajerosData.length > 1 ? "s asientos quedan" : " asiento queda"} reservado
                 {pasajerosData.length > 1 ? "s" : ""} mientras la cooperativa confirma tu pago. Te
-                avisaremos cuando esté listo — revisa tu cuenta en "Mis boletos".
+                avisaremos cuando esté listo — revisa tu cuenta en &quot;Mis boletos&quot;.
               </p>
-              <Link
-                href="/perfil?tab=boletos"
-                className="mt-6 inline-block rounded-lg bg-brand px-6 py-2.5 font-semibold text-white transition hover:bg-brand-dark"
-              >
+              <Link href="/perfil?tab=boletos" className="kb-btn kb-btn--primary mt-2">
                 Ir a mis boletos
               </Link>
             </div>
           ) : (
-            <>
-              <h1 className="font-display text-xl font-bold text-brand-dark">
-                Ahora, paga y sube tu comprobante
-              </h1>
+            <div className="flex flex-col gap-4">
+              <h1 className="text-xl font-semibold">Ahora, paga y sube tu comprobante</h1>
               {metodo && (
-                <div className="mt-3 rounded-xl bg-brand-light/30 p-4 text-sm text-brand-dark">
+                <div className="kb-alert kb-alert--info flex-col !gap-1">
                   {Object.entries(metodo.datosCuenta).map(([clave, valor]) => (
                     <p key={clave}>
-                      <span className="text-brand-dark/50 capitalize">{clave}: </span>
-                      <span className="font-semibold">{valor}</span>
+                      <span className="capitalize text-muted-2">{clave}: </span>
+                      <span className="font-semibold text-ink">{valor}</span>
                     </p>
                   ))}
                 </div>
               )}
-              <div className="mt-4">
-                <label htmlFor="checkout-comprobante" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <div>
+                <label htmlFor="checkout-comprobante" className="kb-label">
                   Foto o captura del comprobante
                 </label>
                 <input
@@ -422,18 +422,18 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   type="file"
                   accept="image/jpeg,image/png,image/webp,application/pdf"
                   onChange={(e) => setComprobanteArchivo(e.target.files?.[0] ?? null)}
-                  className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark file:mr-3 file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white"
+                  className="w-full rounded-ctrl bg-kbbg p-2.5 text-sm file:mr-3 file:rounded-xl file:border-0 file:bg-ink file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
                 />
               </div>
-              {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
+              {error && <p className="kb-alert kb-alert--error">{error}</p>}
               <button
                 onClick={subirComprobante}
                 disabled={!comprobanteArchivo || subiendoComprobante}
-                className="mt-4 w-full rounded-lg bg-brand px-6 py-2.5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+                className="kb-btn kb-btn--primary w-full"
               >
                 {subiendoComprobante ? "Subiendo..." : "Subir comprobante"}
               </button>
-            </>
+            </div>
           )}
         </div>
       </main>
@@ -456,125 +456,158 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
         new Date(a.boletos[0].horaSalidaProgramada).getTime() - new Date(b.boletos[0].horaSalidaProgramada).getTime(),
     );
     const esIdaYVueltaConfirmada = gruposConfirmados.length === 2;
+    const totalTarifa = resultado.boletos.reduce((suma, b) => suma + b.precioPagado, 0);
+    const totalTasa = resultado.boletos.reduce((suma, b) => suma + b.tasaTerminal, 0);
+    const totalCargo = resultado.boletos.reduce((suma, b) => suma + b.cargoPlataforma, 0);
+    const totalIva = resultado.boletos.reduce((suma, b) => suma + b.ivaMonto, 0);
+    const hayVarios = resultado.boletos.length > 1;
     return (
-      <main className="flex flex-1 items-center justify-center bg-brand-light/40 px-4 py-16">
-        <div className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-lg ring-1 ring-black/5">
-          <p className="font-display text-lg font-bold text-brand-dark">
-            {resultado.boletos.length > 1 ? "¡Boletos confirmados!" : "¡Boleto confirmado!"}
-          </p>
-          {/* Cada boleto se agrupa por SU viaje (ruta, fecha y hora): en una compra de
-              ida y vuelta los boletos son de viajes distintos, así que los datos del
-              viaje no pueden tomarse del primer boleto. Si hay dos viajes, el más
-              temprano es la IDA y el otro la VUELTA. */}
-          <div className="mt-4 space-y-6">
-            {gruposConfirmados.map((grupo, indiceGrupo) => {
-              const viaje = grupo.boletos[0];
-              const salida = new Date(viaje.horaSalidaProgramada);
-              return (
-                <section key={grupo.clave} className="rounded-xl bg-brand-light/20 p-4 text-left ring-1 ring-brand-dark/10">
-                  {esIdaYVueltaConfirmada && (
-                    <span className="inline-block rounded-full bg-brand-amber px-3 py-0.5 text-xs font-bold tracking-wide text-brand-dark">
-                      {indiceGrupo === 0 ? "IDA" : "VUELTA"}
-                    </span>
-                  )}
-                  <p className="mt-1 font-display text-lg font-bold text-brand-dark">
-                    {viaje.rutaOrigenCiudad} → {viaje.rutaDestinoCiudad}
-                  </p>
-                  <p className="text-sm font-bold capitalize text-brand-dark">
-                    {salida.toLocaleDateString("es-EC", { weekday: "long", day: "numeric", month: "long" })}
-                  </p>
-                  <p className="text-sm font-bold text-brand-dark">
-                    Salida {salida.toLocaleTimeString("es-EC", { hour: "numeric", minute: "2-digit" })}
-                  </p>
-                  <p className="mt-1 text-xs text-brand-dark/60">
-                    {viaje.cooperativaNombre}
-                    {viaje.unidadIdentificador ? " · Unidad " + viaje.unidadIdentificador : ""}
-                  </p>
-                  <div className="mt-3 space-y-6">
-                    {grupo.boletos.map((boleto) => (
-              <div key={boleto.codigoQr} className="border-t border-brand-dark/10 pt-4 first:border-t-0 first:pt-0">
-                <p className="flex items-center gap-2 text-sm text-brand-dark/70">
-                  Asiento {boleto.numeroAsiento}
-                  {boleto.esVip && (
-                    <span className="rounded-full bg-brand-amber px-2 py-0.5 text-xs font-semibold text-brand-dark">
-                      VIP
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs text-brand-dark/50">
-                  A nombre de {boleto.compradorNombre}
-                  {boleto.compradorDocumento ? ` — ${boleto.compradorDocumento}` : ""}
-                </p>
-                <div className="mt-2 space-y-1 rounded-lg bg-brand-light/30 px-4 py-3 text-left text-sm">
-                  <div className="flex justify-between text-brand-dark/70">
-                    <span>Tarifa</span>
-                    <span>${boleto.precioPagado.toFixed(2)}</span>
-                  </div>
-                  {boleto.tasaTerminal > 0 && (
-                    <div className="flex justify-between text-brand-dark/70">
-                      <span>Tasa de terminal</span>
-                      <span>${boleto.tasaTerminal.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {boleto.cargoPlataforma > 0 && (
-                    <div className="flex justify-between text-brand-dark/70">
-                      <span>Cargo de plataforma</span>
-                      <span>${boleto.cargoPlataforma.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {resultado.ivaVisible && boleto.ivaMonto > 0 && (
-                    <div className="flex justify-between text-xs text-brand-dark/40">
-                      <span>IVA incluido en la tarifa</span>
-                      <span>${boleto.ivaMonto.toFixed(2)}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-3">
-                  <CodigoQr valor={boleto.codigoQr} />
-                  {codigosAnden[boleto.id] && codigosAnden[boleto.id].estadoTasa !== "no_aplica" && (
-                    <p className="mt-1 text-center text-xs font-semibold text-brand-dark/60">Tu boleto · se valida al abordar</p>
-                  )}
-                </div>
-                {codigosAnden[boleto.id] && (
-                  <AccesoAnden estado={codigosAnden[boleto.id].estadoTasa} codigo={codigosAnden[boleto.id].codigoTasa} />
+      <main className="flex flex-1 flex-col items-center gap-4 px-5 pb-10 pt-6 md:gap-[18px] md:px-16 md:pt-10">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-bg px-3.5 py-1.5 text-[13px] font-semibold text-ok">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12l5 5L20 7" />
+          </svg>
+          Pago confirmado
+        </span>
+        <h1 className="text-center text-2xl font-semibold tracking-[-0.02em] md:text-[34px]">
+          {hayVarios ? "¡Listo, tus boletos están confirmados!" : "¡Listo, tu boleto está confirmado!"}
+        </h1>
+        <p className="-mt-2 text-center text-sm text-muted-2 md:mb-1.5">
+          {!tokenValido() && telefonoContacto
+            ? `Te lo enviamos por WhatsApp al ${telefonoContacto}. `
+            : ""}
+          Muestra estos códigos al abordar. También puedes tomarles una captura de pantalla.
+        </p>
+
+        {/* Cada boleto se agrupa por SU viaje (ruta, fecha y hora): en una compra de
+            ida y vuelta los boletos son de viajes distintos, así que los datos del
+            viaje no pueden tomarse del primer boleto. Si hay dos viajes, el más
+            temprano es la IDA y el otro la VUELTA. */}
+        <div className="flex w-full flex-col items-center gap-6">
+          {gruposConfirmados.map((grupo, indiceGrupo) => {
+            const viaje = grupo.boletos[0];
+            const salida = new Date(viaje.horaSalidaProgramada);
+            const diaCorto = salida
+              .toLocaleDateString("es-EC", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Guayaquil" })
+              .replace(".", "");
+            const horaSalida = salida.toLocaleTimeString("es-EC", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Guayaquil" });
+            return (
+              <section key={grupo.clave} className="flex w-full flex-col items-center gap-4 lg:max-w-[980px]">
+                {esIdaYVueltaConfirmada && (
+                  <span className="kb-tag kb-tag--yellow self-start text-xs tracking-wide">
+                    {indiceGrupo === 0 ? "IDA" : "VUELTA"}
+                  </span>
                 )}
-              </div>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-          <div className="mt-4 space-y-1 rounded-lg bg-brand-light/30 px-4 py-3 text-left text-sm">
+                {grupo.boletos.map((boleto) => {
+                  const infoAnden = codigosAnden[boleto.id];
+                  const textoCodigo = boleto.codigoQr.length <= 20 ? boleto.codigoQr : null;
+                  return (
+                    <article key={boleto.codigoQr} className="kb-ticket w-full max-w-[520px] lg:max-w-none lg:grid lg:grid-cols-[1fr_1fr_250px]">
+                      <div className="kb-ticket__top flex flex-col gap-4 lg:justify-between lg:gap-5 lg:p-[26px]">
+                        <div className="flex items-center justify-between">
+                          <LogoKlumbus className="h-[22px] lg:h-6" />
+                          <span className="text-xs font-semibold text-kbyellow">
+                            {viaje.cooperativaNombre}
+                            {viaje.unidadIdentificador ? ` · ${viaje.unidadIdentificador}` : ""}
+                          </span>
+                        </div>
+                        <div className="kb-timeline">
+                          <div>
+                            <div className="text-[26px] font-semibold tabular-nums lg:text-[30px]">{horaSalida}</div>
+                            <div className="kb-timeline__city !text-ondark">{viaje.rutaOrigenCiudad}</div>
+                          </div>
+                          <div className="flex flex-col items-center gap-[3px] text-[11px] text-ondark lg:text-xs">
+                            <span className="capitalize">{diaCorto}</span>
+                            <div className="kb-timeline__line w-full [&::after]:!border-[#4A4F5C] [&::before]:!border-[#4A4F5C]">
+                              <span className="kb-timeline__bus shrink-0 !bg-kbyellow">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B0D12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <rect x="4" y="3" width="16" height="15" rx="3" />
+                                  <path d="M4 11h16M8 21v-3M16 21v-3" />
+                                  <circle cx="8" cy="14.5" r=".6" />
+                                  <circle cx="16" cy="14.5" r=".6" />
+                                </svg>
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-semibold leading-tight lg:text-[22px]">{viaje.rutaDestinoCiudad}</div>
+                            <div className="kb-timeline__city !text-ondark">Destino</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-x-2.5 gap-y-3.5 p-5 lg:grid-cols-2 lg:content-center lg:gap-x-3.5 lg:gap-y-4 lg:p-[26px]">
+                        <div className="col-span-2 min-w-0 lg:col-span-2">
+                          <span className="block text-[11px] text-muted-3">Pasajero</span>
+                          <b className="text-sm font-semibold lg:text-[15px]">{boleto.compradorNombre}</b>
+                        </div>
+                        <div className="min-w-0 lg:order-3">
+                          <span className="block text-[11px] text-muted-3">Asiento</span>
+                          <b className="text-sm font-semibold lg:text-[15px]">
+                            {boleto.numeroAsiento}
+                            {boleto.esVip && <span className="kb-tag kb-tag--yellow ml-1.5 align-middle">VIP</span>}
+                          </b>
+                        </div>
+                        <div className="col-span-2 min-w-0 lg:col-span-1 lg:order-2">
+                          <span className="block text-[11px] text-muted-3">Documento</span>
+                          <b className="text-sm font-semibold tabular-nums lg:text-[15px]">{boleto.compradorDocumento ?? "—"}</b>
+                        </div>
+                        <div className="min-w-0 lg:order-4">
+                          <span className="block text-[11px] text-muted-3">Tarifa</span>
+                          <b className="text-sm font-semibold tabular-nums lg:text-[15px]">${boleto.precioPagado.toFixed(2)}</b>
+                        </div>
+                        {boleto.tasaTerminal > 0 && (
+                          <div className="col-span-2 min-w-0 lg:order-5 lg:col-span-1">
+                            <span className="block text-[11px] text-muted-3">Tasa de terminal</span>
+                            <b className="text-sm font-semibold tabular-nums lg:text-[15px]">${boleto.tasaTerminal.toFixed(2)}</b>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="kb-ticket__cut lg:hidden" />
+                      <div className="relative flex flex-col items-center gap-2 px-5 pb-5 pt-1 lg:justify-center lg:gap-2.5 lg:border-l-2 lg:border-dashed lg:border-line-2 lg:p-[22px]">
+                        <span className="absolute -left-[13px] -top-3 hidden h-6 w-6 rounded-full bg-kbbg lg:block" aria-hidden="true" />
+                        <span className="absolute -bottom-3 -left-[13px] hidden h-6 w-6 rounded-full bg-kbbg lg:block" aria-hidden="true" />
+                        <CodigoQr valor={boleto.codigoQr} />
+                        {textoCodigo && <span className="text-[13px] font-semibold tracking-[.18em]">{textoCodigo}</span>}
+                        <span className="text-xs text-muted-2">
+                          {infoAnden && infoAnden.estadoTasa !== "no_aplica" ? "Tu boleto · se valida al abordar" : "Muéstralo al subir"}
+                        </span>
+                        {infoAnden && <AccesoAnden estado={infoAnden.estadoTasa} codigo={infoAnden.codigoTasa} />}
+                      </div>
+                    </article>
+                  );
+                })}
+              </section>
+            );
+          })}
+        </div>
+
+        <div className="kb-card flex w-full max-w-[520px] flex-wrap items-center justify-between gap-3 px-5 py-4 text-sm md:px-6 md:py-[18px] lg:max-w-[980px]">
+          <div className="flex flex-wrap gap-x-7 gap-y-1 text-muted-2">
+            <span>Tarifa ${totalTarifa.toFixed(2)}</span>
+            {totalTasa > 0 && <span>Tasa de terminal ${totalTasa.toFixed(2)}</span>}
+            {totalCargo > 0 && <span>Cargo de plataforma ${totalCargo.toFixed(2)}</span>}
+            {resultado.ivaVisible && totalIva > 0 && <span>IVA incluido en la tarifa ${totalIva.toFixed(2)}</span>}
             {!!resultado.creditoAplicado && resultado.creditoAplicado > 0 && (
-              <div className="flex justify-between text-green-700">
-                <span>Crédito aplicado</span>
-                <span>-${resultado.creditoAplicado.toFixed(2)}</span>
-              </div>
+              <span className="text-ok">Crédito aplicado -${resultado.creditoAplicado.toFixed(2)}</span>
             )}
-            <div className="flex justify-between font-semibold text-brand-dark">
-              <span>{resultado.creditoAplicado ? "Pagaste" : "Total"}</span>
-              <span>${(resultado.montoPagado ?? resultado.montoTotal)?.toFixed(2)}</span>
-            </div>
           </div>
-          <p className="mt-4 text-xs text-brand-dark/50">
-            Muestra estos códigos al abordar. También puedes tomarles una captura de pantalla.
-          </p>
-          <p className="mt-3 text-center text-sm font-semibold text-brand-dark">
-            Gracias por preferirnos 🚌
-          </p>
-          <div className="mt-6 flex flex-col gap-2">
-            <Link
-              href="/perfil?tab=boletos"
-              className="rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
-            >
-              Ver mis boletos
-            </Link>
-            <Link href="/" className="font-semibold text-brand hover:underline">
-              Volver al inicio
-            </Link>
+          <div className="flex items-center gap-3">
+            <span className="text-muted-2">{resultado.creditoAplicado ? "Pagaste" : "Total"}</span>
+            <b className="text-[22px] font-bold tabular-nums">${(resultado.montoPagado ?? resultado.montoTotal)?.toFixed(2)}</b>
           </div>
         </div>
+
+        <div className="flex w-full flex-col gap-2.5 md:w-auto md:flex-row md:gap-3">
+          <Link href="/perfil?tab=boletos" className="kb-btn kb-btn--outline">
+            Ver mis boletos
+          </Link>
+          <Link href="/" className="kb-btn kb-btn--dark">
+            Volver al inicio
+          </Link>
+        </div>
+        <p className="text-center text-sm font-semibold">Gracias por preferirnos 🚌</p>
       </main>
     );
   }
@@ -582,44 +615,116 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   if (paresAsiento.length === 0) {
     return (
       <main className="mx-auto max-w-2xl flex-1 px-4 py-16 text-center">
-        <p className="text-brand-dark">Falta elegir un asiento primero.</p>
-        <Link href={`/viajes/${viajeId}/asientos`} className="mt-4 inline-block font-semibold text-brand hover:underline">
+        <p>Falta elegir un asiento primero.</p>
+        <Link href={`/viajes/${viajeId}/asientos`} className="mt-4 inline-block font-semibold underline">
           Elegir asiento
         </Link>
       </main>
     );
   }
 
+  // Resumen informativo que manda la pantalla de asientos (ruta, salida, cooperativa y
+  // tarifa de referencia). El total exacto lo cotiza el servidor en "Revisa antes de pagar".
+  const resumen = leerResumenViaje(searchParams);
+  const tarifaEstimada =
+    resumen.precio !== null && !esIdaYVuelta ? resumen.precio * paresAsiento.length : null;
+  const textoAsientos = esIdaYVuelta
+    ? `Ida y vuelta · ${paresAsiento.length} asientos en total`
+    : numerosAsiento.length === 1
+      ? `Asiento ${numerosAsiento[0]}`
+      : `${numerosAsiento.length} asientos: ${numerosAsiento.join(", ")}`;
+  const hayTercerPaso = !tokenValido();
+
+  const OPCIONES_PAGO = [
+    {
+      valor: "tarjeta" as const,
+      titulo: "Tarjeta de crédito o débito",
+      detalle: "Visa, Mastercard, Diners y Discover · pago inmediato",
+    },
+    {
+      valor: "deuna_en_linea" as const,
+      titulo: "DeUna",
+      detalle: "Paga desde tu app · pago inmediato",
+    },
+    ...metodosDisponibles
+      .filter((m) => m.tipo !== "tarjeta_pasarela")
+      .map((m) => ({
+        valor: m.tipo as TipoMetodoPago,
+        titulo: {
+          transferencia_bancaria: "Transferencia bancaria",
+          efectivo: "Efectivo",
+          deuna: "DeUna (pago directo a la cooperativa)",
+          payphone: "PayPhone (billetera)",
+          tarjeta_pasarela: "Tarjeta",
+        }[m.tipo],
+        detalle: "Pagas por fuera y subes tu comprobante · la cooperativa lo confirma",
+      })),
+  ] as { valor: TipoMetodoPago | "tarjeta" | "deuna_en_linea"; titulo: string; detalle: string }[];
+
+  const ICONO_METODO: Record<string, React.ReactNode> = {
+    tarjeta: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="2" y="5" width="20" height="14" rx="3" />
+        <path d="M2 10h20M6 15h4" />
+      </svg>
+    ),
+    transferencia_bancaria: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M3 10l9-6 9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 21h18" />
+      </svg>
+    ),
+    efectivo: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="2" y="6" width="20" height="12" rx="3" />
+        <circle cx="12" cy="12" r="2.5" />
+      </svg>
+    ),
+    deuna_en_linea: "DU",
+    deuna: "DU",
+    payphone: "PP",
+  };
+
+  const claseTarjetaPaso = "kb-card kb-on-white flex flex-col gap-4 p-5 md:p-6";
+  const claseNumeroPaso = "kb-step-num !h-[34px] !w-[34px] shrink-0 not-italic";
+
   return (
-    <main className="flex-1 bg-brand-light/40 px-4 py-10">
-      <div className="mx-auto max-w-md">
-        <h1 className="font-display text-xl font-bold text-brand-dark">Datos del pasajero</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
-          {esIdaYVuelta
-            ? `Ida y vuelta -- ${paresAsiento.length} asientos en total`
-            : numerosAsiento.length === 1
-              ? `Asiento ${numerosAsiento[0]}`
-              : `${numerosAsiento.length} asientos: ${numerosAsiento.join(", ")}`}
-        </p>
-        <form onSubmit={revisarCompra} className="mt-6 space-y-6">
+    <main className="flex flex-1 flex-col">
+      {/* Barra de título (diseño final). */}
+      <div className="border-b border-line bg-white">
+        <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-5 py-3.5 md:px-16 md:py-[18px]">
+          <button type="button" onClick={() => router.back()} aria-label="Volver" className="kb-btn-round shrink-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </button>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-base font-semibold md:text-xl">Datos y pago</h1>
+            <p className="text-xs text-muted-2 md:text-[13px]">{textoAsientos}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto grid w-full max-w-[1280px] flex-1 items-start gap-6 px-5 py-5 md:px-16 md:py-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]">
+        <form id="checkout-form" onSubmit={revisarCompra} className="flex min-w-0 flex-col gap-4">
           {pasajerosData.map((p, indice) => (
-            <div
-              key={p.numeroAsiento}
-              className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5"
-            >
-              {pasajerosData.length > 1 && (
-                <p className="font-display text-sm font-bold text-brand-dark">
-                  Pasajero {indice + 1} — Asiento {p.numeroAsiento}
-                  {esIdaYVuelta && (
-                    <span className="ml-2 rounded-full bg-brand-light px-2 py-0.5 text-xs font-semibold text-brand">
-                      {paresAsiento[indice]?.tramo === "ida" ? "Ida" : "Vuelta"}
-                    </span>
-                  )}
-                </p>
-              )}
+            <div key={p.numeroAsiento} className={claseTarjetaPaso}>
+              <div className="flex items-center gap-3">
+                <i className={claseNumeroPaso}>{indice === 0 ? "1" : "+"}</i>
+                <div>
+                  <b className="block text-base font-semibold md:text-[17px]">
+                    {pasajerosData.length > 1 ? `Pasajero ${indice + 1} — Asiento ${p.numeroAsiento}` : "Pasajero"}
+                    {esIdaYVuelta && (
+                      <span className="kb-tag kb-tag--yellow ml-2 align-middle">
+                        {paresAsiento[indice]?.tramo === "ida" ? "Ida" : "Vuelta"}
+                      </span>
+                    )}
+                  </b>
+                  <span className="block text-xs text-muted-2">Como aparece en el documento</span>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor={`checkout-nombres-${indice}`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                  <label htmlFor={`checkout-nombres-${indice}`} className="kb-label">
                     Nombres
                   </label>
                   <input
@@ -629,11 +734,11 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     minLength={2}
                     value={p.nombres}
                     onChange={(e) => actualizarPasajero(indice, { nombres: e.target.value })}
-                    className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                    className="kb-input"
                   />
                 </div>
                 <div>
-                  <label htmlFor={`checkout-apellidos-${indice}`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                  <label htmlFor={`checkout-apellidos-${indice}`} className="kb-label">
                     Apellidos
                   </label>
                   <input
@@ -643,63 +748,69 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     minLength={2}
                     value={p.apellidos}
                     onChange={(e) => actualizarPasajero(indice, { apellidos: e.target.value })}
-                    className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                    className="kb-input"
                   />
                 </div>
               </div>
-              <div>
-                <label htmlFor={`checkout-tipo-documento-${indice}`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-                  Tipo de documento
-                </label>
-                <select
-                  id={`checkout-tipo-documento-${indice}`}
-                  value={p.tipoDocumento}
-                  onChange={(e) => actualizarPasajero(indice, { tipoDocumento: e.target.value as DatosPasajero["tipoDocumento"] })}
-                  className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
-                >
-                  <option value="cedula">Cédula</option>
-                  <option value="pasaporte">Pasaporte</option>
-                </select>
-                <p className="mt-1 text-xs text-brand-dark/50">
-                  Cédula solo para números ecuatorianos. Turistas y extranjeros: elige Pasaporte.
-                </p>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.4fr]">
+                <div>
+                  <span id={`checkout-tipo-documento-${indice}`} className="kb-label">
+                    Documento
+                  </span>
+                  <div role="group" aria-labelledby={`checkout-tipo-documento-${indice}`} className="kb-tabs flex w-full">
+                    {(["cedula", "pasaporte"] as const).map((tipo) => (
+                      <button
+                        key={tipo}
+                        type="button"
+                        aria-pressed={p.tipoDocumento === tipo}
+                        onClick={() => actualizarPasajero(indice, { tipoDocumento: tipo })}
+                        className={`!px-2 ${p.tipoDocumento === tipo ? "is-active" : ""}`}
+                      >
+                        {tipo === "cedula" ? "Cédula" : "Pasaporte"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor={`checkout-documento-${indice}`} className="kb-label">
+                    {p.tipoDocumento === "cedula" ? "Número de cédula" : "Número de pasaporte"}
+                  </label>
+                  <input
+                    id={`checkout-documento-${indice}`}
+                    type="text"
+                    required
+                    minLength={5}
+                    maxLength={p.tipoDocumento === "cedula" ? 10 : 20}
+                    value={p.documento}
+                    onChange={(e) => {
+                      const valorLimpio =
+                        p.tipoDocumento === "cedula" ? e.target.value.replace(/\D/g, "") : e.target.value;
+                      actualizarPasajero(indice, { documento: valorLimpio });
+                    }}
+                    className="kb-input tabular-nums"
+                  />
+                </div>
+                <div className="md:col-span-2 xl:col-span-1">
+                  <label htmlFor={`checkout-tipo-tarifa-${indice}`} className="kb-label">
+                    Tipo de tarifa
+                  </label>
+                  <select
+                    id={`checkout-tipo-tarifa-${indice}`}
+                    value={p.tipoTarifa}
+                    onChange={(e) => actualizarPasajero(indice, { tipoTarifa: e.target.value as DatosPasajero["tipoTarifa"] })}
+                    className="kb-input"
+                  >
+                    {TARIFAS.map((t) => (
+                      <option key={t.valor} value={t.valor}>
+                        {t.etiqueta}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label htmlFor={`checkout-documento-${indice}`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-                  {p.tipoDocumento === "cedula" ? "Número de cédula" : "Número de pasaporte"}
-                </label>
-                <input
-                  id={`checkout-documento-${indice}`}
-                  type="text"
-                  required
-                  minLength={5}
-                  maxLength={p.tipoDocumento === "cedula" ? 10 : 20}
-                  value={p.documento}
-                  onChange={(e) => {
-                    const valorLimpio =
-                      p.tipoDocumento === "cedula" ? e.target.value.replace(/\D/g, "") : e.target.value;
-                    actualizarPasajero(indice, { documento: valorLimpio });
-                  }}
-                  className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
-                />
-              </div>
-              <div>
-                <label htmlFor={`checkout-tipo-tarifa-${indice}`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-                  Tipo de tarifa
-                </label>
-                <select
-                  id={`checkout-tipo-tarifa-${indice}`}
-                  value={p.tipoTarifa}
-                  onChange={(e) => actualizarPasajero(indice, { tipoTarifa: e.target.value as DatosPasajero["tipoTarifa"] })}
-                  className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
-                >
-                  {TARIFAS.map((t) => (
-                    <option key={t.valor} value={t.valor}>
-                      {t.etiqueta}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <p className="-mt-1 text-xs text-muted-2">
+                Cédula solo para números ecuatorianos. Turistas y extranjeros: elige Pasaporte.
+              </p>
               {esAsientoSoloMujeres(mapasPorViaje[p.viajeId], p.numeroAsiento) && (
                 <CampoSexoAsientoMujeres
                   id={`checkout-sexo-${indice}`}
@@ -708,21 +819,19 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   onCambio={(sexo) => actualizarPasajero(indice, { sexo })}
                 />
               )}
-              <div className="flex items-center gap-2 rounded-lg bg-brand-light/40 px-3 py-2.5">
+              <label htmlFor={`checkout-embarazada-${indice}`} className="flex cursor-pointer items-center gap-2.5 text-[13px]">
                 <input
                   id={`checkout-embarazada-${indice}`}
                   type="checkbox"
                   checked={p.esEmbarazada}
                   onChange={(e) => actualizarPasajero(indice, { esEmbarazada: e.target.checked })}
-                  className="h-4 w-4 rounded border-brand-light text-brand focus:ring-brand-medium"
+                  className="h-[22px] w-[22px] shrink-0 rounded-[7px]"
                 />
-                <label htmlFor={`checkout-embarazada-${indice}`} className="text-sm text-brand-dark/80">
-                  ¿Viaja embarazada? — atención preferente, no afecta el precio
-                </label>
-              </div>
+                <span>¿Viaja embarazada? — atención preferente, no afecta el precio</span>
+              </label>
               {p.tipoTarifa === "nino" && (
                 <div>
-                  <label htmlFor={`checkout-fecha-nacimiento-${indice}`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                  <label htmlFor={`checkout-fecha-nacimiento-${indice}`} className="kb-label">
                     Fecha de nacimiento
                   </label>
                   <input
@@ -730,19 +839,21 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     type="date"
                     value={p.fechaNacimiento}
                     onChange={(e) => actualizarPasajero(indice, { fechaNacimiento: e.target.value })}
-                    className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                    className="kb-input"
                   />
                 </div>
               )}
               {p.tipoTarifa === "nino" && (
-                <div className="rounded-lg bg-brand-light/30 p-4">
-                  <p className="text-sm font-semibold text-brand-dark">Autorización de viaje (RF-MENOR)</p>
-                  <p className="mt-1 text-xs text-brand-dark/70">
-                    Por ser un pasajero menor de edad, indica el adulto responsable que autoriza el viaje.
-                  </p>
-                  <div className="mt-3 space-y-3">
+                <div className="kb-alert kb-alert--info flex-col !gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-ink">Autorización de viaje (RF-MENOR)</p>
+                    <p className="mt-1 text-xs">
+                      Por ser un pasajero menor de edad, indica el adulto responsable que autoriza el viaje.
+                    </p>
+                  </div>
+                  <div className="kb-on-white flex flex-col gap-3">
                     <div>
-                      <label htmlFor={`checkout-adulto-nombre-${indice}`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                      <label htmlFor={`checkout-adulto-nombre-${indice}`} className="kb-label">
                         Nombre del adulto responsable
                       </label>
                       <input
@@ -750,11 +861,11 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                         type="text"
                         value={p.adultoResponsableNombre}
                         onChange={(e) => actualizarPasajero(indice, { adultoResponsableNombre: e.target.value })}
-                        className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                        className="kb-input"
                       />
                     </div>
                     <div>
-                      <label htmlFor={`checkout-adulto-documento-${indice}`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                      <label htmlFor={`checkout-adulto-documento-${indice}`} className="kb-label">
                         Documento del adulto responsable
                       </label>
                       <input
@@ -762,11 +873,11 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                         type="text"
                         value={p.adultoResponsableDocumento}
                         onChange={(e) => actualizarPasajero(indice, { adultoResponsableDocumento: e.target.value })}
-                        className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                        className="kb-input"
                       />
                     </div>
                     <div>
-                      <label htmlFor={`checkout-adulto-telefono-${indice}`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                      <label htmlFor={`checkout-adulto-telefono-${indice}`} className="kb-label">
                         Teléfono del adulto responsable (opcional)
                       </label>
                       <input
@@ -774,7 +885,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                         type="text"
                         value={p.adultoResponsableTelefono}
                         onChange={(e) => actualizarPasajero(indice, { adultoResponsableTelefono: e.target.value })}
-                        className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                        className="kb-input"
                       />
                     </div>
                   </div>
@@ -783,95 +894,76 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
             </div>
           ))}
 
-          <div className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-            {mapa && (!mapa.permiteCancelacion || !mapa.permiteReprogramacion) && (
-              <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
-                <p className="font-semibold">Antes de confirmar el pago, lee esto:</p>
-                {!mapa.permiteCancelacion && !mapa.permiteReprogramacion ? (
-                  <p className="mt-1">
-                    Esta cooperativa no permite cambios ni devoluciones — si no viajas, pierdes el
-                    boleto completo.
-                  </p>
-                ) : (
-                  <ul className="mt-1 list-inside list-disc space-y-0.5">
-                    {!mapa.permiteCancelacion && <li>No podrás cancelar este boleto.</li>}
-                    {!mapa.permiteReprogramacion && <li>No podrás reprogramar este boleto.</li>}
-                  </ul>
-                )}
-              </div>
-            )}
-            <fieldset>
-              <legend className="mb-2 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-                Cómo quieres pagar
-              </legend>
-              <div className="space-y-2">
-                {(
-                  [
-                    {
-                      valor: "tarjeta" as const,
-                      titulo: "Tarjeta de crédito o débito",
-                      detalle: "Visa, Mastercard, Diners y Discover · pago inmediato",
-                    },
-                    {
-                      valor: "deuna_en_linea" as const,
-                      titulo: "DeUna",
-                      detalle: "Paga desde tu app · pago inmediato",
-                    },
-                    ...metodosDisponibles
-                      .filter((m) => m.tipo !== "tarjeta_pasarela")
-                      .map((m) => ({
-                        valor: m.tipo as TipoMetodoPago,
-                        titulo: {
-                          transferencia_bancaria: "Transferencia bancaria",
-                          efectivo: "Efectivo",
-                          deuna: "DeUna (pago directo a la cooperativa)",
-                          payphone: "PayPhone (billetera)",
-                          tarjeta_pasarela: "Tarjeta",
-                        }[m.tipo],
-                        detalle: "Pagas por fuera y subes tu comprobante · la cooperativa lo confirma",
-                      })),
-                  ] as { valor: TipoMetodoPago | "tarjeta" | "deuna_en_linea"; titulo: string; detalle: string }[]
-                ).map((opcion) => (
-                  <label
-                    key={opcion.valor}
-                    className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition ${
-                      metodoElegido === opcion.valor
-                        ? "border-brand bg-brand-light/40 ring-1 ring-brand"
-                        : "border-brand-light bg-white hover:bg-brand-light/20"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="checkout-metodo-pago"
-                      value={opcion.valor}
-                      checked={metodoElegido === opcion.valor}
-                      onChange={() => setMetodoElegido(opcion.valor)}
-                      className="mt-1"
-                    />
-                    <span>
-                      <span className="block text-sm font-semibold text-brand-dark">{opcion.titulo}</span>
-                      <span className="block text-xs text-brand-dark/60">{opcion.detalle}</span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-              {!esEnLinea && (
-                <p className="mt-2 text-xs text-brand-dark/50">
-                  Pagas por fuera de la plataforma y subes tu comprobante — la cooperativa confirma
-                  tu{pasajerosData.length > 1 ? "s boletos" : " boleto"} después.
+          {mapa && (!mapa.permiteCancelacion || !mapa.permiteReprogramacion) && (
+            <div className="kb-alert kb-alert--info flex-col !gap-1">
+              <p className="font-semibold text-ink">Antes de confirmar el pago, lee esto:</p>
+              {!mapa.permiteCancelacion && !mapa.permiteReprogramacion ? (
+                <p>
+                  Esta cooperativa no permite cambios ni devoluciones — si no viajas, pierdes el
+                  boleto completo.
                 </p>
+              ) : (
+                <ul className="list-inside list-disc space-y-0.5">
+                  {!mapa.permiteCancelacion && <li>No podrás cancelar este boleto.</li>}
+                  {!mapa.permiteReprogramacion && <li>No podrás reprogramar este boleto.</li>}
+                </ul>
               )}
-            </fieldset>
+            </div>
+          )}
+
+          <fieldset className={claseTarjetaPaso}>
+            <legend className="sr-only">Cómo quieres pagar</legend>
+            <div className="flex items-center gap-3">
+              <i className={claseNumeroPaso} aria-hidden="true">2</i>
+              <div>
+                <b className="block text-base font-semibold md:text-[17px]">Método de pago</b>
+                <span className="block text-xs text-muted-2">Elige cómo pagar</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+              {OPCIONES_PAGO.map((opcion) => (
+                <label
+                  key={opcion.valor}
+                  className="relative flex cursor-pointer items-center gap-3 rounded-[18px] bg-white px-4 py-3.5 shadow-[inset_0_0_0_1.5px_#E9EBF0] has-[:checked]:shadow-[inset_0_0_0_2px_#0B0D12] has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-kbyellow"
+                >
+                  <input
+                    type="radio"
+                    name="checkout-metodo-pago"
+                    value={opcion.valor}
+                    checked={metodoElegido === opcion.valor}
+                    onChange={() => setMetodoElegido(opcion.valor)}
+                    className="peer sr-only"
+                  />
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-kbbg text-xs font-bold peer-checked:bg-kbyellow">
+                    {ICONO_METODO[opcion.valor] ?? ICONO_METODO.tarjeta}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">{opcion.titulo}</span>
+                    <span className="block text-xs text-muted-2">{opcion.detalle}</span>
+                  </span>
+                  <span
+                    className="h-[22px] w-[22px] shrink-0 rounded-full shadow-[inset_0_0_0_2px_#D6D9E0] peer-checked:shadow-[inset_0_0_0_7px_#0B0D12]"
+                    aria-hidden="true"
+                  />
+                </label>
+              ))}
+            </div>
+            {!esEnLinea && (
+              <p className="text-xs text-muted-2">
+                Pagas por fuera de la plataforma y subes tu comprobante — la cooperativa confirma
+                tu{pasajerosData.length > 1 ? "s boletos" : " boleto"} después.
+              </p>
+            )}
             {creditos.length > 0 && (
               <div>
-                <label htmlFor="checkout-credito" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                <label htmlFor="checkout-credito" className="kb-label">
                   Usar un crédito disponible (opcional)
                 </label>
                 <select
                   id="checkout-credito"
                   value={creditoElegidoId}
                   onChange={(e) => setCreditoElegidoId(e.target.value)}
-                  className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                  className="kb-input"
                 >
                   <option value="">No usar crédito</option>
                   {creditos.map((c) => (
@@ -880,110 +972,118 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-xs text-brand-dark/50">
+                <p className="mt-1 text-xs text-muted-2">
                   Solo se aplica si el crédito es de la misma cooperativa que este viaje.
                 </p>
               </div>
             )}
-            {FACTURACION_VISIBLE && (
-              <div className="space-y-3 rounded-lg border border-brand-dark/10 bg-brand-light/30 p-4">
-                <p className="text-sm font-semibold text-brand-dark">Datos para tu factura</p>
-                <div className="flex flex-col gap-2 text-sm text-brand-dark/80 sm:flex-row sm:gap-6">
-                  <label htmlFor="checkout-factura-modo-pasajero" className="flex items-center gap-2">
-                    <input
-                      id="checkout-factura-modo-pasajero"
-                      type="radio"
-                      name="checkout-factura-modo"
-                      checked={facturaModo === "pasajero"}
-                      onChange={() => setFacturaModo("pasajero")}
-                    />
-                    Con los datos del primer pasajero
-                  </label>
-                  <label htmlFor="checkout-factura-modo-otros" className="flex items-center gap-2">
-                    <input
-                      id="checkout-factura-modo-otros"
-                      type="radio"
-                      name="checkout-factura-modo"
-                      checked={facturaModo === "otros"}
-                      onChange={() => setFacturaModo("otros")}
-                    />
-                    Con otros datos (por ejemplo, con RUC)
-                  </label>
-                </div>
-                {facturaModo === "otros" && (
-                  <div className="space-y-3">
-                    <div>
-                      <label htmlFor="checkout-factura-tipo" className="block text-sm font-medium text-brand-dark/70">
-                        Tipo de identificación
-                      </label>
-                      <select
-                        id="checkout-factura-tipo"
-                        value={facturaTipo}
-                        onChange={(e) => setFacturaTipo(e.target.value as "cedula" | "ruc" | "pasaporte")}
-                        className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
-                      >
-                        <option value="ruc">RUC</option>
-                        <option value="cedula">Cédula</option>
-                        <option value="pasaporte">Pasaporte</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="checkout-factura-identificacion" className="block text-sm font-medium text-brand-dark/70">
-                        Número de identificación
-                      </label>
-                      <input
-                        id="checkout-factura-identificacion"
-                        value={facturaIdentificacion}
-                        onChange={(e) => setFacturaIdentificacion(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="checkout-factura-razon" className="block text-sm font-medium text-brand-dark/70">
-                        Nombre o razón social
-                      </label>
-                      <input
-                        id="checkout-factura-razon"
-                        value={facturaRazonSocial}
-                        onChange={(e) => setFacturaRazonSocial(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="checkout-factura-direccion" className="block text-sm font-medium text-brand-dark/70">
-                        Dirección (opcional)
-                      </label>
-                      <input
-                        id="checkout-factura-direccion"
-                        value={facturaDireccion}
-                        onChange={(e) => setFacturaDireccion(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
-                      />
-                    </div>
-                  </div>
-                )}
-                <div>
-                  <label htmlFor="checkout-factura-correo" className="block text-sm font-medium text-brand-dark/70">
-                    Correo para la factura
-                  </label>
+          </fieldset>
+
+          {FACTURACION_VISIBLE && (
+            <div className={claseTarjetaPaso}>
+              <p className="text-base font-semibold">Datos para tu factura</p>
+              <div className="flex flex-col gap-2 text-sm sm:flex-row sm:gap-6">
+                <label htmlFor="checkout-factura-modo-pasajero" className="flex items-center gap-2">
                   <input
-                    id="checkout-factura-correo"
-                    type="email"
-                    value={facturaCorreo}
-                    onChange={(e) => setFacturaCorreo(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
-                    placeholder={tokenValido() ? "tu@correo.com" : correoContacto || "tu@correo.com"}
+                    id="checkout-factura-modo-pasajero"
+                    type="radio"
+                    name="checkout-factura-modo"
+                    checked={facturaModo === "pasajero"}
+                    onChange={() => setFacturaModo("pasajero")}
                   />
+                  Con los datos del primer pasajero
+                </label>
+                <label htmlFor="checkout-factura-modo-otros" className="flex items-center gap-2">
+                  <input
+                    id="checkout-factura-modo-otros"
+                    type="radio"
+                    name="checkout-factura-modo"
+                    checked={facturaModo === "otros"}
+                    onChange={() => setFacturaModo("otros")}
+                  />
+                  Con otros datos (por ejemplo, con RUC)
+                </label>
+              </div>
+              {facturaModo === "otros" && (
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <label htmlFor="checkout-factura-tipo" className="kb-label">
+                      Tipo de identificación
+                    </label>
+                    <select
+                      id="checkout-factura-tipo"
+                      value={facturaTipo}
+                      onChange={(e) => setFacturaTipo(e.target.value as "cedula" | "ruc" | "pasaporte")}
+                      className="kb-input"
+                    >
+                      <option value="ruc">RUC</option>
+                      <option value="cedula">Cédula</option>
+                      <option value="pasaporte">Pasaporte</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="checkout-factura-identificacion" className="kb-label">
+                      Número de identificación
+                    </label>
+                    <input
+                      id="checkout-factura-identificacion"
+                      value={facturaIdentificacion}
+                      onChange={(e) => setFacturaIdentificacion(e.target.value)}
+                      className="kb-input"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="checkout-factura-razon" className="kb-label">
+                      Nombre o razón social
+                    </label>
+                    <input
+                      id="checkout-factura-razon"
+                      value={facturaRazonSocial}
+                      onChange={(e) => setFacturaRazonSocial(e.target.value)}
+                      className="kb-input"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="checkout-factura-direccion" className="kb-label">
+                      Dirección (opcional)
+                    </label>
+                    <input
+                      id="checkout-factura-direccion"
+                      value={facturaDireccion}
+                      onChange={(e) => setFacturaDireccion(e.target.value)}
+                      className="kb-input"
+                    />
+                  </div>
+                </div>
+              )}
+              <div>
+                <label htmlFor="checkout-factura-correo" className="kb-label">
+                  Correo para la factura
+                </label>
+                <input
+                  id="checkout-factura-correo"
+                  type="email"
+                  value={facturaCorreo}
+                  onChange={(e) => setFacturaCorreo(e.target.value)}
+                  className="kb-input"
+                  placeholder={tokenValido() ? "tu@correo.com" : correoContacto || "tu@correo.com"}
+                />
+              </div>
+            </div>
+          )}
+
+          {hayTercerPaso && (
+            <div className={claseTarjetaPaso}>
+              <div className="flex items-center gap-3">
+                <i className={claseNumeroPaso} aria-hidden="true">3</i>
+                <div>
+                  <b className="block text-base font-semibold md:text-[17px]">¿A dónde enviamos tu boleto?</b>
+                  <span className="block text-xs text-muted-2">Compras sin crear cuenta -- solo necesitamos donde enviarte tu boleto</span>
                 </div>
               </div>
-            )}
-            {!tokenValido() && (
-              <div className="space-y-3 rounded-lg border border-brand-dark/10 bg-brand-light/30 p-4">
-                <p className="text-sm font-semibold text-brand-dark">
-                  Compras sin crear cuenta -- solo necesitamos donde enviarte tu boleto
-                </p>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
-                  <label htmlFor="checkout-invitado-telefono" className="block text-sm font-medium text-brand-dark/70">
+                  <label htmlFor="checkout-invitado-telefono" className="kb-label">
                     Telefono (para WhatsApp)
                   </label>
                   <input
@@ -992,12 +1092,12 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     maxLength={10}
                     value={telefonoContacto}
                     onChange={(e) => setTelefonoContacto(e.target.value.replace(/\D/g, ""))}
-                    className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
+                    className="kb-input tabular-nums"
                     placeholder="0991234567"
                   />
                 </div>
                 <div>
-                  <label htmlFor="checkout-invitado-correo" className="block text-sm font-medium text-brand-dark/70">
+                  <label htmlFor="checkout-invitado-correo" className="kb-label">
                     Correo (opcional si ya diste telefono)
                   </label>
                   <input
@@ -1005,102 +1105,142 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     type="email"
                     value={correoContacto}
                     onChange={(e) => setCorreoContacto(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-brand-dark/20 px-3 py-2 text-sm"
+                    className="kb-input"
                     placeholder="tu@correo.com"
                   />
                 </div>
-                <label htmlFor="checkout-invitado-terminos" className="flex items-start gap-2 text-sm text-brand-dark/70">
-                  <input
-                    id="checkout-invitado-terminos"
-                    type="checkbox"
-                    checked={aceptoTerminos}
-                    onChange={(e) => setAceptoTerminos(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-brand-dark/20 text-brand focus:ring-brand-medium"
-                  />
-                  <span>
-                    Acepto los{" "}
-                    <Link href="/terminos" target="_blank" className="font-semibold text-brand hover:underline">
-                      Términos y Condiciones
-                    </Link>
-                  </span>
-                </label>
               </div>
-            )}
-            {error && (
-              <div className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-600 ring-1 ring-red-100">
-                <p>{error}</p>
-                {error.toLowerCase().includes("bloqueo") && (
-                  <Link
-                    href={`/viajes/${viajeId}/asientos`}
-                    className="mt-1 inline-block font-semibold text-red-700 underline"
-                  >
-                    Volver a elegir asiento
+              <label htmlFor="checkout-invitado-terminos" className="flex cursor-pointer items-center gap-2.5 text-[13px]">
+                <input
+                  id="checkout-invitado-terminos"
+                  type="checkbox"
+                  checked={aceptoTerminos}
+                  onChange={(e) => setAceptoTerminos(e.target.checked)}
+                  className="h-[22px] w-[22px] shrink-0 rounded-[7px]"
+                />
+                <span>
+                  Acepto los{" "}
+                  <Link href="/terminos" target="_blank" className="font-semibold underline">
+                    Términos y Condiciones
                   </Link>
-                )}
-              </div>
+                </span>
+              </label>
+            </div>
+          )}
+
+          {error && (
+            <div className="kb-alert kb-alert--error flex-col !gap-1">
+              <p className="font-medium">{error}</p>
+              {error.toLowerCase().includes("bloqueo") && (
+                <Link href={`/viajes/${viajeId}/asientos`} className="inline-block font-semibold underline">
+                  Volver a elegir asiento
+                </Link>
+              )}
+            </div>
+          )}
+        </form>
+
+        {/* PC: resumen negro a la derecha, con la acción principal. */}
+        <aside className="hidden md:block lg:sticky lg:top-24">
+          <div className="flex flex-col gap-3.5 rounded-card bg-ink p-6 text-white">
+            <span className="text-xs font-semibold uppercase tracking-[.08em] text-kbyellow">Resumen</span>
+            <b className="text-[22px] font-semibold leading-tight">
+              {resumen.origen && resumen.destino && !esIdaYVuelta ? `${resumen.origen} → ${resumen.destino}` : "Tu compra"}
+            </b>
+            <span className="text-[13px] text-ondark">
+              {!esIdaYVuelta && resumen.lineaSalida && (
+                <>
+                  {resumen.lineaSalida}
+                  <br />
+                </>
+              )}
+              {!esIdaYVuelta && resumen.cooperativa && (
+                <>
+                  {resumen.cooperativa}
+                  <br />
+                </>
+              )}
+              {textoAsientos}
+            </span>
+            {tarifaEstimada !== null && (
+              <>
+                <hr className="h-px border-0 bg-ink-3" />
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="text-ondark">Tarifa</span>
+                  <b className="text-[26px] font-bold tabular-nums">${tarifaEstimada.toFixed(2)}</b>
+                </div>
+                <span className="-mt-2 text-xs text-ondark">El total exacto, con tasas y descuentos, lo ves al revisar.</span>
+              </>
             )}
-            <button
-              type="submit"
-              disabled={procesando}
-              className="w-full rounded-lg bg-brand-amber px-6 py-3 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
-            >
+            <button type="submit" form="checkout-form" disabled={procesando} className="kb-btn kb-btn--primary w-full">
               {procesando ? "Calculando..." : "Revisar y pagar"}
             </button>
             {infoPasarela?.modoPrueba !== false && (
-              <p className="text-center text-xs text-brand-dark/40">
+              <p className="text-center text-xs text-ondark">
                 Pago de prueba — todavía no está conectada una pasarela real.
               </p>
             )}
           </div>
-        </form>
+        </aside>
+      </div>
+
+      {/* Celular: total y botón fijos abajo. */}
+      <div className="kb-sheet z-40 mt-auto">
+        <div className="min-w-0 flex-1">
+          <span className="block truncate text-xs text-muted-2">
+            {tarifaEstimada !== null ? "Tarifa estimada" : textoAsientos}
+          </span>
+          {tarifaEstimada !== null && <b className="text-[22px] font-bold tabular-nums">${tarifaEstimada.toFixed(2)}</b>}
+        </div>
+        <button type="submit" form="checkout-form" disabled={procesando} className="kb-btn kb-btn--primary shrink-0 px-6">
+          {procesando ? "Calculando..." : "Revisar y pagar"}
+        </button>
       </div>
 
       {cotizacion && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="font-display text-lg font-bold text-brand-dark">Revisa antes de pagar</h2>
-            <p className="mt-1 text-sm text-brand-dark/70">
+        <div className="kb-modal-bg" role="dialog" aria-modal="true" aria-labelledby="checkout-revision-titulo">
+          <div className="kb-modal">
+            <h2 id="checkout-revision-titulo" className="text-lg font-semibold">
+              Revisa antes de pagar
+            </h2>
+            <p className="-mt-2 text-sm text-muted-2">
               Método: {metodoElegido === "tarjeta" ? "Tarjeta de crédito o débito" : metodoElegido === "deuna_en_linea" ? "DeUna" : metodoElegido === "transferencia_bancaria" ? "Transferencia" : metodoElegido === "efectivo" ? "Efectivo" : metodoElegido === "deuna" ? "DeUna (pago directo a la cooperativa)" : "PayPhone"}
             </p>
-            <div className="mt-3 space-y-1 rounded-lg bg-brand-light/30 px-4 py-3 text-sm">
-              <div className="flex justify-between text-brand-dark/70">
+            <div className="flex flex-col gap-2 rounded-ctrl bg-kbbg px-4 py-3.5 text-sm">
+              <div className="flex justify-between text-muted-2">
                 <span>Tarifas</span>
-                <span>${cotizacion.montoTarifasCooperativa.toFixed(2)}</span>
+                <span className="tabular-nums">${cotizacion.montoTarifasCooperativa.toFixed(2)}</span>
               </div>
               {cotizacion.montoTasaTerminal > 0 && (
-                <div className="flex justify-between text-brand-dark/70">
+                <div className="flex justify-between text-muted-2">
                   <span>Tasa de terminal</span>
-                  <span>${cotizacion.montoTasaTerminal.toFixed(2)}</span>
+                  <span className="tabular-nums">${cotizacion.montoTasaTerminal.toFixed(2)}</span>
                 </div>
               )}
               {cotizacion.montoCargoPlataforma > 0 && (
-                <div className="flex justify-between text-brand-dark/70">
+                <div className="flex justify-between text-muted-2">
                   <span>Cargo de plataforma</span>
-                  <span>${cotizacion.montoCargoPlataforma.toFixed(2)}</span>
+                  <span className="tabular-nums">${cotizacion.montoCargoPlataforma.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between border-t border-brand-dark/10 pt-1 font-semibold text-brand-dark">
+              <div className="flex items-center justify-between border-t border-line-2 pt-2 font-semibold">
                 <span>Total a pagar</span>
-                <span>${cotizacion.montoTotal.toFixed(2)}</span>
+                <span className="text-xl font-bold tabular-nums">${cotizacion.montoTotal.toFixed(2)}</span>
               </div>
             </div>
-            {error && <p className="mt-2 text-sm font-medium text-red-600">{error}</p>}
-            <div className="mt-5 flex gap-3">
+            {error && <p className="kb-alert kb-alert--error">{error}</p>}
+            <div className="kb-modal__actions">
               <button
                 onClick={() => {
                   setCotizacion(null);
                   setPendiente(null);
                 }}
                 disabled={procesando}
-                className="flex-1 rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+                className="kb-btn kb-btn--outline"
               >
                 Cancelar
               </button>
-              <button
-                onClick={confirmarPago}
-                disabled={procesando}
-                className="flex-1 rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-60"
-              >
+              <button onClick={confirmarPago} disabled={procesando} className="kb-btn kb-btn--primary px-4">
                 {procesando ? "Procesando..." : "Confirmar y pagar"}
               </button>
             </div>

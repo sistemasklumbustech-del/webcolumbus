@@ -6,6 +6,7 @@ import Link from "next/link";
 import { registrar } from "@/lib/api";
 import { guardarToken } from "@/lib/auth";
 import { CampoPassword } from "@/components/CampoPassword";
+import { AccesoLayout } from "@/components/AccesoLayout";
 
 /** Solo deja escribir dígitos, y corta en la cantidad exacta que pide cada documento. */
 function soloDigitos(valor: string, maximo: number) {
@@ -63,139 +64,141 @@ function FormularioRegistro() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-brand-light/40 px-4 py-16">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg ring-1 ring-black/5">
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Crear cuenta</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">Regístrate para comprar tu pasaje.</p>
+    <AccesoLayout
+      titulo="Compra más rápido"
+      destacado="con tu cuenta."
+      puntos={["Datos guardados", "Historial de boletos"]}
+    >
+      <h1 className="text-[26px] font-semibold md:text-[32px]">Crear cuenta</h1>
+      <p className="mb-3.5 mt-1 text-sm text-ondark">Regístrate para comprar tu pasaje.</p>
 
-        <form onSubmit={enviar} className="mt-6 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="registro-nombres" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-                Nombres
-              </label>
-              <input
-id="registro-nombres"
-                type="text"
-                required
-                minLength={2}
-                value={nombres}
-                onChange={(e) => setNombres(e.target.value)}
-                className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
-              />
-            </div>
-            <div>
-              <label htmlFor="registro-apellidos" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-                Apellidos
-              </label>
-              <input
-id="registro-apellidos"
-                type="text"
-                required
-                minLength={2}
-                value={apellidos}
-                onChange={(e) => setApellidos(e.target.value)}
-                className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
-              />
-            </div>
-          </div>
-
+      <form onSubmit={enviar} className="flex flex-col gap-3.5">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="registro-cedula" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="registro-nombres" className="kb-label">
+              Nombres
+            </label>
+            <input
+              id="registro-nombres"
+              type="text"
+              required
+              minLength={2}
+              value={nombres}
+              onChange={(e) => setNombres(e.target.value)}
+              placeholder="Juan Andrés"
+              className="kb-input"
+            />
+          </div>
+          <div>
+            <label htmlFor="registro-apellidos" className="kb-label">
+              Apellidos
+            </label>
+            <input
+              id="registro-apellidos"
+              type="text"
+              required
+              minLength={2}
+              value={apellidos}
+              onChange={(e) => setApellidos(e.target.value)}
+              placeholder="Gómez Pérez"
+              className="kb-input"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="registro-cedula" className="kb-label">
               Cédula
             </label>
             <input
-id="registro-cedula"
+              id="registro-cedula"
               type="text"
               inputMode="numeric"
               required
               value={cedula}
               onChange={(e) => setCedula(soloDigitos(e.target.value, 10))}
               placeholder="10 dígitos"
-              className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="kb-input tabular-nums"
             />
             {cedula.length > 0 && cedula.length < 10 && (
-              <p className="mt-1 text-xs text-brand-dark/50">{cedula.length}/10 dígitos</p>
+              <p className="mt-1 text-xs text-ondark">{cedula.length}/10 dígitos</p>
             )}
           </div>
-
           <div>
-            <label htmlFor="registro-whatsapp" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="registro-whatsapp" className="kb-label">
               WhatsApp
             </label>
             <input
-id="registro-whatsapp"
+              id="registro-whatsapp"
               type="text"
               inputMode="numeric"
               required
               value={telefono}
               onChange={(e) => setTelefono(soloDigitos(e.target.value, 10))}
-              placeholder="10 dígitos, ej. 0991234567"
-              className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              placeholder="0991234567"
+              className="kb-input tabular-nums"
             />
             {telefono.length > 0 && telefono.length < 10 && (
-              <p className="mt-1 text-xs text-brand-dark/50">{telefono.length}/10 dígitos</p>
+              <p className="mt-1 text-xs text-ondark">{telefono.length}/10 dígitos</p>
             )}
           </div>
+        </div>
 
-          <div>
-            <label htmlFor="registro-correo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-              Correo
-            </label>
-            <input
-id="registro-correo"
-              type="email"
-              required
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
-              className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
-            />
-          </div>
-          <div>
-            <label htmlFor="registro-password" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-              Contraseña (mínimo 8 caracteres)
-            </label>
-            <CampoPassword id="registro-password" value={password} onChange={setPassword} />
-          </div>
-
-          <label htmlFor="registro-terminos" className="flex items-start gap-2 text-sm text-brand-dark/70">
-            <input
-              id="registro-terminos"
-              type="checkbox"
-              checked={aceptoTerminos}
-              onChange={(e) => setAceptoTerminos(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-brand-light text-brand focus:ring-brand-medium"
-            />
-            <span>
-              Acepto los{" "}
-              <Link href="/terminos" target="_blank" className="font-semibold text-brand hover:underline">
-                Términos y Condiciones
-              </Link>
-            </span>
+        <div>
+          <label htmlFor="registro-correo" className="kb-label">
+            Correo
           </label>
+          <input
+            id="registro-correo"
+            type="email"
+            required
+            value={correo}
+            onChange={(e) => setCorreo(e.target.value)}
+            placeholder="tucorreo@ejemplo.com"
+            className="kb-input"
+          />
+        </div>
+        <div>
+          <label htmlFor="registro-password" className="kb-label">
+            Contraseña (mínimo 8 caracteres)
+          </label>
+          <CampoPassword id="registro-password" value={password} onChange={setPassword} placeholder="Mínimo 8 caracteres" />
+        </div>
 
-          {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+        <label htmlFor="registro-terminos" className="flex cursor-pointer items-center gap-2.5 text-[13px]">
+          <input
+            id="registro-terminos"
+            type="checkbox"
+            checked={aceptoTerminos}
+            onChange={(e) => setAceptoTerminos(e.target.checked)}
+            className="h-[22px] w-[22px] shrink-0 rounded-[7px]"
+          />
+          <span>
+            Acepto los{" "}
+            <Link href="/terminos" target="_blank" className="font-semibold text-kbyellow hover:underline">
+              Términos y Condiciones
+            </Link>
+          </span>
+        </label>
 
-          <button
-            type="submit"
-            disabled={cargando}
-            className="w-full rounded-lg bg-brand px-6 py-2.5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-60"
-          >
-            {cargando ? "Creando cuenta..." : "Crear cuenta"}
-          </button>
-        </form>
+        {error && <p className="kb-alert kb-alert--error">{error}</p>}
 
-        <p className="mt-4 text-center text-sm text-brand-dark/70">
-          ¿Ya tienes cuenta?{" "}
-          <Link
-            href={`/ingresar${searchParams.get("volverA") ? `?volverA=${encodeURIComponent(searchParams.get("volverA")!)}` : ""}`}
-            className="font-semibold text-brand hover:underline"
-          >
-            Inicia sesión
-          </Link>
-        </p>
-      </div>
-    </main>
+        <button type="submit" disabled={cargando} className="kb-btn kb-btn--primary w-full">
+          {cargando ? "Creando cuenta..." : "Crear cuenta"}
+        </button>
+      </form>
+
+      <p className="mt-4 text-center text-sm text-ondark">
+        ¿Ya tienes cuenta?{" "}
+        <Link
+          href={`/ingresar${searchParams.get("volverA") ? `?volverA=${encodeURIComponent(searchParams.get("volverA")!)}` : ""}`}
+          className="font-semibold text-kbyellow hover:underline"
+        >
+          Ingresar
+        </Link>
+      </p>
+    </AccesoLayout>
   );
 }
 

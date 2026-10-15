@@ -30,10 +30,10 @@ const ETIQUETA_ESTADO: Record<EstadoViajeOperacion, string> = {
 };
 
 const COLOR_ESTADO: Record<EstadoViajeOperacion, string> = {
-  programado: "bg-blue-100 text-blue-700",
-  en_curso: "bg-amber-100 text-amber-700",
-  finalizado: "bg-emerald-100 text-emerald-700",
-  cancelado: "bg-slate-100 text-slate-600",
+  programado: "kb-status--wait",
+  en_curso: "kb-status--wait",
+  finalizado: "kb-status--ok",
+  cancelado: "kb-status--off",
 };
 
 function hoyEcuador() {
@@ -71,27 +71,27 @@ function formatearFechaCorta(fecha: string) {
 }
 
 const claseCampo =
-  "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
-const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+  "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+const claseEtiqueta = "kb-label";
 
 function Tarjeta({ etiqueta, valor, detalle }: { etiqueta: string; valor: React.ReactNode; detalle?: string }) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/50">{etiqueta}</p>
-      <p className="mt-1 font-display text-2xl font-extrabold text-brand-dark">{valor}</p>
-      {detalle && <p className="mt-0.5 text-xs text-brand-dark/50">{detalle}</p>}
+    <div className="kb-card kb-on-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">{etiqueta}</p>
+      <p className="mt-1 text-2xl font-extrabold text-brand-dark">{valor}</p>
+      {detalle && <p className="mt-0.5 text-xs text-muted-2">{detalle}</p>}
     </div>
   );
 }
 
 function BarraOcupacion({ porcentaje }: { porcentaje: number }) {
-  const color = porcentaje >= 70 ? "bg-emerald-500" : porcentaje >= 35 ? "bg-amber-500" : "bg-red-400";
+  const color = porcentaje >= 70 ? "bg-ok" : porcentaje >= 35 ? "bg-kbyellow" : "bg-kberror";
   return (
     <div className="flex items-center gap-2">
-      <div className="h-2 w-16 overflow-hidden rounded-full bg-brand-light" aria-hidden="true">
+      <div className="h-2 w-16 overflow-hidden rounded-full bg-kbbg" aria-hidden="true">
         <div className={`h-full ${color}`} style={{ width: `${Math.min(100, porcentaje)}%` }} />
       </div>
-      <span className="text-xs font-semibold text-brand-dark/70">{porcentaje}%</span>
+      <span className="text-xs font-semibold text-muted-2">{porcentaje}%</span>
     </div>
   );
 }
@@ -218,7 +218,7 @@ export default function OperacionPage() {
   const esUnDia = aplicados.desde === aplicados.hasta;
   const atajo = (activo: boolean) =>
     `rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-      activo ? "border-brand bg-brand text-white" : "border-brand-light bg-white text-brand-dark/70 hover:bg-brand-light/40"
+      activo ? "border-ink bg-ink text-white" : "border-line bg-white text-muted-2 hover:bg-kbbg"
     }`;
   const hayAlertas =
     !!alertas &&
@@ -234,8 +234,8 @@ export default function OperacionPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold text-brand-dark">Operación</h1>
-          <p className="mt-1 max-w-2xl text-sm text-brand-dark/70">
+          <h1 className="text-2xl font-bold text-brand-dark">Operación</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-2">
             Cómo va la operación de todas las cooperativas: viajes, ocupación, ventas y lo que necesita atención.
           </p>
         </div>
@@ -243,24 +243,24 @@ export default function OperacionPage() {
           type="button"
           onClick={exportar}
           disabled={exportando || viajes === null || viajes.total === 0}
-          className="rounded-lg border border-brand-light bg-white px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40 disabled:opacity-40"
+          className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm disabled:opacity-40"
         >
           {exportando ? "Exportando..." : "Exportar CSV"}
         </button>
       </div>
 
       {/* Alertas del momento: no dependen del rango de fechas. */}
-      <section aria-label="Alertas operativas" className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-        <h2 className="font-display text-base font-bold text-brand-dark">Requiere atención ahora</h2>
-        {alertas === null && <p className="mt-2 text-sm text-brand-dark/50">Cargando...</p>}
+      <section aria-label="Alertas operativas" className="kb-card kb-on-white p-5">
+        <h2 className="text-base font-bold text-brand-dark">Requiere atención ahora</h2>
+        {alertas === null && <p className="mt-2 text-sm text-muted-2">Cargando...</p>}
         {alertas !== null && !hayAlertas && (
-          <p className="mt-2 text-sm text-emerald-700">✓ Todo en orden: no hay alertas por ahora.</p>
+          <p className="mt-2 text-sm text-ok">✓ Todo en orden: no hay alertas por ahora.</p>
         )}
         {alertas !== null && hayAlertas && (
           <div className="mt-3 space-y-3 text-sm">
             <div className="flex flex-wrap gap-2">
               {alertas.pagosPendientes.cantidad > 0 && (
-                <span className="rounded-full bg-amber-100 px-3 py-1 font-semibold text-amber-800">
+                <span className="kb-status kb-status--wait">
                   {alertas.pagosPendientes.cantidad} pago(s) manual(es) sin confirmar
                   {alertas.pagosPendientes.masAntiguoHoras !== null
                     ? ` · el más antiguo espera ${alertas.pagosPendientes.masAntiguoHoras} h`
@@ -268,7 +268,7 @@ export default function OperacionPage() {
                 </span>
               )}
               {alertas.reclamos.abiertos > 0 && (
-                <span className="rounded-full bg-red-100 px-3 py-1 font-semibold text-red-700">
+                <span className="kb-status kb-status--error">
                   {alertas.reclamos.abiertos} reclamo(s) abierto(s)
                   {alertas.reclamos.enRevision > 0 ? ` · ${alertas.reclamos.enRevision} en revisión` : ""}
                 </span>
@@ -277,11 +277,11 @@ export default function OperacionPage() {
             {alertas.viajesAtrasados.length > 0 && (
               <div>
                 <p className="font-semibold text-brand-dark">Viajes que ya debieron salir y siguen &quot;programados&quot;</p>
-                <ul className="mt-1 space-y-1 text-brand-dark/80">
+                <ul className="mt-1 space-y-1 text-ink">
                   {alertas.viajesAtrasados.map((v) => (
                     <li key={v.viajeId} className="break-words">
                       {v.cooperativa} · {v.ruta} · salida {v.horaSalida} ·{" "}
-                      <span className="font-semibold text-red-700">{v.minutosAtraso} min de atraso</span>
+                      <span className="font-semibold text-kberror">{v.minutosAtraso} min de atraso</span>
                     </li>
                   ))}
                 </ul>
@@ -290,7 +290,7 @@ export default function OperacionPage() {
             {alertas.viajesPendientesLlegada.length > 0 && (
               <div>
                 <p className="font-semibold text-brand-dark">En curso, esperando que la cooperativa confirme la llegada</p>
-                <ul className="mt-1 space-y-1 text-brand-dark/80">
+                <ul className="mt-1 space-y-1 text-ink">
                   {alertas.viajesPendientesLlegada.map((v) => (
                     <li key={v.viajeId} className="break-words">
                       {v.cooperativa} · {v.ruta} · salida {v.horaSalida}
@@ -302,7 +302,7 @@ export default function OperacionPage() {
             {alertas.viajesBajaOcupacion.length > 0 && (
               <div>
                 <p className="font-semibold text-brand-dark">Salen en las próximas 12 horas con menos del 20 % ocupado</p>
-                <ul className="mt-1 space-y-1 text-brand-dark/80">
+                <ul className="mt-1 space-y-1 text-ink">
                   {alertas.viajesBajaOcupacion.map((v) => (
                     <li key={v.viajeId} className="break-words">
                       {v.cooperativa} · {v.ruta} · salida {v.horaSalida} · {v.ocupacion}% ocupado
@@ -317,7 +317,7 @@ export default function OperacionPage() {
 
       <form
         onSubmit={filtrar}
-        className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5"
+        className="space-y-4 kb-card kb-on-white p-5"
       >
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => aplicarRango(hoy, hoy)} className={atajo(aplicados.desde === hoy && aplicados.hasta === hoy)}>
@@ -406,17 +406,17 @@ export default function OperacionPage() {
             </select>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             type="submit"
-            className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark sm:flex-none"
+            className="flex-1 kb-btn kb-btn--dark !h-10 !px-4 !text-sm sm:flex-none"
           >
             Aplicar filtros
           </button>
           <button
             type="button"
             onClick={limpiar}
-            className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40"
+            className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
           >
             Limpiar
           </button>
@@ -424,10 +424,10 @@ export default function OperacionPage() {
       </form>
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">{error}</div>
+        <div className="kb-alert kb-alert--error">{error}</div>
       )}
 
-      <p className="text-sm font-semibold text-brand-dark/70">
+      <p className="text-sm font-semibold text-muted-2">
         {esUnDia ? formatearFechaCorta(aplicados.desde ?? hoy) : `Del ${formatearFechaCorta(aplicados.desde ?? hoy)} al ${formatearFechaCorta(aplicados.hasta ?? hoy)}`}
       </p>
 
@@ -454,17 +454,17 @@ export default function OperacionPage() {
         />
       </div>
 
-      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="border-b border-black/5 px-6 py-4">
-          <h2 className="font-display text-base font-bold text-brand-dark">Rutas con más ventas</h2>
+      <section className="overflow-hidden kb-card kb-on-white">
+        <div className="border-b border-line px-6 py-4">
+          <h2 className="text-base font-bold text-brand-dark">Rutas con más ventas</h2>
         </div>
         {rutas !== null && rutas.length === 0 && !cargando && (
-          <p className="px-6 py-6 text-center text-sm text-brand-dark/50">No hay viajes en este período.</p>
+          <p className="px-6 py-6 text-center text-sm text-muted-2">No hay viajes en este período.</p>
         )}
         {rutas !== null && rutas.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <table className="kb-table min-w-[640px]">
+              <thead>
                 <tr>
                   <th className="px-4 py-3">Ruta</th>
                   <th className="px-4 py-3">Cooperativa</th>
@@ -474,13 +474,13 @@ export default function OperacionPage() {
                   <th className="px-4 py-3 text-right">Ingresos</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/5">
+              <tbody>
                 {rutas.map((r) => (
                   <tr key={r.rutaId}>
                     <td className="px-4 py-3 font-medium text-brand-dark">{r.ruta}</td>
-                    <td className="px-4 py-3 text-brand-dark/70">{r.cooperativa}</td>
-                    <td className="px-4 py-3 text-right text-brand-dark/70">{r.viajes}</td>
-                    <td className="px-4 py-3 text-right text-brand-dark/70">
+                    <td className="px-4 py-3 text-muted-2">{r.cooperativa}</td>
+                    <td className="px-4 py-3 text-right text-muted-2">{r.viajes}</td>
+                    <td className="px-4 py-3 text-right text-muted-2">
                       {r.vendidos}/{r.capacidad}
                     </td>
                     <td className="px-4 py-3">
@@ -495,19 +495,19 @@ export default function OperacionPage() {
         )}
       </section>
 
-      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="border-b border-black/5 px-6 py-4">
-          <h2 className="font-display text-base font-bold text-brand-dark">
+      <section className="overflow-hidden kb-card kb-on-white">
+        <div className="border-b border-line px-6 py-4">
+          <h2 className="text-base font-bold text-brand-dark">
             {viajes === null ? "Cargando..." : `${viajes.total} viaje(s)`}
           </h2>
         </div>
         {viajes !== null && viajes.filas.length === 0 && !cargando && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">No hay viajes con estos filtros.</p>
+          <p className="px-6 py-8 text-center text-sm text-muted-2">No hay viajes con estos filtros.</p>
         )}
         {viajes !== null && viajes.filas.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] text-left text-sm">
-              <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <table className="kb-table min-w-[820px]">
+              <thead>
                 <tr>
                   <th className="px-4 py-3">Salida</th>
                   <th className="px-4 py-3">Cooperativa</th>
@@ -519,21 +519,21 @@ export default function OperacionPage() {
                   <th className="px-4 py-3 text-right">Ingresos</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/5">
+              <tbody>
                 {viajes.filas.map((v) => (
                   <tr key={v.viajeId}>
-                    <td className="whitespace-nowrap px-4 py-3 text-brand-dark/70">
+                    <td className="whitespace-nowrap px-4 py-3 text-muted-2">
                       {formatearFechaCorta(v.fechaSalida)} · {v.horaSalida}
                     </td>
                     <td className="px-4 py-3 font-medium text-brand-dark">{v.cooperativa}</td>
-                    <td className="px-4 py-3 text-brand-dark/80">{v.ruta}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-brand-dark/70">{v.placa}</td>
+                    <td className="px-4 py-3 text-ink">{v.ruta}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted-2">{v.placa}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLOR_ESTADO[v.estado]}`}>
+                      <span className={`kb-status ${COLOR_ESTADO[v.estado]}`}>
                         {ETIQUETA_ESTADO[v.estado]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-brand-dark/70">
+                    <td className="px-4 py-3 text-right text-muted-2">
                       {v.vendidos}/{v.capacidad}
                     </td>
                     <td className="px-4 py-3">
@@ -547,7 +547,7 @@ export default function OperacionPage() {
           </div>
         )}
         {viajes !== null && viajes.total > 0 && (
-          <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+          <div className="flex items-center justify-between border-t border-line px-6 py-3 text-sm text-muted-2">
             <span>
               Página {pagina} de {totalPaginas}
             </span>
@@ -555,14 +555,14 @@ export default function OperacionPage() {
               <button
                 onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 disabled={pagina <= 1 || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
                 disabled={pagina >= totalPaginas || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Siguiente
               </button>

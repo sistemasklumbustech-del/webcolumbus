@@ -25,10 +25,10 @@ import { obtenerToken, decodificarToken } from "@/lib/auth";
 import { Toast } from "@/components/Toast";
 
 const ESTADO_ESTILO: Record<string, string> = {
-  programado: "bg-brand-light text-brand",
-  en_curso: "bg-amber-100 text-amber-700",
+  programado: "bg-kbbg text-brand",
+  en_curso: "kb-status--wait",
   finalizado: "bg-gray-100 text-gray-600",
-  cancelado: "bg-red-100 text-red-700",
+  cancelado: "kb-status--error",
 };
 
 function formatearDolares(monto: number) {
@@ -118,38 +118,38 @@ function ModalAccionesViaje({
   }
 
   const claseCampo =
-    "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+    "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
   const claseBoton =
-    "rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50";
-  const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+    "kb-btn kb-btn--primary !h-11 !px-5 !text-sm";
+  const claseEtiqueta = "kb-label";
   const avisoGuardado = (seccion: string) =>
     confirmacion?.seccion === seccion ? (
-      <p className="text-xs font-semibold text-emerald-700">✓ {confirmacion.texto}</p>
+      <p className="text-xs font-semibold text-ok">✓ {confirmacion.texto}</p>
     ) : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6" onMouseDown={onCerrar}>
+    <div className="kb-modal-bg py-6" onMouseDown={onCerrar}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Acciones del viaje"
         onMouseDown={(e) => e.stopPropagation()}
-        className="max-h-full w-full max-w-md space-y-5 overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+        className="max-h-full w-full max-w-md space-y-5 overflow-y-auto kb-card kb-on-white p-6 shadow-xl"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="font-display text-lg font-bold text-brand-dark">{viaje.rutaNombre}</h2>
-            <p className="text-sm text-brand-dark/70">
+            <h2 className="text-lg font-bold text-brand-dark">{viaje.rutaNombre}</h2>
+            <p className="text-sm text-muted-2">
               {viaje.fechaSalida} · {horaActual} · {viaje.unidadPlaca}
             </p>
-            <p className="text-sm text-brand-dark/70">
-              Conductor: {viaje.conductorNombre ?? <span className="text-brand-dark/40">sin asignar</span>}
+            <p className="text-sm text-muted-2">
+              Conductor: {viaje.conductorNombre ?? <span className="text-muted-3">sin asignar</span>}
             </p>
           </div>
           <button
             onClick={onCerrar}
             aria-label="Cerrar"
-            className="rounded-lg p-1.5 text-brand-dark/50 hover:bg-brand-light hover:text-brand-dark"
+            className="rounded-lg p-1.5 text-muted-2 hover:bg-kbbg hover:text-brand-dark"
           >
             ✕
           </button>
@@ -157,14 +157,14 @@ function ModalAccionesViaje({
 
         <Link
           href={`/panel-empresa/viajes/${viaje.id}/pasajeros`}
-          className="block rounded-lg border border-brand-light px-4 py-2 text-center text-sm font-semibold text-brand hover:bg-brand-light/40"
+          className="block kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-center text-sm font-semibold text-brand"
         >
           Ver pasajeros y boletos
         </Link>
 
         {editable && (
           <>
-            <section className="space-y-3 border-t border-black/5 pt-4">
+            <section className="space-y-3 border-t border-line pt-4">
               <h3 className="text-sm font-bold text-brand-dark">Hora y precio</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -194,9 +194,9 @@ function ModalAccionesViaje({
               {avisoGuardado("horaPrecio")}
             </section>
 
-            <section className="space-y-3 border-t border-black/5 pt-4">
+            <section className="space-y-3 border-t border-line pt-4">
               <h3 className="text-sm font-bold text-brand-dark">Unidad</h3>
-              <p className="text-xs text-brand-dark/60">Actual: {viaje.unidadPlaca}</p>
+              <p className="text-xs text-muted-2">Actual: {viaje.unidadPlaca}</p>
               <label htmlFor="modal-viaje-unidad" className={claseEtiqueta}>Cambiar por</label>
               <select id="modal-viaje-unidad" value={unidadElegida} onChange={(e) => setUnidadElegida(e.target.value)} className={claseCampo}>
                 <option value="">Elige una unidad...</option>
@@ -222,9 +222,9 @@ function ModalAccionesViaje({
               {avisoGuardado("unidad")}
             </section>
 
-            <section className="space-y-3 border-t border-black/5 pt-4">
+            <section className="space-y-3 border-t border-line pt-4">
               <h3 className="text-sm font-bold text-brand-dark">Conductor</h3>
-              <p className="text-xs text-brand-dark/60">Actual: {viaje.conductorNombre ?? "sin asignar"}</p>
+              <p className="text-xs text-muted-2">Actual: {viaje.conductorNombre ?? "sin asignar"}</p>
               <label htmlFor="modal-viaje-conductor" className={claseEtiqueta}>Asignado</label>
               <select id="modal-viaje-conductor" value={conductorElegido} onChange={(e) => setConductorElegido(e.target.value)} className={claseCampo}>
                 <option value="">Sin conductor</option>
@@ -249,17 +249,17 @@ function ModalAccionesViaje({
               {avisoGuardado("conductor")}
             </section>
 
-            <section className="space-y-3 border-t border-black/5 pt-4">
-              <h3 className="text-sm font-bold text-red-700">Cancelar viaje</h3>
+            <section className="space-y-3 border-t border-line pt-4">
+              <h3 className="text-sm font-bold text-kberror">Cancelar viaje</h3>
               {!confirmandoCancelar ? (
                 <button
                   onClick={() => setConfirmandoCancelar(true)}
-                  className="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                  className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-kberror"
                 >
                   Cancelar este viaje
                 </button>
               ) : (
-                <div className="rounded-lg bg-red-50 p-3 ring-1 ring-red-200">
+                <div className="rounded-ctrl bg-kberror-bg p-3">
                   <p className="text-sm font-semibold text-red-800">
                     Se cancelan también todos los boletos vendidos. ¿Confirmas?
                   </p>
@@ -272,13 +272,13 @@ function ModalAccionesViaje({
                           onCancelado(boletosCancelados);
                         }, "No se pudo cancelar el viaje.")
                       }
-                      className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                      className="kb-btn !h-10 !px-4 !text-sm bg-kberror text-white disabled:opacity-50"
                     >
                       Sí, cancelar
                     </button>
                     <button
                       onClick={() => setConfirmandoCancelar(false)}
-                      className="rounded-lg border border-brand-light px-4 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40"
+                      className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
                     >
                       No
                     </button>
@@ -327,7 +327,7 @@ function MenuAccionesViaje({
     <>
       <button
         onClick={() => setAbierto(true)}
-        className="rounded-lg bg-brand-light px-3 py-1.5 text-xs font-semibold text-brand-dark transition hover:bg-brand-light/70"
+        className="kb-btn !h-9 !px-3 !text-xs bg-kbbg text-ink"
       >
         Gestionar
       </button>
@@ -537,20 +537,20 @@ export default function ViajesPage() {
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
       <Toast mensaje={mensajeError} onCerrar={() => setMensajeError(null)} tipo="error" />
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Viajes</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="text-2xl font-bold text-brand-dark">Viajes</h1>
+        <p className="mt-1 text-sm text-muted-2">
           Cada viaje programado aquí es el que un pasajero ve al buscar — con la misma ruta, unidad y precio.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
       {esAdmin && faltaConfigurar && (
-        <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 ring-1 ring-amber-100">
+        <div className="kb-alert kb-alert--info font-medium">
           Antes de crear un viaje necesitas al menos una ruta y una unidad — revisa las pestañas
           &quot;Rutas&quot; y &quot;Unidades&quot;.
         </div>
@@ -559,17 +559,17 @@ export default function ViajesPage() {
       {esAdmin && (
       <form
         onSubmit={crear}
-        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-5 lg:items-end"
+        className="grid grid-cols-1 gap-4 kb-card kb-on-white p-6 sm:grid-cols-2 lg:grid-cols-5 lg:items-end"
       >
         <div>
-          <label htmlFor="viaje-ruta" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="viaje-ruta" className="kb-label">
             Ruta
           </label>
           <select
 id="viaje-ruta"
             value={rutaElegida}
             onChange={(e) => setRutaElegida(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           >
             <option value="">Selecciona...</option>
             {rutas?.map((r) => (
@@ -580,13 +580,13 @@ id="viaje-ruta"
           </select>
         </div>
         <div>
-          <label htmlFor="viaje-unidad" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="viaje-unidad" className="kb-label">
             Unidad
           </label>
           <select
             value={unidadElegida}
             onChange={(e) => setUnidadElegida(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           >
             <option value="">Selecciona...</option>
             {unidades
@@ -599,7 +599,7 @@ id="viaje-ruta"
           </select>
         </div>
         <div>
-          <label htmlFor="viaje-fecha" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="viaje-fecha" className="kb-label">
             Fecha
           </label>
           <input
@@ -607,34 +607,34 @@ id="viaje-fecha"
             type="date"
             value={fecha}
             onChange={(e) => setFecha(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="viaje-hora" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="viaje-hora" className="kb-label">
             Hora de salida
           </label>
           <input
             type="time"
             value={hora}
             onChange={(e) => setHora(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="viaje-hora-llegada" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-            Hora de llegada estimada <span className="font-normal normal-case text-brand-dark/40">(opcional)</span>
+          <label htmlFor="viaje-hora-llegada" className="kb-label">
+            Hora de llegada estimada <span className="font-normal normal-case text-muted-3">(opcional)</span>
           </label>
           <input
             id="viaje-hora-llegada"
             type="time"
             value={horaLlegada}
             onChange={(e) => setHoraLlegada(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="viaje-precio" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="viaje-precio" className="kb-label">
             Precio (USD)
           </label>
           <input
@@ -644,12 +644,12 @@ id="viaje-fecha"
             value={precio}
             onChange={(e) => setPrecio(e.target.value)}
             placeholder="8.50"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="viaje-recargo-vip" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-            Recargo asiento VIP (USD) <span className="font-normal normal-case text-brand-dark/40">(precargado con tu valor por defecto -- ajústalo aquí solo si este viaje lo necesita distinto)</span>
+          <label htmlFor="viaje-recargo-vip" className="kb-label">
+            Recargo asiento VIP (USD) <span className="font-normal normal-case text-muted-3">(precargado con tu valor por defecto -- ajústalo aquí solo si este viaje lo necesita distinto)</span>
           </label>
           <input
             id="viaje-recargo-vip"
@@ -659,18 +659,18 @@ id="viaje-fecha"
             value={recargoVip}
             onChange={(e) => setRecargoVip(e.target.value)}
             placeholder="2.00"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="viaje-conductor" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
-            Conductor <span className="font-normal normal-case text-brand-dark/40">(opcional, se puede asignar después)</span>
+          <label htmlFor="viaje-conductor" className="kb-label">
+            Conductor <span className="font-normal normal-case text-muted-3">(opcional, se puede asignar después)</span>
           </label>
           <select
             id="viaje-conductor"
             value={conductorElegido}
             onChange={(e) => setConductorElegido(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           >
             <option value="">Sin conductor</option>
             {conductores.map((c) => (
@@ -683,20 +683,20 @@ id="viaje-fecha"
         <button
           type="submit"
           disabled={guardando || faltaConfigurar}
-          className="lg:col-span-5 h-[42px] rounded-lg bg-brand-amber px-4 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+          className="lg:col-span-5 kb-btn kb-btn--primary !h-[42px] !px-4 !text-sm"
         >
           {guardando ? "Guardando..." : "Crear viaje"}
         </button>
-        {errorForm && <p className="lg:col-span-5 text-sm font-medium text-red-600">{errorForm}</p>}
+        {errorForm && <p className="lg:col-span-5 text-sm font-medium text-kberror">{errorForm}</p>}
       </form>
       )}
 
       <form
         onSubmit={filtrar}
-        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-6 lg:items-end"
+        className="grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2 lg:grid-cols-6 lg:items-end"
       >
         <div>
-          <label htmlFor="viajes-desde" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="viajes-desde" className="kb-label">
             Desde
           </label>
           <input
@@ -704,11 +704,11 @@ id="viaje-fecha"
             type="date"
             value={desdeFiltro}
             onChange={(e) => setDesdeFiltro(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           />
         </div>
         <div>
-          <label htmlFor="viajes-hasta" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="viajes-hasta" className="kb-label">
             Hasta
           </label>
           <input
@@ -716,18 +716,18 @@ id="viaje-fecha"
             type="date"
             value={hastaFiltro}
             onChange={(e) => setHastaFiltro(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           />
         </div>
         <div>
-          <label htmlFor="viajes-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="viajes-estado" className="kb-label">
             Estado
           </label>
           <select
             id="viajes-estado"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value as (typeof ESTADOS_VIAJE)[number]["valor"])}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           >
             {ESTADOS_VIAJE.map((e) => (
               <option key={e.valor} value={e.valor}>{e.etiqueta}</option>
@@ -735,14 +735,14 @@ id="viaje-fecha"
           </select>
         </div>
         <div>
-          <label htmlFor="viajes-ruta" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="viajes-ruta" className="kb-label">
             Ruta
           </label>
           <select
             id="viajes-ruta"
             value={rutaFiltro}
             onChange={(e) => setRutaFiltro(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           >
             <option value="">Todas</option>
             {rutas?.map((r) => (
@@ -751,7 +751,7 @@ id="viaje-fecha"
           </select>
         </div>
         <div>
-          <label htmlFor="viajes-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="viajes-busqueda" className="kb-label">
             Buscar
           </label>
           <input
@@ -759,35 +759,35 @@ id="viaje-fecha"
             value={busquedaFiltro}
             onChange={(e) => setBusquedaFiltro(e.target.value)}
             placeholder="Ruta, unidad o conductor"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           />
         </div>
-        <div className="flex gap-2">
-          <button type="submit" className="flex-1 rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95">
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" className="flex-1 kb-btn kb-btn--primary !h-11 !px-5 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiarFiltros} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </div>
       </form>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="border-b border-black/5 px-6 py-4">
-          <h2 className="font-display text-base font-bold text-brand-dark">
+      <div className="overflow-hidden kb-card kb-on-white">
+        <div className="border-b border-line px-6 py-4">
+          <h2 className="text-base font-bold text-brand-dark">
             {resultado === null ? "Cargando..." : `${resultado.total} viaje${resultado.total === 1 ? "" : "s"} con estos filtros`}
           </h2>
         </div>
 
         {resultado !== null && resultado.filas.length === 0 && !cargandoViajes && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
+          <p className="px-6 py-8 text-center text-sm text-muted-2">
             No hay viajes que coincidan con estos filtros.
           </p>
         )}
 
         {resultado !== null && resultado.filas.length > 0 && (
-          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+            <thead>
               <tr>
                 <th className="px-6 py-3">Ruta</th>
                 <th className="px-6 py-3">Fecha y hora</th>
@@ -798,11 +798,11 @@ id="viaje-fecha"
                 <th className="px-6 py-3"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/5">
+            <tbody>
               {resultado.filas.map((v) => (
                 <tr key={v.id}>
                   <td className="px-6 py-3 font-medium text-brand-dark">{v.rutaNombre}</td>
-                  <td className="px-6 py-3 text-brand-dark/70">
+                  <td className="px-6 py-3 text-muted-2">
                     {v.fechaSalida} —{" "}
                     {new Date(v.horaSalidaProgramada).toLocaleTimeString("es-EC", {
                       hour: "2-digit",
@@ -810,11 +810,11 @@ id="viaje-fecha"
                       timeZone: "America/Guayaquil",
                     })}
                   </td>
-                  <td className="px-6 py-3 text-brand-dark/70">
+                  <td className="px-6 py-3 text-muted-2">
                     {v.unidadPlaca} · {v.tipoVehiculoNombre}
                   </td>
-                  <td className="px-6 py-3 text-brand-dark/70">
-                    {v.conductorNombre ?? <span className="text-brand-dark/30">Sin asignar</span>}
+                  <td className="px-6 py-3 text-muted-2">
+                    {v.conductorNombre ?? <span className="text-muted-3">Sin asignar</span>}
                   </td>
                   <td className="px-6 py-3">
                     <span
@@ -823,7 +823,7 @@ id="viaje-fecha"
                       {v.estado}
                     </span>
                     {v.estado === "en_curso" && v.llegadaEstimada && (
-                      <span className="mt-1 block text-[11px] text-brand-dark/50">
+                      <span className="mt-1 block text-[11px] text-muted-2">
                         Llegada estimada:{" "}
                         {new Date(v.llegadaEstimada).toLocaleTimeString("es-EC", {
                           hour: "2-digit",
@@ -843,8 +843,8 @@ id="viaje-fecha"
                         onClick={() => confirmarLlegada(v)}
                         className={`mr-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                           v.llegadaEstimada && new Date(v.llegadaEstimada).getTime() <= ahoraMs
-                            ? "bg-brand-amber text-brand-dark hover:brightness-95"
-                            : "border border-brand-light text-brand-dark/70 hover:bg-brand-light/40"
+                            ? "bg-kbyellow text-brand-dark hover:brightness-95"
+                            : "border border-line text-muted-2 hover:bg-kbbg"
                         }`}
                       >
                         Confirmar llegada
@@ -883,7 +883,7 @@ id="viaje-fecha"
         )}
 
         {resultado !== null && resultado.total > 0 && (
-          <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+          <div className="flex items-center justify-between border-t border-line px-6 py-3 text-sm text-muted-2">
             <span>
               Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA))}
             </span>
@@ -891,14 +891,14 @@ id="viaje-fecha"
               <button
                 onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 disabled={pagina <= 1 || cargandoViajes}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setPagina((p) => Math.min(Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)), p + 1))}
                 disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) || cargandoViajes}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Siguiente
               </button>

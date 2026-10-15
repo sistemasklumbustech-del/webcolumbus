@@ -56,8 +56,8 @@ function formatearFechaHora(iso: string) {
 }
 
 const claseCampo =
-  "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
-const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+  "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+const claseEtiqueta = "kb-label";
 
 /**
  * Auditoría de la plataforma (RF-021): quién hizo qué, desde qué IP, con
@@ -165,8 +165,8 @@ export default function AuditoriaPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold text-brand-dark">Auditoría</h1>
-          <p className="mt-1 max-w-2xl text-sm text-brand-dark/70">
+          <h1 className="text-2xl font-bold text-brand-dark">Auditoría</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-2">
             Registro de lo que se hace en la plataforma: quién, cuándo, desde qué dirección IP y con qué resultado, más
             lo que hace el propio sistema. Los registros no se pueden editar ni borrar.
           </p>
@@ -175,7 +175,7 @@ export default function AuditoriaPage() {
           type="button"
           onClick={exportar}
           disabled={exportando || resultado === null || resultado.total === 0}
-          className="rounded-lg border border-brand-light bg-white px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40 disabled:opacity-40"
+          className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm disabled:opacity-40"
         >
           {exportando ? "Exportando..." : "Exportar CSV"}
         </button>
@@ -183,7 +183,7 @@ export default function AuditoriaPage() {
 
       <form
         onSubmit={filtrar}
-        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2 lg:grid-cols-4"
       >
         <div>
           <label htmlFor="aud-accion" className={claseEtiqueta}>
@@ -256,14 +256,14 @@ export default function AuditoriaPage() {
         <div className="flex gap-2 sm:col-span-2 lg:col-span-4">
           <button
             type="submit"
-            className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark sm:flex-none"
+            className="flex-1 kb-btn kb-btn--dark !h-10 !px-4 !text-sm sm:flex-none"
           >
             Filtrar
           </button>
           <button
             type="button"
             onClick={limpiarFiltros}
-            className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40"
+            className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
           >
             Limpiar
           </button>
@@ -271,24 +271,24 @@ export default function AuditoriaPage() {
       </form>
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">{error}</div>
+        <div className="kb-alert kb-alert--error">{error}</div>
       )}
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="border-b border-black/5 px-6 py-4">
-          <h2 className="font-display text-base font-bold text-brand-dark">
+      <div className="overflow-hidden kb-card kb-on-white">
+        <div className="border-b border-line px-6 py-4">
+          <h2 className="text-base font-bold text-brand-dark">
             {resultado === null ? "Cargando..." : `${resultado.total} registro(s) con estos filtros`}
           </h2>
         </div>
 
         {resultado !== null && resultado.filas.length === 0 && !cargando && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">No hay registros que coincidan con estos filtros.</p>
+          <p className="px-6 py-8 text-center text-sm text-muted-2">No hay registros que coincidan con estos filtros.</p>
         )}
 
         {resultado !== null && resultado.filas.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] text-left text-sm">
-              <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <table className="kb-table min-w-[820px]">
+              <thead>
                 <tr>
                   <th className="px-4 py-3">Fecha</th>
                   <th className="px-4 py-3">Acción</th>
@@ -298,60 +298,60 @@ export default function AuditoriaPage() {
                   <th className="px-4 py-3 text-right">Detalle</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/5">
+              <tbody>
                 {resultado.filas.map((r) => (
                   <Fragment key={r.id}>
                     <tr>
-                      <td className="whitespace-nowrap px-4 py-3 text-brand-dark/70">{formatearFechaHora(r.creadoEn)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-muted-2">{formatearFechaHora(r.creadoEn)}</td>
                       <td className="px-4 py-3 font-medium text-brand-dark">{nombreAccion(r.accion)}</td>
-                      <td className="px-4 py-3 text-brand-dark/80">
+                      <td className="px-4 py-3 text-ink">
                         <span className="block break-words">{quien(r)}</span>
-                        {r.usuarioRol && <span className="block text-xs text-brand-dark/40">{r.usuarioRol}</span>}
+                        {r.usuarioRol && <span className="block text-xs text-muted-3">{r.usuarioRol}</span>}
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                            r.resultado === "exito" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                          className={`kb-status ${
+                            r.resultado === "exito" ? "kb-status--ok" : "kb-status--error"
                           }`}
                         >
                           {r.resultado === "exito" ? "Éxito" : "Fallo"}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-brand-dark/70">
+                      <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted-2">
                         {r.direccionIp ?? "—"}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
                           type="button"
                           onClick={() => setExpandido((actual) => (actual === r.id ? null : r.id))}
-                          className="text-xs font-semibold text-brand-cobalto underline decoration-dotted underline-offset-2"
+                          className="text-xs font-semibold text-ink underline decoration-dotted underline-offset-2"
                         >
                           {expandido === r.id ? "Ocultar" : "Ver"}
                         </button>
                       </td>
                     </tr>
                     {expandido === r.id && (
-                      <tr className="bg-brand-light/20">
-                        <td colSpan={6} className="px-4 py-3 text-xs text-brand-dark/80">
+                      <tr className="bg-kbbg">
+                        <td colSpan={6} className="px-4 py-3 text-xs text-ink">
                           <dl className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
                             <div>
-                              <dt className="inline text-brand-dark/50">Origen: </dt>
+                              <dt className="inline text-muted-2">Origen: </dt>
                               <dd className="inline">{r.origen === "sistema" ? "Sistema (automático)" : "Persona"}</dd>
                             </div>
                             <div>
-                              <dt className="inline text-brand-dark/50">Correo: </dt>
+                              <dt className="inline text-muted-2">Correo: </dt>
                               <dd className="inline break-all">{r.usuarioCorreo ?? "—"}</dd>
                             </div>
                             <div>
-                              <dt className="inline text-brand-dark/50">Entidad: </dt>
+                              <dt className="inline text-muted-2">Entidad: </dt>
                               <dd className="inline">{r.entidadTipo}</dd>
                             </div>
                             <div>
-                              <dt className="inline text-brand-dark/50">ID de la entidad: </dt>
+                              <dt className="inline text-muted-2">ID de la entidad: </dt>
                               <dd className="inline break-all font-mono">{r.entidadId ?? "—"}</dd>
                             </div>
                           </dl>
-                          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words rounded-lg bg-white p-3 font-mono text-[11px] ring-1 ring-black/5">
+                          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words rounded-lg bg-white p-3 font-mono text-[11px] ring-1 ring-line">
                             {r.detalle && Object.keys(r.detalle).length > 0 ? JSON.stringify(r.detalle, null, 2) : "Sin detalle adicional."}
                           </pre>
                         </td>
@@ -365,7 +365,7 @@ export default function AuditoriaPage() {
         )}
 
         {resultado !== null && resultado.total > 0 && (
-          <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+          <div className="flex items-center justify-between border-t border-line px-6 py-3 text-sm text-muted-2">
             <span>
               Página {pagina} de {totalPaginas}
             </span>
@@ -373,14 +373,14 @@ export default function AuditoriaPage() {
               <button
                 onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 disabled={pagina <= 1 || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
                 disabled={pagina >= totalPaginas || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Siguiente
               </button>

@@ -33,8 +33,8 @@ const MAPA_VACIO = new Map<string, string>();
 const SIN_SELECCION: string[] = [];
 
 const claseCampo =
-  "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
-const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+  "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+const claseEtiqueta = "kb-label";
 
 /**
  * Arma los pisos con la numeración corrida (la fila 1 del segundo piso
@@ -124,19 +124,19 @@ export function ConstructorBus({
   if (pisosCfg === null) {
     return (
       <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Empieza con una plantilla</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">Empieza con una plantilla</p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => elegirPlantilla("un_piso")}
-            className="rounded-lg border border-brand-light bg-white px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40"
+            className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
           >
             Bus de un piso
           </button>
           <button
             type="button"
             onClick={() => elegirPlantilla("dos_pisos")}
-            className="rounded-lg border border-brand-light bg-white px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40"
+            className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
           >
             Bus de dos pisos (VIP abajo)
           </button>
@@ -199,9 +199,9 @@ export function ConstructorBus({
 
   const esDosPisos = pisosCfg.length > 1;
   const HERRAMIENTAS: Array<{ valor: Herramienta; etiqueta: string; clase: string }> = [
-    { valor: "vip", etiqueta: "VIP", clase: "bg-amber-500 text-white" },
-    { valor: "mujeres", etiqueta: "Solo mujeres", clase: "bg-pink-500 text-white" },
-    { valor: "normal", etiqueta: "Quitar marca", clase: "bg-brand-dark text-white" },
+    { valor: "vip", etiqueta: "VIP", clase: "bg-kbyellow text-ink" },
+    { valor: "mujeres", etiqueta: "Solo mujeres", clase: "bg-women text-white" },
+    { valor: "normal", etiqueta: "Quitar marca", clase: "bg-ink text-white" },
   ];
 
   return (
@@ -209,12 +209,12 @@ export function ConstructorBus({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className={claseEtiqueta}>Pisos del bus</p>
-          <div className="inline-flex overflow-hidden rounded-lg border border-brand-light bg-white text-sm font-semibold">
+          <div className="inline-flex overflow-hidden rounded-lg border border-line bg-white text-sm font-semibold">
             <button
               type="button"
               aria-pressed={!esDosPisos}
               onClick={() => esDosPisos && alternarDosPisos(false)}
-              className={`px-4 py-2 transition ${!esDosPisos ? "bg-brand-cobalto text-white" : "text-brand-dark hover:bg-brand-light/40"}`}
+              className={`px-4 py-2 transition ${!esDosPisos ? "bg-ink text-white" : "text-brand-dark hover:bg-kbbg"}`}
             >
               Un piso
             </button>
@@ -222,20 +222,20 @@ export function ConstructorBus({
               type="button"
               aria-pressed={esDosPisos}
               onClick={() => !esDosPisos && alternarDosPisos(true)}
-              className={`px-4 py-2 transition ${esDosPisos ? "bg-brand-cobalto text-white" : "text-brand-dark hover:bg-brand-light/40"}`}
+              className={`px-4 py-2 transition ${esDosPisos ? "bg-ink text-white" : "text-brand-dark hover:bg-kbbg"}`}
             >
               Dos pisos
             </button>
           </div>
         </div>
-        <p className="text-sm text-brand-dark/70">
+        <p className="text-sm text-muted-2">
           Capacidad total: <span className="font-bold text-brand-dark">{total} asientos</span>
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {pisosCfg.map((piso, i) => (
-          <fieldset key={i} className="space-y-3 rounded-xl border border-brand-light bg-white p-4">
+          <fieldset key={i} className="space-y-3 rounded-ctrl border border-line bg-white p-4">
             <legend className="px-1 text-sm font-bold text-brand-dark">{piso.nombre}</legend>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -329,14 +329,14 @@ export function ConstructorBus({
               <button
                 type="button"
                 onClick={() => bloqueMujeres(i, false)}
-                className="rounded-lg bg-pink-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-pink-600"
+                className="kb-btn !h-10 !px-3 !text-xs bg-women text-white"
               >
                 Reservar del frente
               </button>
               <button
                 type="button"
                 onClick={() => bloqueMujeres(i, true)}
-                className="rounded-lg border border-brand-light px-3 py-2 text-xs font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Quitar
               </button>
@@ -355,7 +355,7 @@ export function ConstructorBus({
               aria-pressed={herramienta === h.valor}
               onClick={() => setHerramienta(h.valor)}
               className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                herramienta === h.valor ? h.clase : "border border-brand-light bg-white text-brand-dark/70 hover:bg-brand-light/40"
+                herramienta === h.valor ? h.clase : "border border-line bg-white text-muted-2 hover:bg-kbbg"
               }`}
             >
               {h.etiqueta}
@@ -364,8 +364,9 @@ export function ConstructorBus({
         </div>
       </div>
 
-      <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
+      <div className="kb-card kb-on-white p-4 ring-1 ring-line">
         <MapaAsientosBus
+          mostrarVip
           pisos={distribucion.pisos ?? []}
           estadoPorNumero={MAPA_VACIO}
           seleccionados={SIN_SELECCION}
@@ -381,7 +382,7 @@ export function ConstructorBus({
           setEtiquetas({});
           onLimpiar();
         }}
-        className="text-xs font-semibold text-brand-dark/60 underline decoration-dotted underline-offset-2"
+        className="text-xs font-semibold text-muted-2 underline decoration-dotted underline-offset-2"
       >
         Descartar y empezar de cero
       </button>

@@ -157,23 +157,23 @@ export function TabDatosPersonales({
           propósito: protege boletos ya comprados a tu nombre. */}
       <form
         onSubmit={guardarIdentidad}
-        className="mt-6 space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5"
+        className="mt-6 space-y-4 kb-card kb-on-white p-6"
       >
         <div>
-          <h2 className="font-display text-base font-bold text-brand-dark">Identidad</h2>
-          <p className="mt-1 text-xs text-brand-dark/50">
+          <h2 className="text-base font-bold text-brand-dark">Identidad</h2>
+          <p className="mt-1 text-xs text-muted-2">
             Nombre y cédula solo se pueden cambiar cada 90 días, para proteger boletos ya
             comprados a tu nombre.
           </p>
         </div>
         {!perfil.puedeEditarIdentidad && (
-          <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-200">
+          <p className="kb-alert kb-alert--info">
             Podrás editar tu nombre y cédula de nuevo en {perfil.diasRestantesParaEditarIdentidad}{" "}
             día(s).
           </p>
         )}
         <div>
-          <label htmlFor="perfil-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="perfil-nombre" className="kb-label">
             Nombre completo
           </label>
           <input
@@ -182,11 +182,11 @@ id="perfil-nombre"
             value={nombreIdentidad}
             onChange={(e) => setNombreIdentidad(e.target.value)}
             disabled={!perfil.puedeEditarIdentidad}
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium disabled:bg-brand-light/30 disabled:text-brand-dark/50"
+            className="kb-input disabled:opacity-60"
           />
         </div>
         <div>
-          <label htmlFor="perfil-cedula" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="perfil-cedula" className="kb-label">
             Cédula / documento
           </label>
           <input
@@ -195,14 +195,14 @@ id="perfil-cedula"
             value={cedulaIdentidad}
             onChange={(e) => setCedulaIdentidad(e.target.value)}
             disabled={!perfil.puedeEditarIdentidad}
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium disabled:bg-brand-light/30 disabled:text-brand-dark/50"
+            className="kb-input disabled:opacity-60"
           />
         </div>
-        {errorIdentidad && <p className="text-sm font-medium text-red-600">{errorIdentidad}</p>}
+        {errorIdentidad && <p className="text-sm font-medium text-kberror">{errorIdentidad}</p>}
         <button
           type="submit"
           disabled={guardandoIdentidad || !perfil.puedeEditarIdentidad}
-          className="rounded-lg bg-brand px-5 py-2.5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+          className="kb-btn kb-btn--dark !h-12 !px-6 !text-sm"
         >
           {guardandoIdentidad ? "Guardando..." : "Guardar identidad"}
         </button>
@@ -211,11 +211,11 @@ id="perfil-cedula"
       {/* Datos editables */}
       <form
         onSubmit={guardarPerfil}
-        className="mt-6 space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5"
+        className="mt-6 space-y-4 kb-card kb-on-white p-6"
       >
-        <h2 className="font-display text-base font-bold text-brand-dark">Mis datos</h2>
+        <h2 className="text-base font-bold text-brand-dark">Mis datos</h2>
         <div>
-          <label htmlFor="perfil-correo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="perfil-correo" className="kb-label">
             Correo
           </label>
           <input
@@ -223,11 +223,11 @@ id="perfil-correo"
             type="text"
             value={perfil.correo}
             disabled
-            className="w-full rounded-lg border border-brand-light bg-brand-light/30 px-3 py-2.5 text-base text-brand-dark/50"
+            className="kb-input disabled:opacity-60"
           />
         </div>
         <div>
-          <label htmlFor="perfil-whatsapp" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="perfil-whatsapp" className="kb-label">
             WhatsApp
           </label>
           <input
@@ -237,11 +237,11 @@ id="perfil-whatsapp"
             value={telefono}
             onChange={(e) => setTelefono(e.target.value.replace(/\D/g, "").slice(0, 10))}
             placeholder="10 dígitos"
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="kb-input"
           />
         </div>
         <div>
-          <label htmlFor="perfil-foto" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="perfil-foto" className="kb-label">
             Foto de perfil
           </label>
           <input
@@ -267,16 +267,16 @@ id="perfil-foto"
               }
             }}
             disabled={subiendoFoto}
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark file:mr-3 file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white disabled:opacity-50"
+            className="kb-input !h-auto py-3 file:mr-3 file:rounded-xl file:border-0 file:bg-ink file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white disabled:opacity-50"
           />
-          {subiendoFoto && <p className="mt-1 text-xs text-brand-dark/70">Subiendo…</p>}
-          <p className="mt-1 text-xs text-brand-dark/50">JPG, PNG o WEBP, hasta 5 MB.</p>
+          {subiendoFoto && <p className="mt-1 text-xs text-muted-2">Subiendo…</p>}
+          <p className="mt-1 text-xs text-muted-2">JPG, PNG o WEBP, hasta 5 MB.</p>
         </div>
-        {errorPerfil && <p className="text-sm font-medium text-red-600">{errorPerfil}</p>}
+        {errorPerfil && <p className="text-sm font-medium text-kberror">{errorPerfil}</p>}
         <button
           type="submit"
           disabled={guardandoPerfil}
-          className="rounded-lg bg-brand px-5 py-2.5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+          className="kb-btn kb-btn--dark !h-12 !px-6 !text-sm"
         >
           {guardandoPerfil ? "Guardando..." : "Guardar cambios"}
         </button>
@@ -285,26 +285,26 @@ id="perfil-foto"
       {/* Cambiar contraseña */}
       <form
         onSubmit={guardarPassword}
-        className="mt-6 space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5"
+        className="mt-6 space-y-4 kb-card kb-on-white p-6"
       >
-        <h2 className="font-display text-base font-bold text-brand-dark">Cambiar contraseña</h2>
+        <h2 className="text-base font-bold text-brand-dark">Cambiar contraseña</h2>
         <div>
-          <label htmlFor="perfil-password-actual" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="perfil-password-actual" className="kb-label">
             Contraseña actual
           </label>
           <CampoPassword id="perfil-password-actual" value={passwordActual} onChange={setPasswordActual} />
         </div>
         <div>
-          <label htmlFor="perfil-password-nueva" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="perfil-password-nueva" className="kb-label">
             Nueva contraseña
           </label>
           <CampoPassword id="perfil-password-nueva" value={passwordNueva} onChange={setPasswordNueva} placeholder="Mínimo 8 caracteres" />
         </div>
-        {errorPassword && <p className="text-sm font-medium text-red-600">{errorPassword}</p>}
+        {errorPassword && <p className="text-sm font-medium text-kberror">{errorPassword}</p>}
         <button
           type="submit"
           disabled={cambiandoPassword || !passwordActual || !passwordNueva}
-          className="rounded-lg bg-brand px-5 py-2.5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+          className="kb-btn kb-btn--dark !h-12 !px-6 !text-sm"
         >
           {cambiandoPassword ? "Cambiando..." : "Cambiar contraseña"}
         </button>
@@ -313,21 +313,21 @@ id="perfil-foto"
       {/* Cambiar correo — hallazgo real del usuario (29-jul-2026): si pierdes acceso a tu correo, quedarías fuera de tu cuenta sin esto. */}
       <form
         onSubmit={solicitarCambio}
-        className="mt-6 space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5"
+        className="mt-6 space-y-4 kb-card kb-on-white p-6"
       >
-        <h2 className="font-display text-base font-bold text-brand-dark">Cambiar correo</h2>
-        <p className="text-xs text-brand-dark/50">
+        <h2 className="text-base font-bold text-brand-dark">Cambiar correo</h2>
+        <p className="text-xs text-muted-2">
           Correo actual: <span className="font-semibold">{perfil.correo}</span>
         </p>
         {correoSolicitudEnviada ? (
-          <p className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+          <p className="kb-alert kb-alert--ok">
             Te enviamos un enlace de confirmación a tu correo nuevo. Tu correo actual sigue activo
             hasta que confirmes.
           </p>
         ) : (
           <>
             <div>
-              <label htmlFor="perfil-correo-nuevo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="perfil-correo-nuevo" className="kb-label">
                 Correo nuevo
               </label>
               <input
@@ -335,22 +335,22 @@ id="perfil-correo-nuevo"
                 type="email"
                 value={correoNuevo}
                 onChange={(e) => setCorreoNuevo(e.target.value)}
-                className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="kb-input"
               />
             </div>
             <div>
-              <label htmlFor="perfil-password-correo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="perfil-password-correo" className="kb-label">
                 Tu contraseña actual (para confirmar que eres tú)
               </label>
               <CampoPassword id="perfil-password-correo" value={passwordParaCorreo} onChange={setPasswordParaCorreo} />
             </div>
             {errorCambioCorreo && (
-              <p className="text-sm font-medium text-red-600">{errorCambioCorreo}</p>
+              <p className="text-sm font-medium text-kberror">{errorCambioCorreo}</p>
             )}
             <button
               type="submit"
               disabled={solicitandoCambioCorreo || !correoNuevo || !passwordParaCorreo}
-              className="rounded-lg bg-brand px-5 py-2.5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+              className="kb-btn kb-btn--dark !h-12 !px-6 !text-sm"
             >
               {solicitandoCambioCorreo ? "Enviando..." : "Solicitar cambio de correo"}
             </button>
@@ -360,7 +360,7 @@ id="perfil-correo-nuevo"
 
       <button
         onClick={cerrarSesion}
-        className="mt-6 w-full rounded-lg border border-brand-light px-5 py-2.5 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+        className="mt-6 kb-btn kb-btn--outline w-full"
       >
         Cerrar sesión
       </button>

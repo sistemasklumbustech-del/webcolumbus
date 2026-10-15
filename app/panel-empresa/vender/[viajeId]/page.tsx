@@ -193,22 +193,22 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
   if (resultado) {
     return (
       <div className="mx-auto max-w-md">
-        <div className="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5 print:shadow-none print:ring-0">
-          <p className="font-display text-lg font-bold text-brand-dark">Venta confirmada</p>
+        <div className="kb-card kb-on-white p-8 text-center print:shadow-none print:ring-0">
+          <p className="text-lg font-bold text-brand-dark">Venta confirmada</p>
           <div className="mt-4 space-y-6">
             {resultado.boletos.map((boleto) => (
-              <div key={boleto.codigoQr} className="border-t border-brand-dark/10 pt-4 first:border-t-0 first:pt-0">
+              <div key={boleto.codigoQr} className="border-t border-line pt-4 first:border-t-0 first:pt-0">
                 <p className="text-sm font-semibold text-brand-dark">
                   Asiento {boleto.numeroAsiento} — {boleto.compradorNombre}
                 </p>
-                <p className="text-xs text-brand-dark/50">
+                <p className="text-xs text-muted-2">
                   {boleto.rutaOrigenCiudad} → {boleto.rutaDestinoCiudad} ·{" "}
                   {new Date(boleto.horaSalidaProgramada).toLocaleString("es-EC", {
                     day: "numeric", month: "short", hour: "numeric", minute: "2-digit",
                     timeZone: "America/Guayaquil",
                   })}
                 </p>
-                <p className="mt-1 text-sm text-brand-dark/70">Total: ${(boleto.precioPagado + boleto.tasaTerminal + boleto.cargoPlataforma).toFixed(2)}</p>
+                <p className="mt-1 text-sm text-muted-2">Total: ${(boleto.precioPagado + boleto.tasaTerminal + boleto.cargoPlataforma).toFixed(2)}</p>
                 <div className="mt-3">
                   <CodigoQr valor={boleto.codigoQr} />
                 </div>
@@ -218,7 +218,7 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
           <div className="mt-6 flex flex-col gap-2 print:hidden">
             <button
               onClick={() => window.print()}
-              className="rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95"
+              className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
             >
               Imprimir boleto
             </button>
@@ -234,7 +234,7 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
   if (error && !mapa) {
     return (
       <div className="mx-auto max-w-md text-center">
-        <p className="text-red-600">{error}</p>
+        <p className="text-kberror">{error}</p>
         <Link href="/panel-empresa/vender" className="mt-4 inline-block font-semibold text-brand hover:underline">
           Volver
         </Link>
@@ -243,7 +243,7 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
   }
 
   if (!mapa) {
-    return <p className="text-sm text-brand-dark/50">Cargando mapa de asientos...</p>;
+    return <p className="text-sm text-muted-2">Cargando mapa de asientos...</p>;
   }
 
   const estadoPorNumero = new Map(mapa.asientosNoDisponibles.map((a) => [a.numeroAsiento, a.estado]));
@@ -252,19 +252,20 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Vender boleto en ventanilla</h1>
-        <Link href="/panel-empresa/vender" className="text-sm text-brand-dark/60 hover:underline">
+        <h1 className="text-2xl font-bold text-brand-dark">Vender boleto en ventanilla</h1>
+        <Link href="/panel-empresa/vender" className="text-sm text-muted-2 hover:underline">
           ← Elegir otra salida
         </Link>
       </div>
 
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+      <div className="kb-card kb-on-white p-5">
         <p className="mb-1 text-sm font-semibold text-brand-dark">1. Elige el/los asiento(s)</p>
-        <p className="mb-3 text-xs text-brand-dark/60">
+        <p className="mb-3 text-xs text-muted-2">
           {mapa.capacidadTotal - mapa.asientosNoDisponibles.length} disponibles · {mapa.asientosNoDisponibles.length} ocupados · {mapa.capacidadTotal} en total
           {pisos.length > 1 ? ` · ${pisos.length} pisos` : ""}
         </p>
         <MapaAsientosBus
+          mostrarVip
           pisos={pisos}
           estadoPorNumero={estadoPorNumero}
           seleccionados={seleccionados}
@@ -276,8 +277,8 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
       {pasajerosData.length > 0 && (
         <form onSubmit={revisarVenta} className="space-y-4">
           {pasajerosData.map((p) => (
-            <div key={p.numeroAsiento} className="space-y-3 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-              <p className="font-display text-sm font-bold text-brand-dark">Asiento {p.numeroAsiento}</p>
+            <div key={p.numeroAsiento} className="space-y-3 kb-card kb-on-white p-5">
+              <p className="text-sm font-bold text-brand-dark">Asiento {p.numeroAsiento}</p>
               <div className="grid grid-cols-2 gap-3">
                 <input
                   required
@@ -285,7 +286,7 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
                   placeholder="Nombres"
                   value={p.nombres}
                   onChange={(e) => actualizarPasajero(p.numeroAsiento, { nombres: e.target.value })}
-                  className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                  className="kb-input !h-11 !text-sm"
                 />
                 <input
                   required
@@ -293,14 +294,14 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
                   placeholder="Apellidos"
                   value={p.apellidos}
                   onChange={(e) => actualizarPasajero(p.numeroAsiento, { apellidos: e.target.value })}
-                  className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                  className="kb-input !h-11 !text-sm"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <select
                   value={p.tipoDocumento}
                   onChange={(e) => actualizarPasajero(p.numeroAsiento, { tipoDocumento: e.target.value as "cedula" | "pasaporte" })}
-                  className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                  className="kb-input !h-11 !text-sm"
                 >
                   <option value="cedula">Cédula</option>
                   <option value="pasaporte">Pasaporte</option>
@@ -310,10 +311,10 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
                   placeholder="Documento"
                   value={p.documento}
                   onChange={(e) => actualizarPasajero(p.numeroAsiento, { documento: e.target.value })}
-                  className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                  className="kb-input !h-11 !text-sm"
                 />
               </div>
-              <p className="-mt-1 text-xs text-brand-dark/50">
+              <p className="-mt-1 text-xs text-muted-2">
                 Cédula solo para números ecuatorianos. Turistas y extranjeros: elige Pasaporte.
               </p>
               {esAsientoSoloMujeres(mapa, p.numeroAsiento) && (
@@ -327,7 +328,7 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
               <select
                 value={p.tipoTarifa}
                 onChange={(e) => actualizarPasajero(p.numeroAsiento, { tipoTarifa: e.target.value as DatosPasajeroVentanilla["tipoTarifa"] })}
-                className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                className="w-full kb-input !h-11 !text-sm"
               >
                 {TARIFAS.map((t) => (
                   <option key={t.valor} value={t.valor}>{t.etiqueta}</option>
@@ -340,26 +341,26 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
                     placeholder="Nombre del adulto responsable"
                     value={p.adultoResponsableNombre}
                     onChange={(e) => actualizarPasajero(p.numeroAsiento, { adultoResponsableNombre: e.target.value })}
-                    className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                    className="kb-input !h-11 !text-sm"
                   />
                   <input
                     required
                     placeholder="Documento del adulto responsable"
                     value={p.adultoResponsableDocumento}
                     onChange={(e) => actualizarPasajero(p.numeroAsiento, { adultoResponsableDocumento: e.target.value })}
-                    className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                    className="kb-input !h-11 !text-sm"
                   />
                 </div>
               )}
             </div>
           ))}
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+          <div className="kb-card kb-on-white p-5">
             <p className="mb-2 text-sm font-semibold text-brand-dark">2. Método de pago</p>
             <select
               value={tipoMetodoPago}
               onChange={(e) => setTipoMetodoPago(e.target.value as (typeof METODOS)[number]["valor"])}
-              className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+              className="w-full kb-input !h-11 !text-sm"
             >
               {METODOS.map((m) => (
                 <option key={m.valor} value={m.valor}>{m.etiqueta}</option>
@@ -367,8 +368,8 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
             </select>
 
             {tipoMetodoPago === "transferencia_bancaria" && (
-              <div className="mt-3 space-y-2 rounded-lg bg-brand-light/20 p-3">
-                <p className="text-xs text-brand-dark/60">
+              <div className="mt-3 space-y-2 rounded-lg bg-kbbg p-3">
+                <p className="text-xs text-muted-2">
                   Opcional: dejá un respaldo de la transferencia para poder revisarla después.
                 </p>
                 <input
@@ -376,10 +377,10 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
                   placeholder="Número de referencia (opcional)"
                   value={referenciaTransferencia}
                   onChange={(e) => setReferenciaTransferencia(e.target.value)}
-                  className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                  className="w-full kb-input !h-11 !text-sm"
                 />
-                <label className="flex cursor-pointer items-center gap-2 text-sm text-brand-dark/70">
-                  <span className="rounded-lg border border-brand-light bg-white px-3 py-2 font-semibold text-brand-dark hover:bg-brand-light/40">
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-2">
+                  <span className="rounded-lg border border-line bg-white px-3 py-2 font-semibold text-brand-dark hover:bg-kbbg">
                     {comprobanteArchivo ? "Cambiar foto" : "Adjuntar foto del comprobante (opcional)"}
                   </span>
                   <input
@@ -390,12 +391,12 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
                   />
                 </label>
                 {comprobanteArchivo && (
-                  <p className="text-xs text-brand-dark/50">
+                  <p className="text-xs text-muted-2">
                     {comprobanteArchivo.name}{" "}
                     <button
                       type="button"
                       onClick={() => setComprobanteArchivo(null)}
-                      className="font-semibold text-red-600 hover:underline"
+                      className="font-semibold text-kberror hover:underline"
                     >
                       Quitar
                     </button>
@@ -404,7 +405,7 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
               </div>
             )}
 
-            <p className="mt-3 mb-2 text-xs font-semibold uppercase tracking-wide text-brand-dark/60">
+            <p className="mt-3 mb-2 text-xs font-semibold uppercase tracking-wide text-muted-2">
               Contacto del pasajero (opcional, para enviarle su boleto)
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -414,24 +415,24 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
                 value={telefonoContacto}
                 onChange={(e) => setTelefonoContacto(e.target.value.replace(/\D/g, ""))}
                 maxLength={10}
-                className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                className="kb-input !h-11 !text-sm"
               />
               <input
                 type="email"
                 placeholder="Correo"
                 value={correoContacto}
                 onChange={(e) => setCorreoContacto(e.target.value)}
-                className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                className="kb-input !h-11 !text-sm"
               />
             </div>
           </div>
 
-          {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+          {error && <p className="text-sm font-medium text-kberror">{error}</p>}
 
           <button
             type="submit"
             disabled={procesando}
-            className="w-full rounded-lg bg-brand-amber px-6 py-3 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-60"
+            className="w-full rounded-lg bg-kbyellow px-6 py-3 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-60"
           >
             {procesando ? "Calculando..." : "Revisar venta"}
           </button>
@@ -439,47 +440,47 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
       )}
 
       {cotizacion && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="font-display text-lg font-bold text-brand-dark">Revisa antes de vender</h2>
-            <p className="mt-1 text-sm text-brand-dark/70">
+        <div className="kb-modal-bg">
+          <div className="w-full max-w-sm kb-card kb-on-white p-6 shadow-xl">
+            <h2 className="text-lg font-bold text-brand-dark">Revisa antes de vender</h2>
+            <p className="mt-1 text-sm text-muted-2">
               Método: {METODOS.find((m) => m.valor === tipoMetodoPago)?.etiqueta}
             </p>
-            <div className="mt-3 space-y-1 rounded-lg bg-brand-light/30 px-4 py-3 text-sm">
-              <div className="flex justify-between text-brand-dark/70">
+            <div className="mt-3 space-y-1 rounded-lg bg-kbbg px-4 py-3 text-sm">
+              <div className="flex justify-between text-muted-2">
                 <span>Tarifas</span>
                 <span>${cotizacion.montoTarifasCooperativa.toFixed(2)}</span>
               </div>
               {cotizacion.montoTasaTerminal > 0 && (
-                <div className="flex justify-between text-brand-dark/70">
+                <div className="flex justify-between text-muted-2">
                   <span>Tasa de terminal</span>
                   <span>${cotizacion.montoTasaTerminal.toFixed(2)}</span>
                 </div>
               )}
               {cotizacion.montoCargoPlataforma > 0 && (
-                <div className="flex justify-between text-brand-dark/70">
+                <div className="flex justify-between text-muted-2">
                   <span>Cargo de plataforma</span>
                   <span>${cotizacion.montoCargoPlataforma.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between border-t border-brand-dark/10 pt-1 font-semibold text-brand-dark">
+              <div className="flex justify-between border-t border-line pt-1 font-semibold text-brand-dark">
                 <span>Total a cobrar</span>
                 <span>${cotizacion.montoTotal.toFixed(2)}</span>
               </div>
             </div>
-            {error && <p className="mt-2 text-sm font-medium text-red-600">{error}</p>}
+            {error && <p className="mt-2 text-sm font-medium text-kberror">{error}</p>}
             <div className="mt-5 flex gap-3">
               <button
                 onClick={() => setCotizacion(null)}
                 disabled={procesando}
-                className="flex-1 rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+                className="flex-1 kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmarVenta}
                 disabled={procesando}
-                className="flex-1 rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-60"
+                className="flex-1 kb-btn kb-btn--primary !h-11 !px-5 !text-sm disabled:opacity-60"
               >
                 {procesando ? "Vendiendo..." : "Confirmar y vender"}
               </button>

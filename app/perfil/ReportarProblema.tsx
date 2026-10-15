@@ -52,10 +52,10 @@ export function ReportarProblema({ boletoId, onEnviado }: { boletoId: string; on
   }
 
   return (
-    <div className="mt-2 rounded-lg bg-brand-light/30 p-3">
+    <div className="mt-2 kb-on-white rounded-ctrl bg-kbbg p-3">
       <label
         htmlFor={`reclamo-tipo-${boletoId}`}
-        className="block text-xs font-semibold uppercase tracking-wide text-brand-dark/70"
+        className="kb-label"
       >
         ¿Qué pasó?
       </label>
@@ -63,7 +63,7 @@ export function ReportarProblema({ boletoId, onEnviado }: { boletoId: string; on
         id={`reclamo-tipo-${boletoId}`}
         value={tipo}
         onChange={(e) => setTipo(e.target.value as TipoReclamo)}
-        className="mt-1 w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+        className="mt-1 kb-input"
       >
         {Object.entries(ETIQUETA_TIPO_RECLAMO).map(([valor, etiqueta]) => (
           <option key={valor} value={valor}>
@@ -78,24 +78,24 @@ export function ReportarProblema({ boletoId, onEnviado }: { boletoId: string; on
         rows={4}
         maxLength={1000}
         aria-label="Descripción del problema"
-        className="mt-2 w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+        className="mt-2 kb-input"
       />
-      <p className="mt-1 text-xs text-brand-dark/50">
+      <p className="mt-1 text-xs text-muted-2">
         La cooperativa recibirá tu reclamo y te responderá por correo. Podrás seguirlo en &quot;Mis reclamos&quot;.
       </p>
-      {error && <p className="mt-2 text-xs font-medium text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs font-medium text-kberror">{error}</p>}
       <div className="mt-2 flex flex-wrap gap-2">
         <button
           onClick={enviar}
           disabled={enviando}
-          className="rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+          className="kb-btn kb-btn--dark !h-10 !px-4 !text-sm"
         >
           {enviando ? "Enviando..." : "Enviar reclamo"}
         </button>
         <button
           onClick={() => setAbierto(false)}
           disabled={enviando}
-          className="rounded-lg border border-brand-light px-4 py-1.5 text-sm text-brand-dark/70 hover:bg-brand-light/40"
+          className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
         >
           Cancelar
         </button>

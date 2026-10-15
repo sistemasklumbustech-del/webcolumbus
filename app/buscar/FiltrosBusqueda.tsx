@@ -114,10 +114,14 @@ export function FiltrosBusqueda({ variante = "dropdown" }: { variante?: "dropdow
     searchParams.get("horaDesde") || searchParams.get("amenidades") || searchParams.get("precioMin") || searchParams.get("precioMax"),
   );
 
+  const claseTituloGrupo = "mb-2 block text-[13px] font-semibold";
+  const claseCampo =
+    "h-12 w-full rounded-ctrl border-[1.5px] border-transparent bg-kbbg px-3.5 text-sm text-ink placeholder:text-muted-3 focus:border-ink focus:bg-white focus:outline-none";
+
   const contenidoFiltros = (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-5">
       <div>
-        <label id="filtros-precio-label" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+        <label id="filtros-precio-label" className={claseTituloGrupo}>
           Precio (USD)
         </label>
         <div role="group" aria-labelledby="filtros-precio-label" className="flex items-center gap-2">
@@ -125,26 +129,26 @@ export function FiltrosBusqueda({ variante = "dropdown" }: { variante?: "dropdow
             type="number"
             inputMode="decimal"
             min={0}
-            placeholder="Min"
+            placeholder="Mín."
             value={precioMin}
             onChange={(e) => setPrecioMin(e.target.value)}
-            className="w-full rounded-lg border border-brand-light px-2.5 py-1.5 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className={claseCampo}
           />
-          <span className="text-brand-dark/30">—</span>
+          <span className="text-muted-3">—</span>
           <input
             type="number"
             inputMode="decimal"
             min={0}
-            placeholder="Max"
+            placeholder="Máx."
             value={precioMax}
             onChange={(e) => setPrecioMax(e.target.value)}
-            className="w-full rounded-lg border border-brand-light px-2.5 py-1.5 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className={claseCampo}
           />
         </div>
       </div>
 
       <div>
-        <label id="filtros-hora-label" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+        <label id="filtros-hora-label" className={claseTituloGrupo}>
           Hora de salida
         </label>
         <div role="group" aria-labelledby="filtros-hora-label" className="grid grid-cols-2 gap-2">
@@ -152,24 +156,23 @@ export function FiltrosBusqueda({ variante = "dropdown" }: { variante?: "dropdow
             <button
               key={f.valor}
               type="button"
+              aria-pressed={franjaHorario === f.valor}
               onClick={() => alternarFranja(f.valor)}
-              className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-                franjaHorario === f.valor
-                  ? "border-brand-cobalto bg-brand-cobalto/10 text-brand-cobalto"
-                  : "border-brand-light text-brand-dark/70 hover:border-brand-cobalto/40"
+              className={`flex flex-col items-center rounded-tab px-1 py-2.5 text-[13px] font-medium transition ${
+                franjaHorario === f.valor ? "bg-ink text-white" : "bg-kbbg text-ink"
               }`}
             >
               {f.etiqueta}
-              <span className="block text-[10px] font-normal text-brand-dark/40">
+              <small className={`text-[11px] font-normal ${franjaHorario === f.valor ? "text-ondark" : "text-muted-2"}`}>
                 {f.horaDesde}–{f.horaHasta}
-              </span>
+              </small>
             </button>
           ))}
         </div>
       </div>
 
       <div>
-        <label id="filtros-amenidades-label" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+        <label id="filtros-amenidades-label" className={claseTituloGrupo}>
           Amenidades
         </label>
         <div role="group" aria-labelledby="filtros-amenidades-label" className="flex flex-wrap gap-2">
@@ -177,12 +180,9 @@ export function FiltrosBusqueda({ variante = "dropdown" }: { variante?: "dropdow
             <button
               key={a.valor}
               type="button"
+              aria-pressed={amenidades.includes(a.valor)}
               onClick={() => alternarAmenidad(a.valor)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                amenidades.includes(a.valor)
-                  ? "bg-brand-cobalto text-white"
-                  : "bg-brand-light/40 text-brand-dark/70"
-              }`}
+              className={`kb-chip ${amenidades.includes(a.valor) ? "is-active" : ""}`}
             >
               {a.etiqueta}
             </button>
@@ -190,37 +190,23 @@ export function FiltrosBusqueda({ variante = "dropdown" }: { variante?: "dropdow
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={aplicar}
-          className="rounded-lg bg-brand-dark px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark/80"
-        >
-          Aplicar filtros
+      <button type="button" onClick={aplicar} className="kb-btn kb-btn--dark w-full">
+        Aplicar filtros
+      </button>
+      {hayFiltrosActivos && (
+        <button type="button" onClick={limpiar} className="-mt-2 text-center text-[13px] font-medium text-muted-2 hover:text-ink">
+          Limpiar filtros
         </button>
-        {hayFiltrosActivos && (
-          <button
-            type="button"
-            onClick={limpiar}
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-brand-dark/70"
-          >
-            Limpiar
-          </button>
-        )}
-      </div>
+      )}
     </div>
   );
 
   if (variante === "panel") {
     return (
-      <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-sm font-bold text-brand-dark">Filtros</h2>
-          {hayFiltrosActivos && (
-            <span className="rounded-full bg-brand-amber px-2 py-0.5 text-xs font-bold text-brand-dark">
-              Activos
-            </span>
-          )}
+      <div className="rounded-card bg-white p-[22px] shadow-card">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-[17px] font-semibold">Filtros</h2>
+          {hayFiltrosActivos && <span className="kb-tag kb-tag--yellow">Activos</span>}
         </div>
         {contenidoFiltros}
       </div>
@@ -228,24 +214,24 @@ export function FiltrosBusqueda({ variante = "dropdown" }: { variante?: "dropdow
   }
 
   return (
-    <div className="mb-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+    <div className="mb-4 rounded-card bg-white p-4 shadow-card">
       <button
         type="button"
         onClick={() => setAbierto((a) => !a)}
-        className="flex w-full items-center justify-between text-left text-sm font-semibold text-brand-dark"
+        aria-expanded={abierto}
+        className="flex w-full items-center justify-between text-left text-sm font-semibold"
       >
-        <span>
+        <span className="flex items-center gap-2.5">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 6h16M7 12h10M10 18h4" />
+          </svg>
           Filtros
-          {hayFiltrosActivos && (
-            <span className="ml-2 rounded-full bg-brand-amber px-2 py-0.5 text-xs font-bold text-brand-dark">
-              Activos
-            </span>
-          )}
+          {hayFiltrosActivos && <span className="kb-tag kb-tag--yellow">Activos</span>}
         </span>
-        <span className="text-brand-dark/40">{abierto ? "▲" : "▼"}</span>
+        <span className="text-muted-3">{abierto ? "▲" : "▼"}</span>
       </button>
 
-      {abierto && <div className="mt-4 border-t border-black/5 pt-4">{contenidoFiltros}</div>}
+      {abierto && <div className="mt-4 border-t border-line pt-4">{contenidoFiltros}</div>}
     </div>
   );
 }

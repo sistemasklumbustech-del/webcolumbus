@@ -86,12 +86,12 @@ function TarjetaMetrica({
   valor: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-amber/15 text-brand-amber">
+    <div className="kb-card kb-on-white p-6">
+      <div className="flex h-11 w-11 items-center justify-center rounded-ctrl bg-kbyellow-soft text-ink">
         <Icono className="h-5 w-5" />
       </div>
-      <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-brand-dark/50">{etiqueta}</p>
-      <p className="mt-1 font-display text-3xl font-extrabold text-brand-dark">{valor}</p>
+      <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-2">{etiqueta}</p>
+      <p className="mt-1 text-3xl font-extrabold text-brand-dark">{valor}</p>
     </div>
   );
 }
@@ -293,8 +293,8 @@ export default function PanelEmpresaDashboard() {
   const claseAtajo = (activo: boolean) =>
     `rounded-lg border px-3 py-2 text-sm font-semibold transition ${
       activo
-        ? "border-brand bg-brand text-white"
-        : "border-brand-light bg-white text-brand-dark/70 hover:bg-brand-light/40"
+        ? "border-ink bg-ink text-white"
+        : "border-line bg-white text-muted-2 hover:bg-kbbg"
     }`;
   const totalPorDiaBoletos = porDia?.reduce((acc, d) => acc + d.totalBoletos, 0) ?? 0;
   const totalPorDiaVentas = porDia?.reduce((acc, d) => acc + d.totalVentas, 0) ?? 0;
@@ -306,14 +306,14 @@ export default function PanelEmpresaDashboard() {
       {rolActual === "admin_cooperativa" ? (
         <>
           <div>
-            <h1 className="font-display text-2xl font-bold text-brand-dark">Ventas</h1>
-            <p className="mt-1 text-sm text-brand-dark/70">
+            <h1 className="text-2xl font-bold text-brand-dark">Ventas</h1>
+            <p className="mt-1 text-sm text-muted-2">
               Boletos vendidos en línea y en ventanilla, por ruta y por vendedor. Elige el día o el período que
               quieres revisar.
             </p>
           </div>
 
-          <div className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+          <div className="space-y-4 kb-card kb-on-white p-5">
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={() => aplicarPeriodo(hoy, hoy)} className={claseAtajo(periodo.desde === hoy && periodo.hasta === hoy)}>
                 Hoy
@@ -338,7 +338,7 @@ export default function PanelEmpresaDashboard() {
             </div>
             <form onSubmit={aplicarRangoLibre} className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-end">
               <div>
-                <label htmlFor="panel-desde" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                <label htmlFor="panel-desde" className="kb-label">
                   Desde
                 </label>
                 <input
@@ -347,11 +347,11 @@ export default function PanelEmpresaDashboard() {
                   value={desdeCampo}
                   max={hoy}
                   onChange={(e) => setDesdeCampo(e.target.value)}
-                  className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                  className="w-full kb-input !h-11 !text-sm"
                 />
               </div>
               <div>
-                <label htmlFor="panel-hasta" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                <label htmlFor="panel-hasta" className="kb-label">
                   Hasta
                 </label>
                 <input
@@ -359,17 +359,17 @@ export default function PanelEmpresaDashboard() {
                   type="date"
                   value={hastaCampo}
                   onChange={(e) => setHastaCampo(e.target.value)}
-                  className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                  className="w-full kb-input !h-11 !text-sm"
                 />
               </div>
-              <button type="submit" className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+              <button type="submit" className="kb-btn kb-btn--dark !h-10 !px-4 !text-sm">
                 Ver período
               </button>
             </form>
           </div>
 
           {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+            <div className="kb-alert kb-alert--error">
               {error}
             </div>
           )}
@@ -383,9 +383,9 @@ export default function PanelEmpresaDashboard() {
             />
           </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 px-6 py-4">
-          <h2 className="font-display text-base font-bold text-brand-dark">Detalle por ruta y vendedor</h2>
+      <div className="overflow-hidden kb-card kb-on-white">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-6 py-4">
+          <h2 className="text-base font-bold text-brand-dark">Detalle por ruta y vendedor</h2>
           {filas !== null && filas.length > 0 && (
             <div className="w-full sm:w-64">
               <label htmlFor="detalle-buscar" className="sr-only">
@@ -399,29 +399,29 @@ export default function PanelEmpresaDashboard() {
                   pagDetalle.setPagina(1);
                 }}
                 placeholder="Buscar ruta o vendedor"
-                className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="w-full kb-input !h-11 !text-sm"
               />
             </div>
           )}
         </div>
 
         {(filas === null || cargandoVentas) && !error && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">Cargando...</p>
+          <p className="px-6 py-8 text-center text-sm text-muted-2">Cargando...</p>
         )}
 
         {filas !== null && filas.length === 0 && !cargandoVentas && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
+          <p className="px-6 py-8 text-center text-sm text-muted-2">
             No hay ventas registradas {etiquetaPeriodo}.
           </p>
         )}
 
         {filas !== null && filas.length > 0 && filasFiltradas.length === 0 && !cargandoVentas && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">Ninguna fila coincide con la búsqueda.</p>
+          <p className="px-6 py-8 text-center text-sm text-muted-2">Ninguna fila coincide con la búsqueda.</p>
         )}
 
         {filasFiltradas.length > 0 && !cargandoVentas && (
-          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+            <thead>
               <tr>
                 <th className="px-6 py-3">Ruta</th>
                 <th className="px-6 py-3">Vendedor</th>
@@ -429,14 +429,14 @@ export default function PanelEmpresaDashboard() {
                 <th className="px-6 py-3 text-right">Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/5">
+            <tbody>
               {pagDetalle.visibles.map((fila, i) => (
                 <tr key={i}>
                   <td className="px-6 py-3 font-medium text-brand-dark">{fila.rutaNombre}</td>
-                  <td className="px-6 py-3 text-brand-dark/70">
+                  <td className="px-6 py-3 text-muted-2">
                     {fila.vendedorNombre ?? "Venta en línea"}
                   </td>
-                  <td className="px-6 py-3 text-right text-brand-dark/70">{fila.totalBoletos}</td>
+                  <td className="px-6 py-3 text-right text-muted-2">{fila.totalBoletos}</td>
                   <td className="px-6 py-3 text-right font-semibold text-brand-dark">
                     {formatearDolares(fila.totalVentas)}
                   </td>
@@ -452,35 +452,35 @@ export default function PanelEmpresaDashboard() {
             total={pagDetalle.total}
             etiqueta="fila"
             onCambio={pagDetalle.setPagina}
-            className="border-t border-black/5"
+            className="border-t border-line"
           />
         )}
       </div>
 
       {!esUnSoloDia && porDia !== null && porDia.length > 0 && !cargandoVentas && (
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-          <div className="border-b border-black/5 px-6 py-4">
-            <h2 className="font-display text-base font-bold text-brand-dark">Consolidado por día</h2>
+        <div className="overflow-hidden kb-card kb-on-white">
+          <div className="border-b border-line px-6 py-4">
+            <h2 className="text-base font-bold text-brand-dark">Consolidado por día</h2>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[480px] text-left text-sm">
-              <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <table className="kb-table min-w-[480px]">
+              <thead>
                 <tr>
                   <th className="px-6 py-3">Día</th>
                   <th className="px-6 py-3 text-right">Boletos</th>
                   <th className="px-6 py-3 text-right">Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/5">
+              <tbody>
                 {porDia.map((d) => (
                   <tr key={d.fecha}>
                     <td className="px-6 py-3 font-medium capitalize text-brand-dark">{formatearDia(d.fecha)}</td>
-                    <td className="px-6 py-3 text-right text-brand-dark/70">{d.totalBoletos}</td>
+                    <td className="px-6 py-3 text-right text-muted-2">{d.totalBoletos}</td>
                     <td className="px-6 py-3 text-right font-semibold text-brand-dark">{formatearDolares(d.totalVentas)}</td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="border-t-2 border-black/10 bg-brand-light/30 font-bold text-brand-dark">
+              <tfoot className="border-t-2 border-line-2 bg-kbbg font-bold text-brand-dark">
                 <tr>
                   <td className="px-6 py-3">Total del período</td>
                   <td className="px-6 py-3 text-right">{totalPorDiaBoletos}</td>
@@ -492,15 +492,15 @@ export default function PanelEmpresaDashboard() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-        <h2 className="font-display text-base font-bold text-brand-dark">Logo de la cooperativa</h2>
-        <p className="mt-1 text-sm text-brand-dark/70">
+      <div className="overflow-hidden kb-card kb-on-white p-6">
+        <h2 className="text-base font-bold text-brand-dark">Logo de la cooperativa</h2>
+        <p className="mt-1 text-sm text-muted-2">
           Se muestra junto al nombre de tu cooperativa en los resultados de búsqueda del pasajero. Súbelo desde tu
           computador o celular; la imagen se reduce automáticamente para que cargue rápido.
         </p>
 
         {cargandoLogo ? (
-          <p className="mt-4 text-sm text-brand-dark/50">Cargando...</p>
+          <p className="mt-4 text-sm text-muted-2">Cargando...</p>
         ) : (
           <form onSubmit={guardarLogo} className="mt-4 space-y-4">
             <SelectorImagen
@@ -520,27 +520,27 @@ export default function PanelEmpresaDashboard() {
             <button
               type="submit"
               disabled={guardandoLogo}
-              className="rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40 disabled:opacity-50"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm disabled:opacity-50"
             >
               {guardandoLogo ? "Guardando..." : "Guardar enlace"}
             </button>
           </form>
         )}
-        {errorLogo && <p className="mt-3 text-sm font-medium text-red-600">{errorLogo}</p>}
+        {errorLogo && <p className="mt-3 text-sm font-medium text-kberror">{errorLogo}</p>}
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-        <h2 className="font-display text-base font-bold text-brand-dark">Configuración de IVA</h2>
-        <p className="mt-1 text-sm text-brand-dark/70">
+      <div className="overflow-hidden kb-card kb-on-white p-6">
+        <h2 className="text-base font-bold text-brand-dark">Configuración de IVA</h2>
+        <p className="mt-1 text-sm text-muted-2">
           El precio de cada boleto ya incluye este porcentaje — no se suma aparte al total.
         </p>
 
         {cargandoFiscal ? (
-          <p className="mt-4 text-sm text-brand-dark/50">Cargando...</p>
+          <p className="mt-4 text-sm text-muted-2">Cargando...</p>
         ) : (
           <form onSubmit={guardarFiscal} className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
             <div>
-              <label htmlFor="panel-iva-porcentaje" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="panel-iva-porcentaje" className="kb-label">
                 Porcentaje de IVA
               </label>
               <div className="flex items-center gap-1">
@@ -552,40 +552,40 @@ export default function PanelEmpresaDashboard() {
                   step="0.01"
                   value={ivaPorcentaje}
                   onChange={(e) => setIvaPorcentaje(e.target.value)}
-                  className="w-28 rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                  className="kb-input"
                 />
-                <span className="text-brand-dark/70">%</span>
+                <span className="text-muted-2">%</span>
               </div>
             </div>
-            <label className="flex items-center gap-2 text-sm text-brand-dark/70">
+            <label className="flex items-center gap-2 text-sm text-muted-2">
               <input
                 type="checkbox"
                 checked={ivaVisible}
                 onChange={(e) => setIvaVisible(e.target.checked)}
-                className="h-4 w-4 rounded border-brand-light text-brand focus:ring-brand-medium"
+                className="kb-input"
               />
               Mostrar el desglose de IVA en el boleto del pasajero
             </label>
-            <label className="flex items-center gap-2 text-sm text-brand-dark/70">
+            <label className="flex items-center gap-2 text-sm text-muted-2">
               <input
                 type="checkbox"
                 checked={ivaAutomatico}
                 onChange={(e) => setIvaAutomatico(e.target.checked)}
-                className="h-4 w-4 rounded border-brand-light text-brand focus:ring-brand-medium"
+                className="kb-input"
               />
               Seguir el IVA nacional automáticamente
             </label>
             <button
               type="submit"
               disabled={guardandoFiscal}
-              className="h-[42px] rounded-lg bg-brand-amber px-4 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+              className="kb-btn kb-btn--primary !h-[42px] !px-4 !text-sm"
             >
               {guardandoFiscal ? "Guardando..." : "Guardar"}
             </button>
           </form>
         )}
-        {mensajeFiscal && <p className="mt-3 text-sm font-medium text-emerald-600">{mensajeFiscal}</p>}
-        {errorFiscal && <p className="mt-3 text-sm font-medium text-red-600">{errorFiscal}</p>}
+        {mensajeFiscal && <p className="mt-3 text-sm font-medium text-ok">{mensajeFiscal}</p>}
+        {errorFiscal && <p className="mt-3 text-sm font-medium text-kberror">{errorFiscal}</p>}
       </div>
         </>
       ) : (
@@ -595,42 +595,42 @@ export default function PanelEmpresaDashboard() {
         // nuevo. Reemplazado por contenido real y distinto: lista de
         // solo lectura de los viajes que salen hoy, mismo endpoint ya
         // accesible para vendedor -- no un dato inventado.
-        <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5">
-          <h1 className="font-display text-2xl font-bold text-brand-dark">Viajes de hoy</h1>
-          <p className="mt-1 text-sm text-brand-dark/70">Salidas programadas para hoy, en un vistazo.</p>
+        <div className="kb-card kb-on-white p-8">
+          <h1 className="text-2xl font-bold text-brand-dark">Viajes de hoy</h1>
+          <p className="mt-1 text-sm text-muted-2">Salidas programadas para hoy, en un vistazo.</p>
 
           {errorViajesHoy && (
-            <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+            <div className="mt-4 kb-alert kb-alert--error">
               {errorViajesHoy}
             </div>
           )}
 
           {viajesHoy === null && !errorViajesHoy && (
-            <p className="mt-4 text-sm text-brand-dark/50">Cargando...</p>
+            <p className="mt-4 text-sm text-muted-2">Cargando...</p>
           )}
 
           {viajesHoy !== null && viajesHoy.length === 0 && (
-            <p className="mt-4 text-sm text-brand-dark/50">No hay viajes programados para hoy.</p>
+            <p className="mt-4 text-sm text-muted-2">No hay viajes programados para hoy.</p>
           )}
 
           {viajesHoy !== null && viajesHoy.length > 0 && (
-            <div className="mt-4 overflow-hidden rounded-xl ring-1 ring-black/5">
-              <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <div className="mt-4 overflow-hidden rounded-ctrl ring-1 ring-line">
+              <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+                <thead>
                   <tr>
                     <th className="px-4 py-3">Hora</th>
                     <th className="px-4 py-3">Ruta</th>
                     <th className="px-4 py-3">Unidad</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-black/5">
+                <tbody>
                   {pagViajesHoy.visibles.map((v) => (
                     <tr key={v.id}>
                       <td className="px-4 py-3 font-semibold text-brand-dark">
                         {new Date(v.horaSalidaProgramada).toLocaleTimeString("es-EC", { hour: "2-digit", minute: "2-digit" })}
                       </td>
-                      <td className="px-4 py-3 text-brand-dark/80">{v.rutaNombre}</td>
-                      <td className="px-4 py-3 text-brand-dark/60">{v.unidadPlaca}</td>
+                      <td className="px-4 py-3 text-ink">{v.rutaNombre}</td>
+                      <td className="px-4 py-3 text-muted-2">{v.unidadPlaca}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -641,7 +641,7 @@ export default function PanelEmpresaDashboard() {
                 total={pagViajesHoy.total}
                 etiqueta="viaje"
                 onCambio={pagViajesHoy.setPagina}
-                className="border-t border-black/5"
+                className="border-t border-line"
               />
             </div>
           )}

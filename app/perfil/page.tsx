@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
 import { obtenerMiPerfil, subirFotoPerfil, type MiPerfil } from "@/lib/api";
@@ -81,11 +81,6 @@ function MiCuenta() {
       .catch(() => setQrCodigoPasajero(null));
   }, [perfil]);
 
-  function cambiarPestana(valor: Pestana) {
-    // scroll:false -- se queda donde el usuario tocó la opción, en vez de subir al inicio de la página.
-    router.push(`/perfil?tab=${valor}`, { scroll: false });
-  }
-
   async function subirFotoDesdeHeader(archivo: File) {
     const token = tokenValido();
     if (!token) return;
@@ -104,17 +99,15 @@ function MiCuenta() {
 
   if (error) {
     return (
-      <main className="mx-auto max-w-lg flex-1 px-4 py-16">
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
-          {error}
-        </div>
+      <main className="mx-auto w-full max-w-lg flex-1 px-5 py-16">
+        <div className="kb-alert kb-alert--error">{error}</div>
       </main>
     );
   }
 
   if (!perfil) {
     return (
-      <main className="mx-auto max-w-lg flex-1 px-4 py-16 text-center text-sm text-brand-dark/50">
+      <main className="mx-auto w-full max-w-lg flex-1 px-5 py-16 text-center text-sm text-muted-2">
         Cargando...
       </main>
     );
@@ -129,191 +122,106 @@ function MiCuenta() {
     .toUpperCase();
 
   return (
-    <main className="flex-1 px-4 py-10 lg:px-8">
-      {/* Bug real encontrado (24-ago-2026, mismo día del ajuste de
-          ancho): `mx-auto` + `flex-1` combinados en el MISMO elemento
-          -- y ese elemento es hijo directo del `<body>` con
-          `flex flex-col` (ver layout.tsx) -- sacan al elemento del
-          comportamiento "stretch" (estirarse a todo el ancho) en el
-          eje transversal de un contenedor flex: un margen automático
-          en ese eje anula el stretch y encoge el elemento a su propio
-          contenido, sin importar el valor de `max-w`. Por eso ampliar
-          a `max-w-screen-2xl` no alcanzaba -- la tarjeta seguía
-          angosta. No lo causó este cambio -- ya venía así desde antes
-          (con `max-w-6xl` era menos notorio, porque el contenido casi
-          llenaba ese ancho de por sí). Corregido con el mismo patrón
-          real que ya usa `/buscar` (page.tsx, la ruta con resultados
-          reales): el `<main>` NUNCA lleva `mx-auto`/`max-w` -- el
-          ancho vive en un `<div>` anidado, sin ser el hijo flex
-          directo del body. */}
-      <div className="mx-auto max-w-screen-2xl">
-      <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
+    <main className="flex-1">
+      {/* El ancho vive en un <div> anidado: el <main> es hijo flex directo del body y no debe llevar mx-auto/max-w. */}
+      <div className="mx-auto max-w-[1280px] px-5 py-6 md:px-16 md:py-8">
+        <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
 
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Mi cuenta</h1>
-
-      {/* Identidad -- rediseño real 19-ago-2026, hallazgo del director:
-          la version anterior (horizontal, tipo pase de abordar solo)
-          se veia poco profesional. Nuevo patron real: encabezado tipo
-          Airbnb (foto grande centrada, nombre prominente, fila de
-          insignias con datos reales) + el mismo talon recortable de
-          siempre para el QR, ahora como elemento secundario, no
-          protagonista. */}
-      {/* Corrección real 19-ago-2026, hallazgo del director: el negro
-          completo "se siente fúnebre" -- mismo criterio ya usado en
-          la portada, reemplazado por el azul cobalto de marca. */}
-      {/* Rediseño real (24-ago-2026, orden explícita del director):
-          "quiero que se vea como una sección de perfil moderna" --
-          referencia real compartida (plantilla de perfil tipo
-          X/Twitter: foto de portada + avatar superpuesto en la
-          esquina, no centrado). Adaptado con nuestros datos y marca
-          reales:
-          - Portada: `hero-2.jpg`, la misma foto real de la Terminal
-            de Machala ya usada en el Hero -- nunca una foto de banco
-            de imágenes (regla ya establecida del proyecto).
-          - Avatar superpuesto en la esquina inferior izquierda de la
-            portada, con anillo blanco -- mismo patrón real de
-            perfiles modernos (Twitter/X, LinkedIn).
-          - Bug real encontrado en el camino: el avatar SIEMPRE
-            mostraba las iniciales, aunque `perfil.fotoUrl` ya
-            existiera (la función de subir foto ya funcionaba desde
-            la pestaña "Mis datos", pero el resultado nunca se veía
-            reflejado aquí). Corregido: si hay `fotoUrl` real, se
-            muestra la foto; si no, las iniciales como respaldo.
-          - Botón de cámara superpuesto sobre el avatar -- mismo
-            endpoint/función real ya existente (`subirFotoPerfil`),
-            solo que ahora también se puede disparar desde aquí, no
-            solo desde la pestaña "Mis datos" (esa sigue funcionando
-            igual, sin tocar). */}
-      <div className="mt-6 overflow-hidden rounded-2xl bg-white shadow-lg shadow-black/5 ring-1 ring-black/5">
-        <div className="relative h-48 w-full sm:h-64 lg:h-80">
-          <Image
-            src="/img/hero-1.jpg"
-            alt=""
-            fill
-            sizes="(max-width: 1024px) 100vw, 1536px"
-            className="object-cover object-center"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/0 to-black/10" />
-        </div>
-
-        <div className="relative px-5 pb-6 sm:px-8">
-          <div className="relative -mt-12 inline-block sm:-mt-16">
-            <div className="relative h-24 w-24 overflow-hidden rounded-full bg-brand-amber ring-4 ring-white sm:h-32 sm:w-32">
-              {perfil.fotoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- URL externa dinámica (almacenamiento configurable), no un asset local -- mismo patrón real ya usado en TarjetaCooperativaAgrupada para cooperativaLogoUrl
-                <img src={perfil.fotoUrl} alt={perfil.nombreCompleto} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center font-display text-3xl font-bold text-brand-dark sm:text-4xl">
-                  {iniciales || "P"}
-                </div>
-              )}
-            </div>
-
-            <label
-              htmlFor="perfil-foto-header"
-              aria-label="Cambiar foto de perfil"
-              className="absolute bottom-0 right-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-brand-dark text-white shadow-md ring-2 ring-white transition hover:bg-brand-dark/80"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
-            </label>
-            <input
-              id="perfil-foto-header"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="sr-only"
-              disabled={subiendoFotoHeader}
-              onChange={(e) => {
-                const archivo = e.target.files?.[0];
-                if (archivo) subirFotoDesdeHeader(archivo);
-              }}
-            />
-          </div>
-
-          <div className="mt-3">
-            <p className="font-display text-xl font-bold text-brand-dark sm:text-2xl">{perfil.nombreCompleto}</p>
-            {subiendoFotoHeader && <p className="mt-1 text-xs text-brand-dark/50">Subiendo foto…</p>}
-            {errorFotoHeader && <p className="mt-1 text-xs font-medium text-red-600">{errorFotoHeader}</p>}
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-brand-light px-3 py-1.5 text-xs font-semibold text-brand-dark/70">
-                Viajero desde{" "}
-                {new Date(perfil.creadoEn).toLocaleDateString("es-EC", { month: "long", year: "numeric" })}
-              </span>
-              <span className="rounded-full bg-brand-light px-3 py-1.5 text-xs font-semibold text-brand-dark/70">
-                {perfil.viajesCompletados ?? 0}{" "}
-                {perfil.viajesCompletados === 1 ? "viaje completado" : "viajes completados"}
-              </span>
-              <span className="rounded-full bg-brand-amber/15 px-3 py-1.5 text-xs font-bold tracking-wide text-brand-amber">
-                {perfil.codigoPasajero}
-              </span>
-            </div>
+        <div className="kb-topbar">
+          <div>
+            <h1>Mi cuenta</h1>
+            <p>Tus datos, boletos, saldo y reclamos en un solo lugar.</p>
           </div>
         </div>
 
-        <div className="relative border-t border-dashed border-black/10">
-          <div className="absolute -left-3 -top-3 h-6 w-6 rounded-full bg-brand-light/40" />
-          <div className="absolute -right-3 -top-3 h-6 w-6 rounded-full bg-brand-light/40" />
-        </div>
-        <div className="flex items-center gap-4 bg-brand-light/30 px-5 py-4 sm:px-8">
-          {qrCodigoPasajero && (
-            // eslint-disable-next-line @next/next/no-img-element -- data URL generada en el cliente
-            <img
-              src={qrCodigoPasajero}
-              alt={`Código de pasajero ${perfil.codigoPasajero}`}
-              className="h-14 w-14 rounded-lg bg-white p-1 ring-1 ring-black/5"
-            />
-          )}
-          <p className="text-xs text-brand-dark/50">
-            Muestra este código QR en el terminal para verificar tu identidad, aunque no tengas tu boleto a
-            mano.
-          </p>
-        </div>
-      </div>
+        {/* Identidad (rediseño final): tarjeta negra con foto, datos del viajero y el QR de pasajero. */}
+        <div className="kb-card kb-card--dark flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-7">
+          <div className="flex items-center gap-4 md:gap-5">
+            <div className="relative shrink-0">
+              <div className="relative h-20 w-20 overflow-hidden rounded-full bg-kbyellow ring-4 ring-ink-3 md:h-24 md:w-24">
+                {perfil.fotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- URL externa dinámica (almacenamiento configurable), no un asset local
+                  <img src={perfil.fotoUrl} alt={perfil.nombreCompleto} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-ink md:text-3xl">
+                    {iniciales || "P"}
+                  </div>
+                )}
+              </div>
+              <label
+                htmlFor="perfil-foto-header"
+                aria-label="Cambiar foto de perfil"
+                className="absolute bottom-0 right-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white text-ink shadow-[0_2px_10px_rgba(11,13,18,.25)] transition hover:bg-kbyellow"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </label>
+              <input
+                id="perfil-foto-header"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                disabled={subiendoFotoHeader}
+                onChange={(e) => {
+                  const archivo = e.target.files?.[0];
+                  if (archivo) subirFotoDesdeHeader(archivo);
+                }}
+              />
+            </div>
 
-      {/* En celular/tablet: pestañas horizontales arriba, mismo
-          comportamiento de siempre. En pantalla grande (lg+): panel
-          lateral fijo, mismo patrón que Stripe/Linear para páginas de
-          cuenta -- usa el ancho real de la pantalla en vez de una
-          columna angosta flotando en el centro. */}
-      <div className="mt-6 flex gap-1 overflow-x-auto border-b border-black/5 lg:hidden">
-        {PESTANAS.map((p) => (
-          <button
-            key={p.valor}
-            onClick={() => cambiarPestana(p.valor)}
-            className={`shrink-0 rounded-t-lg px-4 py-2 text-sm font-semibold transition ${
-              pestanaActiva === p.valor
-                ? "border-b-2 border-brand text-brand-dark"
-                : "text-brand-dark/50 hover:text-brand-dark/80"
-            }`}
-          >
-            {p.etiqueta}
-          </button>
-        ))}
-      </div>
+            <div className="min-w-0">
+              <p className="text-xl font-semibold leading-tight md:text-2xl">{perfil.nombreCompleto}</p>
+              {subiendoFotoHeader && <p className="mt-1 text-xs text-ondark">Subiendo foto…</p>}
+              {errorFotoHeader && <p className="mt-1 text-xs font-medium text-[#FF8A8A]">{errorFotoHeader}</p>}
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                <span className="kb-tag bg-ink-2 text-ondark">
+                  Viajero desde{" "}
+                  {new Date(perfil.creadoEn).toLocaleDateString("es-EC", { month: "long", year: "numeric" })}
+                </span>
+                <span className="kb-tag bg-ink-2 text-ondark">
+                  {perfil.viajesCompletados ?? 0}{" "}
+                  {perfil.viajesCompletados === 1 ? "viaje completado" : "viajes completados"}
+                </span>
+                <span className="kb-tag kb-tag--yellow tracking-wide">{perfil.codigoPasajero}</span>
+              </div>
+            </div>
+          </div>
 
-      <div className="mt-6 lg:mt-8 lg:grid lg:grid-cols-[220px_1fr] lg:items-start lg:gap-10">
-        <nav className="hidden lg:sticky lg:top-6 lg:block lg:space-y-1">
+          <div className="flex items-center gap-4 rounded-ctrl bg-ink-2 p-3.5 md:max-w-sm">
+            {qrCodigoPasajero && (
+              // eslint-disable-next-line @next/next/no-img-element -- data URL generada en el cliente
+              <img
+                src={qrCodigoPasajero}
+                alt={`Código de pasajero ${perfil.codigoPasajero}`}
+                className="h-16 w-16 shrink-0 rounded-xl bg-white p-1"
+              />
+            )}
+            <p className="text-xs text-ondark">
+              Muestra este código QR en el terminal para verificar tu identidad, aunque no tengas tu boleto a
+              mano.
+            </p>
+          </div>
+        </div>
+
+        <nav className="kb-subnav mt-6" aria-label="Secciones de mi cuenta">
           {PESTANAS.map((p) => (
-            <button
+            <Link
               key={p.valor}
-              onClick={() => cambiarPestana(p.valor)}
-              className={`block w-full rounded-lg px-4 py-2.5 text-left text-sm font-semibold transition ${
-                pestanaActiva === p.valor
-                  ? "bg-brand-dark text-white"
-                  : "text-brand-dark/60 hover:bg-brand-dark/5 hover:text-brand-dark"
-              }`}
+              href={`/perfil?tab=${p.valor}`}
+              scroll={false}
+              aria-current={pestanaActiva === p.valor ? "page" : undefined}
+              className={pestanaActiva === p.valor ? "is-active" : ""}
             >
               {p.etiqueta}
-            </button>
+            </Link>
           ))}
         </nav>
 
         <div className="min-w-0">
           {pestanaActiva === "datos" && (
-            <div className="max-w-2xl">
+            <div className="max-w-3xl">
               <TabDatosPersonales
                 perfil={perfil}
                 onActualizado={(cambios) => setPerfil((p) => (p ? { ...p, ...cambios } : p))}
@@ -322,7 +230,7 @@ function MiCuenta() {
             </div>
           )}
           {pestanaActiva === "boletos" && (
-            <div className="max-w-2xl">
+            <div className="max-w-3xl">
               <TabMisBoletos onExito={setMensajeExito} />
             </div>
           )}
@@ -334,12 +242,11 @@ function MiCuenta() {
           {pestanaActiva === "wallet" && <TabWallet />}
           {pestanaActiva === "referidos" && <TabReferidos perfil={perfil} />}
           {pestanaActiva === "creditos" && (
-            <div className="max-w-2xl">
+            <div className="max-w-3xl">
               <TabMisCreditos />
             </div>
           )}
         </div>
-      </div>
       </div>
     </main>
   );
