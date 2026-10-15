@@ -78,22 +78,6 @@ const DESTINOS = [
   },
 ];
 
-/** Insignia real de Columbus para cada tarjeta -- mismo criterio ya
- * usado en el resto del sitio (SVG/PNG propio, nunca un emoji ni un
- * ícono genérico de banco de imágenes). Ícono recortado del logo real
- * (`logo-klumbus.png`), sin el texto, para que quepa a escala como
- * insignia pequeña -- el wordmark completo es demasiado ancho para
- * este tamaño de chip. Posición medida con precisión de la referencia
- * real (20-ago-2026): esquina superior derecha de la foto, chip
- * blanco redondeado. */
-function InsigniaColumbus() {
-  return (
-    <div className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-md ring-1 ring-black/5">
-      <Image src="/img/icono-klumbus.png" alt="Klumbus" width={18} height={22} className="h-4 w-auto" />
-    </div>
-  );
-}
-
 interface TarjetaDestinoProps {
   nombre: string;
   foto: string;
@@ -119,18 +103,15 @@ interface TarjetaDestinoProps {
  */
 function TarjetaDestino({ nombre, foto, descripcion }: TarjetaDestinoProps) {
   return (
-    <div className="w-[300px] shrink-0 snap-start overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="relative aspect-[385/178] w-full">
-        <Image src={foto} alt={nombre} fill sizes="300px" className="object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/80 via-brand-dark/10 to-transparent" />
-        <InsigniaColumbus />
-        <p className="absolute bottom-2 left-3 right-3 text-base font-bold leading-tight text-white sm:text-lg">
+    <div className="w-[260px] shrink-0 snap-start overflow-hidden rounded-[22px] bg-white shadow-card transition hover:-translate-y-0.5 md:w-[276px] md:rounded-card">
+      <div className="relative h-[150px] w-full md:h-[180px]">
+        <Image src={foto} alt={nombre} fill sizes="276px" className="object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
+        <p className="absolute bottom-3 left-3.5 right-3.5 text-xl font-semibold leading-tight text-white md:text-2xl">
           {nombre}
         </p>
       </div>
-      <div className="px-3 pb-3 pt-2">
-        <p className="text-xs leading-snug text-brand-dark/60 sm:text-sm">{descripcion}</p>
-      </div>
+      <p className="px-3.5 pb-3.5 pt-3 text-xs text-muted-2 md:px-4 md:pb-[18px] md:pt-3.5 md:text-[13px]">{descripcion}</p>
     </div>
   );
 }
@@ -147,11 +128,10 @@ function FlechaCarrusel({ direccion, onClick }: { direccion: "izquierda" | "dere
       type="button"
       onClick={onClick}
       aria-label={direccion === "izquierda" ? "Destinos anteriores" : "Más destinos"}
-      className="absolute top-[36%] z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-brand-dark shadow-md ring-1 ring-black/5 transition hover:bg-brand-light sm:flex"
-      style={direccion === "izquierda" ? { left: "-14px" } : { right: "-14px" }}
+      className="kb-btn-round"
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-        {direccion === "izquierda" ? <path d="M15 19l-7-7 7-7" /> : <path d="M9 5l7 7-7 7" />}
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {direccion === "izquierda" ? <path d="M15 5l-7 7 7 7" /> : <path d="M9 5l7 7-7 7" />}
       </svg>
     </button>
   );
@@ -161,7 +141,7 @@ export function DestinosPopulares() {
   const carruselRef = useRef<HTMLDivElement>(null);
   const inicioClonRef = useRef<HTMLDivElement>(null);
   const anchoVueltaRef = useRef(0);
-  const ANCHO_TARJETA = 300;
+  const ANCHO_TARJETA = 276;
   const ESPACIO = 16; // gap-4
   const PASO = ANCHO_TARJETA + ESPACIO;
 
@@ -218,15 +198,22 @@ export function DestinosPopulares() {
   }
 
   return (
-    <section className="mx-auto max-w-screen-2xl px-4 py-12 sm:px-8 lg:px-12">
-      <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-cobalto">
-        Destinos populares
-      </h2>
+    <section className="mx-auto max-w-[1280px] px-5 pt-[30px] md:px-16 md:pt-14">
+      <div className="mb-3.5 flex items-end justify-between md:mb-[18px]">
+        <div>
+          <span className="kb-eyebrow">Destinos populares</span>
+          <h2 className="text-[21px] font-semibold md:text-2xl">¿A dónde quieres ir?</h2>
+        </div>
+        {/* Flechas: refuerzo para mouse/trackpad; en celular el swipe ya es el patrón natural. */}
+        <div className="hidden gap-2.5 md:flex">
+          <FlechaCarrusel direccion="izquierda" onClick={() => desplazar("izquierda")} />
+          <FlechaCarrusel direccion="derecha" onClick={() => desplazar("derecha")} />
+        </div>
+      </div>
       <div className="relative">
-        <FlechaCarrusel direccion="izquierda" onClick={() => desplazar("izquierda")} />
         <div
           ref={carruselRef}
-          className="flex gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] md:snap-none md:gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {DESTINOS.slice(0, 4).map((destino) => (
             <TarjetaDestino key={destino.nombre} {...destino} />
@@ -248,7 +235,6 @@ export function DestinosPopulares() {
             </div>
           ))}
         </div>
-        <FlechaCarrusel direccion="derecha" onClick={() => desplazar("derecha")} />
       </div>
     </section>
   );

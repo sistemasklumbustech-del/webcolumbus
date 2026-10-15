@@ -73,11 +73,11 @@ export function ResenasCooperativa({
       </button>
 
       {abierto && (
-        <div className="mt-2 space-y-3 rounded-lg bg-brand-light/30 p-3">
-          {cargando && <p className="text-xs text-brand-dark/50">Cargando reseñas...</p>}
-          {error && <p className="text-xs text-red-600">{error}</p>}
+        <div className="mt-2 space-y-3 kb-on-white rounded-ctrl bg-kbbg p-3">
+          {cargando && <p className="text-xs text-muted-2">Cargando reseñas...</p>}
+          {error && <p className="text-xs text-kberror">{error}</p>}
           {!cargando && !error && resenas.length === 0 && (
-            <p className="text-xs text-brand-dark/50">Todavía no hay reseñas de texto.</p>
+            <p className="text-xs text-muted-2">Todavía no hay reseñas de texto.</p>
           )}
           {resenas.map((r) => (
             <div key={r.id} className="border-b border-brand-dark/10 pb-2 last:border-0 last:pb-0">
@@ -87,9 +87,9 @@ export function ResenasCooperativa({
                   {"☆".repeat(5 - r.puntuacion)}
                 </span>
                 <span className="text-xs font-semibold text-brand-dark">{r.nombreAutor}</span>
-                <span className="text-xs text-brand-dark/40">{formatearFechaResena(r.creadoEn)}</span>
+                <span className="text-xs text-muted-3">{formatearFechaResena(r.creadoEn)}</span>
               </div>
-              <p className="mt-1 text-sm text-brand-dark/80">{r.comentario}</p>
+              <p className="mt-1 text-sm text-ink">{r.comentario}</p>
             </div>
           ))}
 
@@ -103,7 +103,7 @@ export function ResenasCooperativa({
               >
                 Anterior
               </button>
-              <span className="text-xs text-brand-dark/50">
+              <span className="text-xs text-muted-2">
                 Página {pagina} de {totalPaginas}
               </span>
               <button

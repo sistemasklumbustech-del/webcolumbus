@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { LogoKlumbus } from "./LogoKlumbus";
 import { obtenerToken, decodificarToken, tokenExpirado, borrarToken, type PayloadToken } from "@/lib/auth";
 
 const RUTA_POR_ROL: Record<PayloadToken["rol"], string> = {
@@ -52,53 +52,89 @@ export function HeaderPublico() {
     window.location.href = "/";
   }
 
-  return (
-    <header className="sticky top-0 z-50 border-b border-black/10 bg-brand-dark">
-      <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-4 py-3 sm:px-8 lg:px-12">
-        <Link href="/" className="flex items-center">
-          <Image src="/img/logo-klumbus.png" alt="Klumbus" width={110} height={28} priority />
-        </Link>
+  // En el flujo de compra el encabezado muestra los pasos en vez del menú (diseño final).
+  const PASOS_COMPRA = ["Viaje", "Asiento", "Pago", "Boleto"];
+  const pasoActual = /^\/viajes\/[^/]+\/asientos/.test(pathname)
+    ? 2
+    : /^\/viajes\/[^/]+\/checkout/.test(pathname)
+      ? 3
+      : null;
 
-        {payload ? (
-          <nav aria-label="Cuenta" className="flex items-center gap-3">
-            {payload.rol === "pasajero" ? (
-              <Link
-                href="/perfil"
-                className="text-sm font-semibold text-white/70 transition hover:text-white"
-              >
-                Mi cuenta
-              </Link>
+  const enlace = (href: string, texto: string) => (
+    <Link
+      href={href}
+      className={`hidden whitespace-nowrap text-sm font-medium transition hover:text-white lg:block ${
+        pathname === href ? "text-white" : "text-ondark"
+      }`}
+    >
+      {texto}
+    </Link>
+  );
+
+  return (
+    <header className="kb-header sticky top-0 z-50">
+      <div className="kb-container">
+        <div className="kb-header__in">
+          <Link href="/" className="flex items-center" aria-label="Klumbus, ir al inicio">
+            <LogoKlumbus className="kb-header__logo" />
+          </Link>
+
+          <div className="flex items-center gap-4 lg:gap-[34px]">
+            {pasoActual ? (
+              <ol className="hidden items-center gap-[34px] lg:flex" aria-label="Pasos de la compra">
+                {PASOS_COMPRA.map((texto, i) => (
+                  <li
+                    key={texto}
+                    aria-current={i + 1 === pasoActual ? "step" : undefined}
+                    className={`whitespace-nowrap text-sm font-medium ${i + 1 === pasoActual ? "text-kbyellow" : "text-ondark"}`}
+                  >
+                    {i + 1} {texto}
+                  </li>
+                ))}
+              </ol>
             ) : (
-              <Link
-                href={RUTA_POR_ROL[payload.rol]}
-                className="text-sm font-semibold text-white/70 transition hover:text-white"
-              >
-                Ir a mi panel
-              </Link>
+              <>
+                {enlace("/", "Inicio")}
+                {enlace("/rutas", "Rutas")}
+                {enlace("/cooperativas", "Cooperativas")}
+                {enlace("/mis-boletos", "Mis boletos")}
+                {enlace("/ayuda", "Ayuda")}
+              </>
             )}
-            <button
-              onClick={salir}
-              className="rounded-lg border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/70 transition hover:bg-white/10"
-            >
-              Salir
-            </button>
-          </nav>
-        ) : (
-          <nav aria-label="Cuenta" className="flex items-center gap-3">
-            <Link
-              href="/ingresar"
-              className="text-sm font-semibold text-white/70 transition hover:text-white"
-            >
-              Iniciar sesión
-            </Link>
-            <Link
-              href="/registro"
-              className="rounded-lg bg-brand-amber px-3 py-1.5 text-sm font-semibold text-brand-dark transition hover:bg-brand-amber/85"
-            >
-              Registrarse
-            </Link>
-          </nav>
-        )}
+
+            {payload ? (
+              <nav aria-label="Cuenta" className="flex items-center gap-2.5">
+                {payload.rol === "pasajero" ? (
+                  <Link href="/perfil" className="px-2 text-sm font-semibold text-ondark transition hover:text-white">
+                    Mi cuenta
+                  </Link>
+                ) : (
+                  <Link href={RUTA_POR_ROL[payload.rol]} className="px-2 text-sm font-semibold text-ondark transition hover:text-white">
+                    Ir a mi panel
+                  </Link>
+                )}
+                <button
+                  onClick={salir}
+                  className="rounded-tab px-3.5 py-2.5 text-sm font-semibold text-white shadow-[inset_0_0_0_1.5px_#262A35] transition hover:bg-ink-2 md:h-11"
+                >
+                  Salir
+                </button>
+              </nav>
+            ) : (
+              <nav aria-label="Cuenta" className="flex items-center gap-2.5">
+                <Link href="/ingresar" className="whitespace-nowrap px-2 text-sm font-semibold text-white transition hover:text-kbyellow">
+                  Iniciar sesión
+                </Link>
+                <Link
+                  href="/registro"
+                  className="flex items-center whitespace-nowrap rounded-xl bg-kbyellow px-3.5 py-[9px] text-[13px] font-semibold text-ink transition hover:bg-[#F2C800] md:h-11 md:rounded-tab md:px-[18px] md:text-sm"
+                >
+                  Registrarse
+                </Link>
+              </nav>
+            )}
+          </div>
+        </div>
       </div>
     </header>
   );

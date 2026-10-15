@@ -8,8 +8,8 @@ import { estimarTrayecto, formatearDuracion } from "@/lib/trayecto";
 import { usePaginacionLocal, ControlesPaginacion } from "@/components/Paginacion";
 
 const claseCampo =
-  "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
-const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+  "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+const claseEtiqueta = "kb-label";
 
 function hoyEcuador() {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "America/Guayaquil" });
@@ -50,29 +50,29 @@ function TarjetaPar({ par }: { par: ParRutasCatalogo }) {
   const desde = Math.min(...par.opciones.map((o) => o.precioReferencia));
 
   return (
-    <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 px-5 py-4">
-        <h2 className="font-display text-lg font-bold text-brand-dark">
+    <article className="overflow-hidden kb-card kb-on-white">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
+        <h2 className="text-lg font-bold text-brand-dark">
           {par.origenCiudad} → {par.destinoCiudad}
         </h2>
         <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
           {estimacion && (
-            <span className="rounded-full bg-brand-light px-3 py-1 text-brand-dark">
+            <span className="rounded-full bg-kbbg px-3 py-1 text-brand-dark">
               {estimacion.aproximado ? "≈ " : ""}
               {formatearDuracion(estimacion.minutos)}
             </span>
           )}
           {estimacion?.km ? (
-            <span className="rounded-full bg-brand-light px-3 py-1 text-brand-dark">
+            <span className="rounded-full bg-kbbg px-3 py-1 text-brand-dark">
               {estimacion.aproximado ? "≈ " : ""}
               {Math.round(estimacion.km)} km
             </span>
           ) : null}
-          <span className="rounded-full bg-brand-amber/20 px-3 py-1 text-brand-dark">Desde ${desde.toFixed(2)}</span>
+          <span className="rounded-full bg-kbyellow px-3 py-1 text-brand-dark">Desde ${desde.toFixed(2)}</span>
         </div>
       </header>
 
-      <ul className="divide-y divide-black/5">
+      <ul>
         {par.opciones.map((o) => {
           const grupos = agruparHorarios(o);
           const buscarHref =
@@ -93,33 +93,33 @@ function TarjetaPar({ par }: { par: ParRutasCatalogo }) {
                   ) : (
                     <span
                       aria-hidden="true"
-                      className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-sm font-bold text-brand-dark"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-kbbg text-sm font-bold text-brand-dark"
                     >
                       {o.cooperativaNombre.charAt(0)}
                     </span>
                   )}
                   <div>
                     <p className="font-semibold text-brand-dark">{o.cooperativaNombre}</p>
-                    <p className="text-xs text-brand-dark/60">
+                    <p className="text-xs text-muted-2">
                       {o.origenNombre} → {o.destinoNombre} · ${o.precioReferencia.toFixed(2)}
                     </p>
                   </div>
                 </div>
                 <Link
                   href={buscarHref}
-                  className="rounded-lg bg-brand-amber px-4 py-2 text-xs font-semibold text-brand-dark transition hover:brightness-95"
+                  className="rounded-lg bg-kbyellow px-4 py-2 text-xs font-semibold text-brand-dark transition hover:brightness-95"
                 >
                   Ver salidas de hoy
                 </Link>
               </div>
 
               {grupos.length === 0 ? (
-                <p className="mt-3 text-sm text-brand-dark/50">Horarios por confirmar con la cooperativa.</p>
+                <p className="mt-3 text-sm text-muted-2">Horarios por confirmar con la cooperativa.</p>
               ) : (
                 <div className="mt-3 space-y-2">
                   {grupos.map(([dias, horas]) => (
                     <div key={dias} className="flex flex-wrap items-center gap-2">
-                      <span className="w-40 shrink-0 text-xs font-semibold uppercase tracking-wide text-brand-dark/60">
+                      <span className="w-40 shrink-0 text-xs font-semibold uppercase tracking-wide text-muted-2">
                         {dias}
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -127,7 +127,7 @@ function TarjetaPar({ par }: { par: ParRutasCatalogo }) {
                           <span
                             key={`${h.hora}-${i}`}
                             title={h.tipoVehiculo ?? undefined}
-                            className="rounded-md bg-brand-light/60 px-2.5 py-1 text-sm font-semibold text-brand-dark"
+                            className="rounded-md bg-kbbg px-2.5 py-1 text-sm font-semibold text-brand-dark"
                           >
                             {h.hora}
                             {h.tipoVehiculo && (
@@ -186,14 +186,14 @@ export default function RutasPage() {
   const hayFiltros = origen !== "" || destino !== "" || cooperativa !== "";
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
-      <h1 className="font-display text-3xl font-bold text-brand-dark">Rutas y horarios</h1>
-      <p className="mt-2 max-w-2xl text-sm text-brand-dark/70">
+    <main className="kb-on-white mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
+      <h1 className="text-3xl font-bold text-brand-dark">Rutas y horarios</h1>
+      <p className="mt-2 max-w-2xl text-sm text-muted-2">
         Todas las rutas disponibles hoy en Klumbus: qué cooperativas las operan, a qué hora salen, qué días y cuánto
         tarda el viaje. Los tiempos marcados con ≈ son aproximados.
       </p>
 
-      <div className="mt-6 grid grid-cols-1 gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-1 gap-3 kb-card kb-on-white p-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label htmlFor="rutas-origen" className={claseEtiqueta}>
             Origen
@@ -267,23 +267,23 @@ export default function RutasPage() {
               setCooperativa("");
               paginacion.setPagina(1);
             }}
-            className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm font-semibold text-brand-dark/70 hover:bg-brand-light/40 disabled:opacity-40"
+            className="w-full kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
           >
             Limpiar
           </button>
         </div>
       </div>
 
-      {catalogo === null && <p className="mt-8 text-sm text-brand-dark/50">Cargando rutas...</p>}
+      {catalogo === null && <p className="mt-8 text-sm text-muted-2">Cargando rutas...</p>}
 
       {catalogo !== null && catalogo.length === 0 && (
-        <p className="mt-8 rounded-2xl bg-white p-6 text-center text-sm text-brand-dark/60 shadow-sm ring-1 ring-black/5">
+        <p className="mt-8 kb-card kb-on-white p-6 text-center text-sm text-muted-2">
           Todavía no hay rutas publicadas. Vuelve pronto.
         </p>
       )}
 
       {catalogo !== null && catalogo.length > 0 && filtrados.length === 0 && (
-        <p className="mt-8 rounded-2xl bg-white p-6 text-center text-sm text-brand-dark/60 shadow-sm ring-1 ring-black/5">
+        <p className="mt-8 kb-card kb-on-white p-6 text-center text-sm text-muted-2">
           No hay rutas con esos filtros. Prueba con otra ciudad o cooperativa.
         </p>
       )}
@@ -300,7 +300,7 @@ export default function RutasPage() {
         total={paginacion.total}
         etiqueta="ruta"
         onCambio={paginacion.setPagina}
-        className="mt-4 rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
+        className="mt-4 kb-card kb-on-white"
       />
     </main>
   );

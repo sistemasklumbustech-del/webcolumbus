@@ -31,12 +31,12 @@ function formatearFecha(iso: string) {
 
 function Pill({ texto, tono }: { texto: string; tono: "verde" | "ambar" | "rojo" | "gris" }) {
   const clases = {
-    verde: "bg-emerald-100 text-emerald-700",
-    ambar: "bg-amber-100 text-amber-700",
-    rojo: "bg-red-100 text-red-700",
-    gris: "bg-brand-light text-brand-dark/60",
+    verde: "kb-status--ok",
+    ambar: "kb-status--wait",
+    rojo: "kb-status--error",
+    gris: "bg-kbbg text-muted-2",
   }[tono];
-  return <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${clases}`}>{texto}</span>;
+  return <span className={`whitespace-nowrap kb-status ${clases}`}>{texto}</span>;
 }
 
 function PillEstadoPago({ estado }: { estado: string | null }) {
@@ -62,13 +62,13 @@ function PillComprobantes({ estados }: { estados: string[] | null }) {
 
 function FilaTabla({ f }: { f: FilaConciliacion }) {
   return (
-    <tr className="border-b border-black/5 last:border-0">
+    <tr className="border-b border-line last:border-0">
       <td className="px-4 py-3">
         <p className="font-mono text-xs text-brand-dark">{f.codigoQr}</p>
-        <p className="text-xs text-brand-dark/50">{f.estadoBoleto}</p>
+        <p className="text-xs text-muted-2">{f.estadoBoleto}</p>
       </td>
       <td className="px-4 py-3 text-brand-dark">{f.cooperativaNombre}</td>
-      <td className="px-4 py-3 text-brand-dark/70">{formatearFecha(f.creadoEn)}</td>
+      <td className="px-4 py-3 text-muted-2">{formatearFecha(f.creadoEn)}</td>
       <td className="px-4 py-3">
         <PillEstadoPago estado={f.estadoPago} />
       </td>
@@ -82,7 +82,7 @@ function FilaTabla({ f }: { f: FilaConciliacion }) {
         {f.discrepancias.length === 0 ? (
           <Pill texto="Sin discrepancias" tono="verde" />
         ) : (
-          <ul className="list-inside list-disc space-y-0.5 text-xs text-red-600">
+          <ul className="list-inside list-disc space-y-0.5 text-xs text-kberror">
             {f.discrepancias.map((d, i) => (
               <li key={i}>{d}</li>
             ))}
@@ -174,19 +174,19 @@ export default function ConciliacionAdminPage() {
 
   const totalPaginas = resultado ? Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) : 1;
   const claseCampo =
-    "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
-  const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+    "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+  const claseEtiqueta = "kb-label";
 
   return (
     <main className="mx-auto max-w-6xl flex-1 px-4 py-10">
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Conciliación</h1>
-      <p className="mt-1 text-sm text-brand-dark/70">
+      <h1 className="text-2xl font-bold text-brand-dark">Conciliación</h1>
+      <p className="mt-1 text-sm text-muted-2">
         Cruce de pago, tasa de terminal (SIAT3000) y comprobante electrónico, boleto por boleto.
       </p>
 
       <form
         onSubmit={filtrar}
-        className="mt-6 grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-6 lg:items-end"
+        className="mt-6 grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2 lg:grid-cols-6 lg:items-end"
       >
         <div>
           <label htmlFor="conc-desde" className={claseEtiqueta}>Desde</label>
@@ -221,17 +221,17 @@ export default function ConciliacionAdminPage() {
             type="checkbox"
             checked={soloDiscrepancias}
             onChange={(e) => setSoloDiscrepancias(e.target.checked)}
-            className="h-4 w-4 rounded border-brand-light text-brand-cobalto focus:ring-brand-medium"
+            className="kb-input"
           />
-          <label htmlFor="conc-solo-discrepancias" className="text-sm font-medium text-brand-dark/70">
+          <label htmlFor="conc-solo-discrepancias" className="text-sm font-medium text-muted-2">
             Solo con discrepancias
           </label>
         </div>
         <div className="flex gap-2 lg:col-span-6">
-          <button type="submit" className="rounded-lg bg-brand-cobalto px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110">
+          <button type="submit" className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110">
             Filtrar
           </button>
-          <button type="button" onClick={limpiar} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiar} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </div>
@@ -239,30 +239,30 @@ export default function ConciliacionAdminPage() {
 
       {resultado && (
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/50">Boletos con estos filtros</p>
-            <p className="mt-1 font-display text-2xl font-bold text-brand-dark">{resultado.total}</p>
+          <div className="kb-card kb-on-white p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">Boletos con estos filtros</p>
+            <p className="mt-1 text-2xl font-bold text-brand-dark">{resultado.total}</p>
           </div>
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/50">Con discrepancia</p>
-            <p className={`mt-1 font-display text-2xl font-bold ${resultado.totalConDiscrepancias > 0 ? "text-red-600" : "text-emerald-600"}`}>
+          <div className="kb-card kb-on-white p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">Con discrepancia</p>
+            <p className={`mt-1 text-2xl font-bold ${resultado.totalConDiscrepancias > 0 ? "text-kberror" : "text-ok"}`}>
               {resultado.totalConDiscrepancias}
             </p>
           </div>
         </div>
       )}
 
-      {error && <p className="mt-6 text-sm font-medium text-red-600">{error}</p>}
-      {resultado === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+      {error && <p className="mt-6 text-sm font-medium text-kberror">{error}</p>}
+      {resultado === null && !error && <p className="mt-6 text-sm text-muted-2">Cargando...</p>}
       {resultado !== null && resultado.filas.length === 0 && !cargando && (
-        <p className="mt-8 text-center text-sm text-brand-dark/50">No hay boletos que coincidan con estos filtros.</p>
+        <p className="mt-8 text-center text-sm text-muted-2">No hay boletos que coincidan con estos filtros.</p>
       )}
 
       {resultado !== null && resultado.filas.length > 0 && (
-        <div className="mt-6 overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-          <table className="w-full min-w-[820px] text-left text-sm">
+        <div className="mt-6 overflow-x-auto kb-card kb-on-white">
+          <table className="kb-table min-w-[820px]">
             <thead>
-              <tr className="border-b border-black/5 text-xs font-semibold uppercase tracking-wide text-brand-dark/50">
+              <tr className="border-b border-line text-xs font-semibold uppercase tracking-wide text-muted-2">
                 <th className="px-4 py-3">Boleto</th>
                 <th className="px-4 py-3">Cooperativa</th>
                 <th className="px-4 py-3">Fecha</th>
@@ -280,20 +280,20 @@ export default function ConciliacionAdminPage() {
           </table>
 
           {resultado.total > 0 && (
-            <div className="flex items-center justify-between border-t border-black/5 px-4 py-3 text-sm text-brand-dark/70">
+            <div className="flex items-center justify-between border-t border-line px-4 py-3 text-sm text-muted-2">
               <span>Página {pagina} de {totalPaginas}</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => setPagina((p) => Math.max(1, p - 1))}
                   disabled={pagina <= 1 || cargando}
-                  className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                  className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
                 >
                   Anterior
                 </button>
                 <button
                   onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
                   disabled={pagina >= totalPaginas || cargando}
-                  className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                  className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
                 >
                   Siguiente
                 </button>

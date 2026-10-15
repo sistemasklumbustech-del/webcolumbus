@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
+/* Rediseño final (oct-2026): Poppins autoalojada (sin Google Fonts: la CSP solo permite
+   font-src 'self') y hoja oficial de estilos en la capa "components", para que las clases
+   de Tailwind sigan ganándole donde ya se usan. Fuente de verdad: /diseno/klumbus-estilos.css */
+@import "@fontsource/poppins/latin-400.css";
+@import "@fontsource/poppins/latin-500.css";
+@import "@fontsource/poppins/latin-600.css";
+@import "@fontsource/poppins/latin-700.css";
+@import "@fontsource/poppins/latin-ext-400.css";
+@import "@fontsource/poppins/latin-ext-500.css";
+@import "@fontsource/poppins/latin-ext-600.css";
+@import "@fontsource/poppins/latin-ext-700.css";
+@import "../diseno/klumbus-estilos.css" layer(components);
+
 :root {
-  --background: #ffffff;
-  --foreground: #1a1523;
+  --background: #F5F6F8;
+  --foreground: #0B0D12;
 
   /* Identidad de marca Columbus — negro/amarillo/blanco, colores reales
      extraídos y medidos del logo oficial (07-ago-2026): amarillo #ffd425
@@ -13,10 +26,10 @@
      usado en cientos de lugares del código -- evita romper el
      contraste WCAG recién corregido en el ítem 21 (un botón amarillo
      con texto blanco encima habría fallado). */
-  --brand: #0f0d02;
-  --brand-dark: #000000;
-  --brand-medium: #ffd425;
-  --brand-light: #fffbe9;
+  --brand: #0B0D12;
+  --brand-dark: #0B0D12;
+  --brand-medium: #FDD514;
+  --brand-light: #FFF6C2;
   --brand-amber: #f5a800;
 
   /* Azul cobalto -- decisión real de diseño del director (15-ago-2026,
@@ -26,8 +39,35 @@
      (hero, detalles puntuales), no como color de fondo dominante. Este
      azul es el acento de uso general (íconos, enlaces, elementos
      interactivos secundarios). */
-  --brand-cobalto: #2451c4;
-  --brand-cobalto-claro: #eef2fb;
+  --brand-cobalto: #0B0D12; /* rediseño: cero azul -> negro de marca */
+  --brand-cobalto-claro: #F5F6F8;
+}
+
+/* Paleta del rediseño (nombres del snippet de Tailwind de /diseno/klumbus-estilos.css). Sin azul. */
+@theme {
+  --color-ink: #0B0D12;
+  --color-ink-2: #171A22;
+  --color-ink-3: #262A35;
+  --color-kbyellow: #FDD514;
+  --color-kbyellow-soft: #FFF6C2;
+  --color-kbbg: #F5F6F8;
+  --color-line: #E9EBF0;
+  --color-line-2: #D6D9E0;
+  --color-muted-2: #6B7080;
+  --color-muted-3: #9AA0AE;
+  --color-ondark: #C7CAD3;
+  --color-ok: #14804A;
+  --color-ok-bg: #E5F5EC;
+  --color-kberror: #D32F2F;
+  --color-kberror-bg: #FDECEC;
+  --color-women: #B8336A;
+  --color-women-bg: #FCE7F0;
+  --color-occupied: #DDE0E6;
+  --radius-card: 24px;
+  --radius-ctrl: 16px;
+  --radius-tab: 14px;
+  --shadow-card: 0 2px 14px rgba(11,13,18,.05);
+  --shadow-float: 0 16px 40px rgba(11,13,18,.14);
 }
 
 @theme inline {
@@ -43,12 +83,30 @@
   /* Pila de fuentes del sistema en vez de next/font/google — no depende
      de una descarga externa en tiempo de build, funciona igual de bien
      y evita un punto de fallo innecesario. */
-  --font-display: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-sans: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Poppins", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-sans: "Poppins", "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+/* Cero azul: casillas y radios nativos en negro de marca. */
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"] {
+  accent-color: #0B0D12;
+}
+
+/* La hoja de diseño pierde el borde negro al enfocar dentro de tarjetas blancas (mismo peso de selector): se restablece. */
+.kb-on-white .kb-input:focus {
+  border-color: #0B0D12;
+}
+
+/* Sobre fondos oscuros la casilla marcada va en amarillo (en negro no se vería). */
+.kb-dark input[type="checkbox"],
+.kb-dark input[type="radio"] {
+  accent-color: #FDD514;
 }

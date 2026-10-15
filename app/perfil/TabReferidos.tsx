@@ -46,21 +46,21 @@ export function TabReferidos({ perfil }: { perfil: MiPerfil }) {
 
   return (
     <div className="lg:grid lg:grid-cols-[320px_1fr] lg:items-start lg:gap-6">
-      <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-brand-amber to-brand-amber/70 px-6 py-6 lg:sticky lg:top-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/60">
+      <div className="overflow-hidden rounded-card bg-kbyellow px-6 py-6 lg:sticky lg:top-6">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">
           Invita a un amigo
         </p>
-        <p className="mt-1 text-sm text-brand-dark/80">
+        <p className="mt-1 text-sm text-ink">
           Comparte tu código — tu amigo recibe un descuento en su primer viaje, y tú ganas saldo en tu
           wallet cuando él aborde.
         </p>
         <div className="mt-4 flex items-center gap-2">
-          <p className="flex-1 rounded-lg bg-white/70 px-4 py-3 text-center font-display text-xl font-bold tracking-wide text-brand-dark">
+          <p className="flex-1 rounded-ctrl bg-white px-4 py-3 text-center text-xl font-bold tracking-wide text-brand-dark">
             {perfil.codigoPasajero}
           </p>
           <button
             onClick={copiarCodigo}
-            className="rounded-lg bg-brand-dark px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-dark/80"
+            className="kb-btn kb-btn--dark !h-12 !px-4 !text-sm"
           >
             {copiado ? "¡Copiado!" : "Copiar"}
           </button>
@@ -69,25 +69,25 @@ export function TabReferidos({ perfil }: { perfil: MiPerfil }) {
 
       <div className="mt-6 lg:mt-0">
         {error && (
-          <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+          <div className="kb-alert kb-alert--error">
             {error}
           </div>
         )}
 
-        {referidos === null && !error && <p className="text-sm text-brand-dark/50">Cargando...</p>}
+        {referidos === null && !error && <p className="text-sm text-muted-2">Cargando...</p>}
 
         {referidos !== null && referidos.length === 0 && (
-          <p className="text-center text-sm text-brand-dark/50">
+          <p className="text-center text-sm text-muted-2">
             Todavía no has referido a nadie — comparte tu código para empezar a ganar.
           </p>
         )}
 
         {referidos !== null && referidos.length > 0 && (
           <>
-            <h2 className="font-display text-sm font-bold text-brand-dark">
+            <h2 className="text-sm font-bold text-brand-dark">
               {referidos.length} {referidos.length === 1 ? "persona referida" : "personas referidas"}
               {yaAcreditados > 0 && (
-                <span className="ml-2 font-normal text-brand-dark/50">
+                <span className="ml-2 font-normal text-muted-2">
                   · {yaAcreditados} ya te dieron saldo
                 </span>
               )}
@@ -96,18 +96,14 @@ export function TabReferidos({ perfil }: { perfil: MiPerfil }) {
               {pagReferidos.visibles.map((r) => (
                 <div
                   key={r.id}
-                  className="flex items-center justify-between rounded-xl bg-brand-light/40 px-4 py-3"
+                  className="flex items-center justify-between rounded-ctrl bg-kbbg px-4 py-3"
                 >
                   <div>
                     <p className="font-semibold text-brand-dark">{r.nombreReferido}</p>
-                    <p className="text-xs text-brand-dark/50">Se unió el {formatearFecha(r.creadoEn)}</p>
+                    <p className="text-xs text-muted-2">Se unió el {formatearFecha(r.creadoEn)}</p>
                   </div>
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      r.creditoDisparado
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-brand-dark/5 text-brand-dark/50"
-                    }`}
+                    className={`kb-status ${r.creditoDisparado ? "kb-status--ok" : "kb-status--off"}`}
                   >
                     {r.creditoDisparado ? "Ya viajó" : "Aún no viaja"}
                   </span>

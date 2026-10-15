@@ -64,7 +64,7 @@ export function EntradaCodigoOtp({
           onChange={(e) => !pegando && actualizarDigito(i, e.target.value)}
           onKeyDown={(e) => manejarTeclado(i, e)}
           onPaste={manejarPegado}
-          className="h-14 w-11 rounded-lg border border-brand-light text-center text-2xl font-bold text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium sm:w-12"
+          className="kb-input !h-14 !w-11 !px-0 text-center !text-2xl font-bold sm:!w-12"
         />
       ))}
     </div>

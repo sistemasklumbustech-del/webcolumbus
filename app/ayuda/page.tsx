@@ -48,8 +48,8 @@ const PREGUNTAS = [
 ];
 
 const claseCampo =
-  "w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium";
-const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+  "w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-brand-dark placeholder:text-muted-3 focus:outline-none focus:ring-2 focus:ring-brand-medium";
+const claseEtiqueta = "kb-label";
 
 export default function AyudaPage() {
   const [nombre, setNombre] = useState("");
@@ -114,43 +114,43 @@ export default function AyudaPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
-      <h1 className="font-display text-3xl font-bold text-brand-dark">Ayuda</h1>
-      <p className="mt-2 max-w-2xl text-sm text-brand-dark/70">
+    <main className="kb-on-white mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
+      <h1 className="text-3xl font-bold text-brand-dark">Ayuda</h1>
+      <p className="mt-2 max-w-2xl text-sm text-muted-2">
         Encuentra respuesta a lo más común o escríbenos: te respondemos por correo.
       </p>
 
       <section className="mt-8" aria-labelledby="ayuda-frecuentes">
-        <h2 id="ayuda-frecuentes" className="font-display text-lg font-bold text-brand-dark">
+        <h2 id="ayuda-frecuentes" className="text-lg font-bold text-brand-dark">
           Preguntas frecuentes
         </h2>
-        <div className="mt-3 divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+        <div className="mt-3 divide-y divide-black/5 overflow-hidden kb-card kb-on-white">
           {PREGUNTAS.map((q) => (
             <details key={q.p} className="group px-5 py-4">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-brand-dark">
                 {q.p}
-                <span aria-hidden="true" className="text-brand-dark/40 transition group-open:rotate-45">
+                <span aria-hidden="true" className="text-muted-3 transition group-open:rotate-45">
                   +
                 </span>
               </summary>
-              <p className="mt-2 text-sm leading-relaxed text-brand-dark/70">{q.r}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-2">{q.r}</p>
             </details>
           ))}
         </div>
-        <p className="mt-2 text-xs text-brand-dark/50">
+        <p className="mt-2 text-xs text-muted-2">
           ¿Ya tienes cuenta? <Link href="/perfil?tab=boletos" className="font-semibold text-brand hover:underline">Ve a Mis boletos</Link>.
         </p>
       </section>
 
       <section className="mt-10" aria-labelledby="ayuda-formulario">
-        <h2 id="ayuda-formulario" className="font-display text-lg font-bold text-brand-dark">
+        <h2 id="ayuda-formulario" className="text-lg font-bold text-brand-dark">
           ¿No encontraste lo que buscabas? Escríbenos
         </h2>
 
         {referencia ? (
-          <div role="status" className="mt-3 rounded-2xl bg-emerald-50 p-6 ring-1 ring-emerald-200">
-            <p className="font-display text-lg font-bold text-emerald-900">¡Recibimos tu consulta!</p>
-            <p className="mt-1 text-sm text-emerald-900/80">
+          <div role="status" className="mt-3 rounded-card bg-ok-bg p-6">
+            <p className="text-lg font-bold text-ok">¡Recibimos tu consulta!</p>
+            <p className="mt-1 text-sm text-ok/80">
               {cooperativaElegida
                 ? `Le escribimos directamente a ${cooperativaElegida.nombre}. `
                 : ""}
@@ -160,7 +160,7 @@ export default function AyudaPage() {
             <button
               type="button"
               onClick={() => setReferencia(null)}
-              className="mt-4 rounded-lg border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
+              className="mt-4 kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-ok"
             >
               Enviar otra consulta
             </button>
@@ -168,7 +168,7 @@ export default function AyudaPage() {
         ) : (
           <form
             onSubmit={enviar}
-            className="mt-3 grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 sm:p-6"
+            className="mt-3 grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2 sm:p-6"
           >
             <div>
               <label htmlFor="ayuda-nombre" className={claseEtiqueta}>
@@ -218,7 +218,7 @@ export default function AyudaPage() {
                 ))}
               </select>
               {cooperativaElegida && (
-                <p className="mt-1 text-xs text-brand-dark/50">
+                <p className="mt-1 text-xs text-muted-2">
                   Tu consulta le llegará directo a {cooperativaElegida.nombre}, no a Klumbus.
                 </p>
               )}
@@ -262,7 +262,7 @@ export default function AyudaPage() {
                 placeholder="Cuéntanos qué pasó con el mayor detalle posible."
                 className={claseCampo}
               />
-              <p className="mt-1 text-xs text-brand-dark/40">{mensaje.length} de 2000</p>
+              <p className="mt-1 text-xs text-muted-3">{mensaje.length} de 2000</p>
             </div>
 
             {/* Campo trampa: invisible para las personas. */}
@@ -272,7 +272,7 @@ export default function AyudaPage() {
             </div>
 
             {error && (
-              <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100 sm:col-span-2">
+              <p role="alert" className="kb-alert kb-alert--error sm:col-span-2">
                 {error}
               </p>
             )}
@@ -281,7 +281,7 @@ export default function AyudaPage() {
               <button
                 type="submit"
                 disabled={enviando}
-                className="rounded-lg bg-brand-amber px-6 py-2.5 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+                className="rounded-lg bg-kbyellow px-6 py-2.5 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
               >
                 {enviando ? "Enviando..." : "Enviar consulta"}
               </button>
@@ -290,7 +290,7 @@ export default function AyudaPage() {
         )}
 
         {(contacto.correo || contacto.telefono) && (
-          <p className="mt-4 text-sm text-brand-dark/70">
+          <p className="mt-4 text-sm text-muted-2">
             También puedes contactarnos directamente
             {contacto.correo && (
               <>

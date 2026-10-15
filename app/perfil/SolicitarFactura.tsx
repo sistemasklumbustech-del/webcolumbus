@@ -21,7 +21,7 @@ export function SolicitarFactura({ boletoId }: { boletoId: string }) {
 
   if (enviada) {
     return (
-      <p className="mt-2 text-xs font-medium text-emerald-600">
+      <p className="mt-2 text-xs font-medium text-ok">
         Factura solicitada — la cooperativa la emitirá en su propio sistema.
       </p>
     );
@@ -63,7 +63,7 @@ export function SolicitarFactura({ boletoId }: { boletoId: string }) {
   }
 
   return (
-    <div className="mt-2 rounded-lg bg-brand-light/30 p-3">
+    <div className="mt-2 kb-on-white rounded-ctrl bg-kbbg p-3">
       <div className="flex gap-3 text-sm">
         <label className="flex items-center gap-1">
           <input
@@ -84,34 +84,34 @@ export function SolicitarFactura({ boletoId }: { boletoId: string }) {
         value={numero}
         onChange={(e) => setNumero(e.target.value.replace(/\D/g, "").slice(0, 13))}
         placeholder={tipo === "cedula" ? "Cédula (10 dígitos)" : "RUC (13 dígitos)"}
-        className="mt-2 w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+        className="mt-2 kb-input"
       />
       <input
         type="text"
         value={razonSocial}
         onChange={(e) => setRazonSocial(e.target.value)}
         placeholder="Nombre completo o razón social"
-        className="mt-2 w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+        className="mt-2 kb-input"
       />
       <input
         type="text"
         value={direccion}
         onChange={(e) => setDireccion(e.target.value)}
         placeholder="Dirección (opcional)"
-        className="mt-2 w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+        className="mt-2 kb-input"
       />
-      {error && <p className="mt-2 text-xs font-medium text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs font-medium text-kberror">{error}</p>}
       <div className="mt-2 flex gap-2">
         <button
           onClick={enviar}
           disabled={enviando}
-          className="rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+          className="kb-btn kb-btn--dark !h-10 !px-4 !text-sm"
         >
           {enviando ? "Enviando..." : "Enviar solicitud"}
         </button>
         <button
           onClick={() => setAbierto(false)}
-          className="rounded-lg border border-brand-light px-4 py-1.5 text-sm text-brand-dark/70 hover:bg-brand-light/40"
+          className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
         >
           Cancelar
         </button>

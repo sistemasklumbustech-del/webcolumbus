@@ -191,28 +191,28 @@ export default function PersonalPage() {
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
       <Toast mensaje={mensajeError} onCerrar={() => setMensajeError(null)} tipo="error" />
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Personal</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="text-2xl font-bold text-brand-dark">Personal</h1>
+        <p className="mt-1 text-sm text-muted-2">
           Da de alta a tus vendedores (para que puedan validar boletos en el andén) y a tus conductores.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
       {/* ─── Usuarios (staff) ─── */}
       <section className="space-y-4">
-        <h2 className="font-display text-lg font-bold text-brand-dark">Usuarios del sistema</h2>
+        <h2 className="text-lg font-bold text-brand-dark">Usuarios del sistema</h2>
 
         <form
           onSubmit={crearStaff}
-          className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
+          className="grid grid-cols-1 gap-4 kb-card kb-on-white p-6 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
         >
           <div>
-            <label htmlFor="personal-staff-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-staff-nombre" className="kb-label">
               Nombre completo
             </label>
             <input
@@ -220,11 +220,11 @@ export default function PersonalPage() {
               type="text"
               value={nombreStaff}
               onChange={(e) => setNombreStaff(e.target.value)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="personal-staff-correo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-staff-correo" className="kb-label">
               Correo
             </label>
             <input
@@ -232,24 +232,24 @@ export default function PersonalPage() {
               type="email"
               value={correo}
               onChange={(e) => setCorreo(e.target.value)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="personal-staff-password" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-staff-password" className="kb-label">
               Contraseña
             </label>
             <CampoPassword id="personal-staff-password" value={password} onChange={setPassword} placeholder="Mínimo 8 caracteres" />
           </div>
           <div>
-            <label htmlFor="personal-staff-rol" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-staff-rol" className="kb-label">
               Rol
             </label>
             <select
               id="personal-staff-rol"
               value={rol}
               onChange={(e) => setRol(e.target.value as typeof rol)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             >
               <option value="vendedor">Vendedor</option>
               <option value="admin_cooperativa">Administrador</option>
@@ -258,28 +258,28 @@ export default function PersonalPage() {
           <button
             type="submit"
             disabled={guardandoStaff}
-            className="h-[42px] w-fit rounded-lg bg-brand-amber px-5 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50 sm:col-span-2 lg:col-span-4"
+            className="kb-btn kb-btn--primary !h-[42px] w-fit !px-5 !text-sm sm:col-span-2 lg:col-span-4"
           >
             {guardandoStaff ? "Creando..." : "Crear usuario"}
           </button>
           {errorStaff && (
-            <p className="sm:col-span-2 lg:col-span-4 text-sm font-medium text-red-600">{errorStaff}</p>
+            <p className="sm:col-span-2 lg:col-span-4 text-sm font-medium text-kberror">{errorStaff}</p>
           )}
         </form>
 
         <form
           onSubmit={filtrarStaff}
-          className="flex flex-wrap items-end gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+          className="flex flex-wrap items-end gap-3 kb-card kb-on-white p-4"
         >
           <div>
-            <label htmlFor="personal-staff-rol-filtro" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-staff-rol-filtro" className="kb-label">
               Rol
             </label>
             <select
               id="personal-staff-rol-filtro"
               value={rolFiltro}
               onChange={(e) => setRolFiltro(e.target.value as "" | "vendedor" | "admin_cooperativa")}
-              className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="kb-input !h-11 !text-sm"
             >
               <option value="">Todos</option>
               <option value="vendedor">Vendedor</option>
@@ -287,7 +287,7 @@ export default function PersonalPage() {
             </select>
           </div>
           <div className="min-w-[220px] flex-1">
-            <label htmlFor="personal-staff-busqueda-filtro" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-staff-busqueda-filtro" className="kb-label">
               Buscar
             </label>
             <input
@@ -295,26 +295,26 @@ export default function PersonalPage() {
               value={busquedaFiltroStaff}
               onChange={(e) => setBusquedaFiltroStaff(e.target.value)}
               placeholder="Nombre o correo"
-              className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input !h-11 !text-sm"
             />
           </div>
-          <button type="submit" className="rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95">
+          <button type="submit" className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiarFiltrosStaff} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiarFiltrosStaff} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </form>
 
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+        <div className="overflow-hidden kb-card kb-on-white">
           {resultadoStaff !== null && resultadoStaff.filas.length === 0 && !cargandoStaff && (
-            <p className="px-6 py-6 text-center text-sm text-brand-dark/50">
+            <p className="px-6 py-6 text-center text-sm text-muted-2">
               No hay usuarios que coincidan con estos filtros.
             </p>
           )}
           {resultadoStaff !== null && resultadoStaff.filas.length > 0 && (
-            <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+              <thead>
                 <tr>
                   <th className="px-6 py-3">Nombre</th>
                   <th className="px-6 py-3">Correo</th>
@@ -322,16 +322,16 @@ export default function PersonalPage() {
                   <th className="px-6 py-3">Estado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/5">
+              <tbody>
                 {resultadoStaff.filas.map((s) => (
                   <tr key={s.id}>
                     <td className="px-6 py-3 font-medium text-brand-dark">{s.nombreCompleto}</td>
-                    <td className="px-6 py-3 text-brand-dark/70">{s.correo}</td>
-                    <td className="px-6 py-3 text-brand-dark/70">{ETIQUETA_ROL[s.rol]}</td>
+                    <td className="px-6 py-3 text-muted-2">{s.correo}</td>
+                    <td className="px-6 py-3 text-muted-2">{ETIQUETA_ROL[s.rol]}</td>
                     <td className="px-6 py-3">
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          s.activo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                        className={`kb-status ${
+                          s.activo ? "kb-status--ok" : "kb-status--off"
                         }`}
                       >
                         {s.activo ? "Activo" : "Inactivo"}
@@ -344,7 +344,7 @@ export default function PersonalPage() {
           )}
 
           {resultadoStaff !== null && resultadoStaff.total > 0 && (
-            <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+            <div className="flex items-center justify-between border-t border-line px-6 py-3 text-sm text-muted-2">
               <span>
                 Página {paginaStaff} de {Math.max(1, Math.ceil(resultadoStaff.total / LIMITE_PERSONAL_PAGINA))}
               </span>
@@ -352,7 +352,7 @@ export default function PersonalPage() {
                 <button
                   onClick={() => setPaginaStaff((p) => Math.max(1, p - 1))}
                   disabled={paginaStaff <= 1 || cargandoStaff}
-                  className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                  className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
                 >
                   Anterior
                 </button>
@@ -366,7 +366,7 @@ export default function PersonalPage() {
                     paginaStaff >= Math.max(1, Math.ceil(resultadoStaff.total / LIMITE_PERSONAL_PAGINA)) ||
                     cargandoStaff
                   }
-                  className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                  className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
                 >
                   Siguiente
                 </button>
@@ -378,14 +378,14 @@ export default function PersonalPage() {
 
       {/* ─── Conductores ─── */}
       <section className="space-y-4">
-        <h2 className="font-display text-lg font-bold text-brand-dark">Conductores</h2>
+        <h2 className="text-lg font-bold text-brand-dark">Conductores</h2>
 
         <form
           onSubmit={crearConductor}
-          className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-3 lg:items-end"
+          className="grid grid-cols-1 gap-4 kb-card kb-on-white p-6 sm:grid-cols-2 lg:grid-cols-3 lg:items-end"
         >
           <div>
-            <label htmlFor="personal-conductor-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-conductor-nombre" className="kb-label">
               Nombre completo
             </label>
             <input
@@ -393,11 +393,11 @@ export default function PersonalPage() {
               type="text"
               value={nombreConductor}
               onChange={(e) => setNombreConductor(e.target.value)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="personal-conductor-cedula" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-conductor-cedula" className="kb-label">
               Cédula
             </label>
             <input
@@ -405,11 +405,11 @@ export default function PersonalPage() {
               type="text"
               value={cedula}
               onChange={(e) => setCedula(e.target.value)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="personal-conductor-licencia-numero" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-conductor-licencia-numero" className="kb-label">
               Número de licencia (opcional)
             </label>
             <input
@@ -417,11 +417,11 @@ export default function PersonalPage() {
               type="text"
               value={licenciaNumero}
               onChange={(e) => setLicenciaNumero(e.target.value)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="personal-conductor-licencia-categoria" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-conductor-licencia-categoria" className="kb-label">
               Categoría de licencia (opcional)
             </label>
             <input
@@ -430,11 +430,11 @@ export default function PersonalPage() {
               value={licenciaCategoria}
               onChange={(e) => setLicenciaCategoria(e.target.value)}
               placeholder="Ej. E"
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <div>
-            <label htmlFor="personal-conductor-telefono" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-conductor-telefono" className="kb-label">
               Teléfono (opcional)
             </label>
             <input
@@ -442,27 +442,27 @@ export default function PersonalPage() {
               type="text"
               value={telefonoConductor}
               onChange={(e) => setTelefonoConductor(e.target.value)}
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
           <button
             type="submit"
             disabled={guardandoConductor}
-            className="h-[42px] w-fit rounded-lg bg-brand-amber px-5 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+            className="kb-btn kb-btn--primary !h-[42px] w-fit !px-5 !text-sm"
           >
             {guardandoConductor ? "Guardando..." : "Registrar conductor"}
           </button>
           {errorConductor && (
-            <p className="sm:col-span-2 lg:col-span-3 text-sm font-medium text-red-600">{errorConductor}</p>
+            <p className="sm:col-span-2 lg:col-span-3 text-sm font-medium text-kberror">{errorConductor}</p>
           )}
         </form>
 
         <form
           onSubmit={filtrarConductores}
-          className="flex flex-wrap items-end gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+          className="flex flex-wrap items-end gap-3 kb-card kb-on-white p-4"
         >
           <div className="min-w-[220px] flex-1">
-            <label htmlFor="personal-conductor-busqueda-filtro" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="personal-conductor-busqueda-filtro" className="kb-label">
               Buscar
             </label>
             <input
@@ -470,26 +470,26 @@ export default function PersonalPage() {
               value={busquedaFiltroConductor}
               onChange={(e) => setBusquedaFiltroConductor(e.target.value)}
               placeholder="Nombre, cédula o teléfono"
-              className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input !h-11 !text-sm"
             />
           </div>
-          <button type="submit" className="rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95">
+          <button type="submit" className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiarFiltrosConductores} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiarFiltrosConductores} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </form>
 
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+        <div className="overflow-hidden kb-card kb-on-white">
           {resultadoConductores !== null && resultadoConductores.filas.length === 0 && !cargandoConductores && (
-            <p className="px-6 py-6 text-center text-sm text-brand-dark/50">
+            <p className="px-6 py-6 text-center text-sm text-muted-2">
               No hay conductores que coincidan con estos filtros.
             </p>
           )}
           {resultadoConductores !== null && resultadoConductores.filas.length > 0 && (
-            <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+              <thead>
                 <tr>
                   <th className="px-6 py-3">Nombre</th>
                   <th className="px-6 py-3">Cédula</th>
@@ -497,15 +497,15 @@ export default function PersonalPage() {
                   <th className="px-6 py-3">Teléfono</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/5">
+              <tbody>
                 {resultadoConductores.filas.map((c) => (
                   <tr key={c.id}>
                     <td className="px-6 py-3 font-medium text-brand-dark">{c.nombreCompleto}</td>
-                    <td className="px-6 py-3 text-brand-dark/70">{c.cedula}</td>
-                    <td className="px-6 py-3 text-brand-dark/70">
+                    <td className="px-6 py-3 text-muted-2">{c.cedula}</td>
+                    <td className="px-6 py-3 text-muted-2">
                       {c.licenciaNumero ? `${c.licenciaNumero}${c.licenciaCategoria ? ` (${c.licenciaCategoria})` : ""}` : "—"}
                     </td>
-                    <td className="px-6 py-3 text-brand-dark/70">{c.telefono ?? "—"}</td>
+                    <td className="px-6 py-3 text-muted-2">{c.telefono ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -513,7 +513,7 @@ export default function PersonalPage() {
           )}
 
           {resultadoConductores !== null && resultadoConductores.total > 0 && (
-            <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+            <div className="flex items-center justify-between border-t border-line px-6 py-3 text-sm text-muted-2">
               <span>
                 Página {paginaConductores} de {Math.max(1, Math.ceil(resultadoConductores.total / LIMITE_PERSONAL_PAGINA))}
               </span>
@@ -521,7 +521,7 @@ export default function PersonalPage() {
                 <button
                   onClick={() => setPaginaConductores((p) => Math.max(1, p - 1))}
                   disabled={paginaConductores <= 1 || cargandoConductores}
-                  className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                  className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
                 >
                   Anterior
                 </button>
@@ -536,7 +536,7 @@ export default function PersonalPage() {
                       Math.max(1, Math.ceil(resultadoConductores.total / LIMITE_PERSONAL_PAGINA)) ||
                     cargandoConductores
                   }
-                  className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                  className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
                 >
                   Siguiente
                 </button>

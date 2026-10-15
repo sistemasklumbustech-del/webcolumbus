@@ -12,8 +12,8 @@ import { obtenerToken } from "@/lib/auth";
 import { ENTIDADES_FINANCIERAS, ETIQUETA_ENTIDAD } from "@/lib/entidades-financieras";
 
 const claseCampo =
-  "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
-const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+  "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+const claseEtiqueta = "kb-label";
 
 const VACIO: DatosCuentaCobro = {
   entidadFinanciera: "banco_pichincha",
@@ -76,19 +76,19 @@ export function CuentaCobroCoop({ onExito, onError }: { onExito: (m: string) => 
   }
 
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:p-6">
-      <h2 className="font-display text-lg font-bold text-brand-dark">Cuenta para recibir tus pagos</h2>
-      <p className="mt-1 max-w-2xl text-sm text-brand-dark/70">
+    <section className="kb-card kb-on-white p-5 sm:p-6">
+      <h2 className="text-lg font-bold text-brand-dark">Cuenta para recibir tus pagos</h2>
+      <p className="mt-1 max-w-2xl text-sm text-muted-2">
         Los pasajeros pagan en línea (tarjeta o DeUna) y la plataforma te liquida el dinero de tus boletos a esta cuenta
         bancaria. Debe estar a nombre de la cooperativa (o de su representante legal).
       </p>
 
       {cuentas === null ? (
-        <p className="mt-4 text-sm text-brand-dark/60">Cargando...</p>
+        <p className="mt-4 text-sm text-muted-2">Cargando...</p>
       ) : (
         <div className="mt-4 space-y-3">
           {vigente && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+            <div className="kb-alert kb-alert--ok flex-col">
               <p className="font-semibold">Cuenta verificada</p>
               <p className="mt-1">
                 {ETIQUETA_ENTIDAD[vigente.entidadFinanciera]} · {vigente.tipoCuenta} · {enmascarar(vigente.numeroCuenta)}
@@ -97,7 +97,7 @@ export function CuentaCobroCoop({ onExito, onError }: { onExito: (m: string) => 
             </div>
           )}
           {pendiente && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div className="kb-alert kb-alert--info flex-col">
               <p className="font-semibold">En revisión</p>
               <p className="mt-1">
                 {ETIQUETA_ENTIDAD[pendiente.entidadFinanciera]} · {pendiente.tipoCuenta} · {enmascarar(pendiente.numeroCuenta)}
@@ -107,7 +107,7 @@ export function CuentaCobroCoop({ onExito, onError }: { onExito: (m: string) => 
             </div>
           )}
           {rechazada && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+            <div className="kb-alert kb-alert--error flex-col">
               <p className="font-semibold">La última cuenta enviada fue rechazada</p>
               <p className="mt-1">{rechazada.motivoRechazo}</p>
             </div>
@@ -117,7 +117,7 @@ export function CuentaCobroCoop({ onExito, onError }: { onExito: (m: string) => 
             <button
               type="button"
               onClick={() => setEditando(true)}
-              className="rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               {vigente || pendiente ? "Cambiar de cuenta" : "Agregar cuenta"}
             </button>
@@ -227,7 +227,7 @@ export function CuentaCobroCoop({ onExito, onError }: { onExito: (m: string) => 
                 <button
                   type="submit"
                   disabled={guardando}
-                  className="rounded-lg bg-brand-amber px-5 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+                  className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
                 >
                   {guardando ? "Enviando..." : "Enviar para verificación"}
                 </button>
@@ -235,7 +235,7 @@ export function CuentaCobroCoop({ onExito, onError }: { onExito: (m: string) => 
                   <button
                     type="button"
                     onClick={() => setEditando(false)}
-                    className="rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 hover:bg-brand-light/40"
+                    className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
                   >
                     Cancelar
                   </button>

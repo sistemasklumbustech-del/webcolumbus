@@ -57,7 +57,7 @@ export function SelectorImagen({
         ) : (
           <div
             aria-hidden="true"
-            className={`flex h-16 w-16 shrink-0 items-center justify-center bg-brand-light/40 text-center text-[10px] text-brand-dark/40 ${redonda ? "rounded-full" : "rounded-lg"}`}
+            className={`flex h-16 w-16 shrink-0 items-center justify-center bg-kbbg text-center text-[10px] text-muted-3 ${redonda ? "rounded-full" : "rounded-lg"}`}
           >
             Sin imagen
           </div>
@@ -75,15 +75,15 @@ export function SelectorImagen({
             type="button"
             disabled={subiendo}
             onClick={() => entrada.current?.click()}
-            className="rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+            className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
           >
             {subiendo ? "Subiendo..." : valor ? "Cambiar imagen" : "Subir imagen"}
           </button>
-          <p className="mt-1 text-xs text-brand-dark/50">Desde tu computador o celular · JPG, PNG o WEBP.</p>
+          <p className="mt-1 text-xs text-muted-2">Desde tu computador o celular · JPG, PNG o WEBP.</p>
         </div>
       </div>
-      {aviso && <p className="text-sm font-medium text-red-600">{aviso}</p>}
-      <details className="text-xs text-brand-dark/60">
+      {aviso && <p className="text-sm font-medium text-kberror">{aviso}</p>}
+      <details className="text-xs text-muted-2">
         <summary className="cursor-pointer font-semibold">O pega el enlace de una imagen</summary>
         <input
           id={id}
@@ -91,7 +91,7 @@ export function SelectorImagen({
           value={valor}
           onChange={(e) => onCambio(e.target.value)}
           placeholder="https://..."
-          className="mt-2 w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+          className="mt-2 w-full kb-input"
         />
       </details>
     </div>

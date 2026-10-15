@@ -35,8 +35,8 @@ interface Props {
  */
 export function TarjetaPublicidadNativa({ nombreAnunciante, archivoUrl, href, onClic }: Props) {
   const contenido = (
-    <div className="group overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="relative aspect-[385/178] w-full">
+    <div className="group overflow-hidden rounded-[22px] bg-white shadow-card transition hover:-translate-y-0.5 md:rounded-card">
+      <div className="relative h-[150px] w-full md:h-[180px]">
         {archivoUrl ? (
           <Image
             src={archivoUrl}
@@ -47,15 +47,15 @@ export function TarjetaPublicidadNativa({ nombreAnunciante, archivoUrl, href, on
             unoptimized
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-brand-cobalto-claro">
+          <div className="flex h-full w-full items-center justify-center bg-kbbg">
             <IconoPublicidad tamano={40} />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/80 via-brand-dark/10 to-transparent" />
-        <span className="absolute right-2 top-2 rounded bg-black/40 px-2 py-0.5 text-[10px] text-white/90">
+        <span className="absolute left-3 top-3 rounded-full bg-kbyellow px-2.5 py-0.5 text-[11px] font-semibold text-ink">
           Publicidad
         </span>
-        <p className="absolute bottom-2 left-3 right-3 text-base font-bold leading-tight text-white sm:text-lg">
+        <p className="absolute bottom-3 left-3.5 right-3.5 text-xl font-semibold leading-tight text-white md:text-2xl">
           {nombreAnunciante}
         </p>
       </div>

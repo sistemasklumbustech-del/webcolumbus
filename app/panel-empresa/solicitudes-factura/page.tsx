@@ -50,29 +50,29 @@ function TarjetaSolicitud({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+    <div className="kb-card kb-on-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="break-words font-display font-bold text-brand-dark">{solicitud.pasajeroNombre}</p>
-          <p className="text-xs text-brand-dark/40">
+          <p className="break-words font-bold text-brand-dark">{solicitud.pasajeroNombre}</p>
+          <p className="text-xs text-muted-3">
             Solicitado {formatearFecha(solicitud.creadoEn)}
           </p>
         </div>
         <span
-          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+          className={`kb-status ${
             solicitud.estado === "emitida"
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-amber-100 text-amber-700"
+              ? "kb-status--ok"
+              : "kb-status--wait"
           }`}
         >
           {solicitud.estado === "emitida" ? "Emitida" : "Pendiente"}
         </span>
       </div>
 
-      <div className="mt-3 rounded-lg bg-brand-light/30 p-3 text-sm text-brand-dark">
+      <div className="mt-3 kb-on-white rounded-ctrl bg-kbbg p-3 text-sm text-brand-dark">
         {Object.entries(solicitud.datosTributarios).map(([clave, valor]) => (
           <p key={clave} className="break-words">
-            <span className="text-brand-dark/50 capitalize">{clave}: </span>
+            <span className="text-muted-2 capitalize">{clave}: </span>
             <span className="font-semibold">{valor}</span>
           </p>
         ))}
@@ -85,12 +85,12 @@ function TarjetaSolicitud({
             value={urlFactura}
             onChange={(e) => setUrlFactura(e.target.value)}
             placeholder="Link a la factura (opcional)"
-            className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           />
           <button
             onClick={marcarEmitida}
             disabled={guardando}
-            className="rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+            className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
           >
             {guardando ? "Guardando..." : "Marcar como emitida"}
           </button>
@@ -159,31 +159,31 @@ export default function SolicitudesFacturaPage() {
     <div className="mx-auto w-full max-w-2xl">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
 
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Solicitudes de factura</h1>
-      <p className="mt-1 text-sm text-brand-dark/70">
+      <h1 className="text-2xl font-bold text-brand-dark">Solicitudes de factura</h1>
+      <p className="mt-1 text-sm text-muted-2">
         Pasajeros que pidieron la factura de su pasaje — la emites en tu propio sistema contable y
         la marcas aquí como lista.
       </p>
 
       {error && (
-        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="mt-4 kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
       <form
         onSubmit={filtrar}
-        className="mt-6 grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-3 sm:items-end"
+        className="mt-6 grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-3 sm:items-end"
       >
         <div>
-          <label htmlFor="factura-filtro-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="factura-filtro-estado" className="kb-label">
             Estado
           </label>
           <select
             id="factura-filtro-estado"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           >
             <option value="">Todas</option>
             <option value="pendiente">Pendientes</option>
@@ -191,7 +191,7 @@ export default function SolicitudesFacturaPage() {
           </select>
         </div>
         <div>
-          <label htmlFor="factura-filtro-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="factura-filtro-busqueda" className="kb-label">
             Buscar
           </label>
           <input
@@ -199,23 +199,23 @@ export default function SolicitudesFacturaPage() {
             value={busquedaFiltro}
             onChange={(e) => setBusquedaFiltro(e.target.value)}
             placeholder="Pasajero, RUC o razón social"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           />
         </div>
-        <div className="flex gap-2">
-          <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" className="flex-1 kb-btn kb-btn--dark !h-10 !px-4 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiarFiltros} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </div>
       </form>
 
-      {resultado === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+      {resultado === null && !error && <p className="mt-6 text-sm text-muted-2">Cargando...</p>}
 
       {resultado !== null && resultado.total === 0 && !cargandoLista && (
-        <p className="mt-8 text-center text-sm text-brand-dark/50">
+        <p className="mt-8 text-center text-sm text-muted-2">
           {aplicados.estado || aplicados.busqueda
             ? "No hay solicitudes que coincidan con estos filtros."
             : "Todavía no hay ninguna solicitud de factura."}
@@ -240,7 +240,7 @@ export default function SolicitudesFacturaPage() {
 
       {emitidas.length > 0 && (
         <div className="mt-8">
-          <h2 className="font-display text-sm font-bold text-brand-dark/50">Ya emitidas</h2>
+          <h2 className="text-sm font-bold text-muted-2">Ya emitidas</h2>
           <div className="mt-2 space-y-3">
             {emitidas.map((s) => (
               <TarjetaSolicitud key={s.id} solicitud={s} onEmitida={cargar} onError={setError} />
@@ -250,7 +250,7 @@ export default function SolicitudesFacturaPage() {
       )}
 
       {resultado !== null && resultado.total > 0 && (
-        <div className="mt-6 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+        <div className="mt-6 flex items-center justify-between kb-card kb-on-white px-4 py-3 text-sm text-muted-2">
           <span>
             {resultado.total} solicitud(es) · Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA))}
           </span>
@@ -258,14 +258,14 @@ export default function SolicitudesFacturaPage() {
             <button
               onClick={() => setPagina((p) => Math.max(1, p - 1))}
               disabled={pagina <= 1 || cargandoLista}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Anterior
             </button>
             <button
               onClick={() => setPagina((p) => Math.min(Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)), p + 1))}
               disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) || cargandoLista}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Siguiente
             </button>

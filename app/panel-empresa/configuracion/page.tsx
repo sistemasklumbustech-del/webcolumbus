@@ -155,11 +155,11 @@ export default function ConfiguracionPage() {
     return (
       <main className="mx-auto max-w-2xl flex-1 px-4 py-10">
         {error ? (
-          <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+          <div className="kb-alert kb-alert--error">
             {error}
           </div>
         ) : (
-          <p className="text-sm text-brand-dark/50">Cargando...</p>
+          <p className="text-sm text-muted-2">Cargando...</p>
         )}
       </main>
     );
@@ -169,8 +169,8 @@ export default function ConfiguracionPage() {
     <main className="mx-auto max-w-2xl flex-1 px-4 py-10">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
 
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Configuración</h1>
-      <p className="mt-1 text-sm text-brand-dark/70">
+      <h1 className="text-2xl font-bold text-brand-dark">Configuración</h1>
+      <p className="mt-1 text-sm text-muted-2">
         Ajustes propios de tu cooperativa — cada empresa afiliada configura los suyos.
       </p>
 
@@ -184,36 +184,36 @@ export default function ConfiguracionPage() {
       {estadoDatos && (
         <form
           onSubmit={confirmarDatos}
-          className="mt-6 space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5"
+          className="mt-6 space-y-4 kb-card kb-on-white p-6"
         >
           <div>
-            <h2 className="font-display text-base font-bold text-brand-dark">Datos legales</h2>
-            <p className="mt-1 text-xs text-brand-dark/50">
+            <h2 className="text-base font-bold text-brand-dark">Datos legales</h2>
+            <p className="mt-1 text-xs text-muted-2">
               Revisa que estén correctos y confirma, aunque no cambies nada — se te pide cada 6
               meses.
             </p>
           </div>
 
           {estadoDatos.estado === "bloqueado" && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800 ring-1 ring-red-200">
+            <p className="kb-alert kb-alert--error !px-3 !py-2 !text-xs">
               Llevan {estadoDatos.mesesSinConfirmar} meses sin confirmarse — crear horarios
               recurrentes y la carga masiva están bloqueados hasta que confirmes.
             </p>
           )}
           {estadoDatos.estado === "advertencia" && (
-            <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200">
+            <p className="kb-alert kb-alert--info !px-3 !py-2 !text-xs">
               Llevan {estadoDatos.mesesSinConfirmar} meses sin confirmarse.
             </p>
           )}
           {estadoDatos.estado === "al_dia" && (
-            <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 ring-1 ring-emerald-200">
+            <p className="kb-alert kb-alert--ok !px-3 !py-2 !text-xs">
               Al día.
             </p>
           )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="config-razon-social" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="config-razon-social" className="kb-label">
                 Razón social
               </label>
               <input
@@ -221,11 +221,11 @@ export default function ConfiguracionPage() {
                 type="text"
                 value={razonSocial}
                 onChange={(e) => setRazonSocial(e.target.value)}
-                className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="w-full kb-input"
               />
             </div>
             <div>
-              <label htmlFor="config-ruc" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="config-ruc" className="kb-label">
                 RUC
               </label>
               <input
@@ -233,11 +233,11 @@ export default function ConfiguracionPage() {
                 type="text"
                 value={ruc}
                 onChange={(e) => setRuc(e.target.value)}
-                className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="w-full kb-input"
               />
             </div>
             <div className="sm:col-span-2">
-              <label htmlFor="config-direccion-legal" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="config-direccion-legal" className="kb-label">
                 Dirección legal
               </label>
               <input
@@ -245,11 +245,11 @@ export default function ConfiguracionPage() {
                 type="text"
                 value={direccionLegal}
                 onChange={(e) => setDireccionLegal(e.target.value)}
-                className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="w-full kb-input"
               />
             </div>
             <div>
-              <label htmlFor="config-contacto-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="config-contacto-nombre" className="kb-label">
                 Nombre de contacto
               </label>
               <input
@@ -257,11 +257,11 @@ export default function ConfiguracionPage() {
                 type="text"
                 value={contactoNombre}
                 onChange={(e) => setContactoNombre(e.target.value)}
-                className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="w-full kb-input"
               />
             </div>
             <div>
-              <label htmlFor="config-contacto-correo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="config-contacto-correo" className="kb-label">
                 Correo de contacto
               </label>
               <input
@@ -269,11 +269,11 @@ export default function ConfiguracionPage() {
                 type="email"
                 value={contactoCorreo}
                 onChange={(e) => setContactoCorreo(e.target.value)}
-                className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="w-full kb-input"
               />
             </div>
             <div>
-              <label htmlFor="config-contacto-telefono" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="config-contacto-telefono" className="kb-label">
                 Teléfono de contacto
               </label>
               <input
@@ -281,7 +281,7 @@ export default function ConfiguracionPage() {
                 type="text"
                 value={contactoTelefono}
                 onChange={(e) => setContactoTelefono(e.target.value)}
-                className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="w-full kb-input"
               />
             </div>
           </div>
@@ -289,7 +289,7 @@ export default function ConfiguracionPage() {
           <button
             type="submit"
             disabled={guardandoDatos}
-            className="rounded-lg bg-brand-amber px-5 py-2.5 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+            className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
           >
             {guardandoDatos ? "Confirmando..." : "Confirmar datos"}
           </button>
@@ -299,23 +299,23 @@ export default function ConfiguracionPage() {
       {/* Política de cancelación/reprogramación */}
       <form
         onSubmit={guardarPolitica}
-        className="mt-6 space-y-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5"
+        className="mt-6 space-y-5 kb-card kb-on-white p-6"
       >
         <div>
-          <h2 className="font-display text-base font-bold text-brand-dark">
+          <h2 className="text-base font-bold text-brand-dark">
             Cancelación y reprogramación
           </h2>
-          <p className="mt-1 text-xs text-brand-dark/50">
+          <p className="mt-1 text-xs text-muted-2">
             Configúralas por separado — cancelar es una venta perdida para ti, reprogramar no,
             así que no tienen que ir juntas.
           </p>
         </div>
 
-        <div className="flex items-center justify-between rounded-xl bg-brand-light/30 px-4 py-3">
+        <div className="flex items-center justify-between rounded-ctrl bg-kbbg px-4 py-3">
           <div>
             <p className="text-sm font-semibold text-brand-dark">Permitir cancelaciones</p>
             {!politica.permiteCancelacion && (
-              <p className="text-xs text-amber-700">
+              <p className="text-xs text-[#7A5D00]">
                 Si no viaja, el pasajero pierde el boleto completo.
               </p>
             )}
@@ -326,19 +326,19 @@ export default function ConfiguracionPage() {
               setPolitica((p) => (p ? { ...p, permiteCancelacion: !p.permiteCancelacion } : p))
             }
             className={`relative h-6 w-11 rounded-full transition ${
-              politica.permiteCancelacion ? "bg-brand-amber" : "bg-gray-300"
+              politica.permiteCancelacion ? "bg-ink" : "bg-line-2"
             }`}
           >
             <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
-                politica.permiteCancelacion ? "left-5" : "left-0.5"
+              className={`absolute top-0.5 h-5 w-5 rounded-full transition ${
+                politica.permiteCancelacion ? "left-5 bg-kbyellow" : "left-0.5 bg-white"
               }`}
             />
           </button>
         </div>
         {politica.permiteCancelacion && (
           <div>
-            <label htmlFor="config-horas-cancelacion" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="config-horas-cancelacion" className="kb-label">
               Horas mínimas antes de la salida para poder cancelar
             </label>
             <input
@@ -358,16 +358,16 @@ export default function ConfiguracionPage() {
                     : p,
                 )
               }
-              className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
         )}
 
-        <div className="flex items-center justify-between rounded-xl bg-brand-light/30 px-4 py-3">
+        <div className="flex items-center justify-between rounded-ctrl bg-kbbg px-4 py-3">
           <div>
             <p className="text-sm font-semibold text-brand-dark">Permitir reprogramaciones</p>
             {!politica.permiteReprogramacion && (
-              <p className="text-xs text-amber-700">
+              <p className="text-xs text-[#7A5D00]">
                 El pasajero no podrá cambiar de fecha, ni con crédito ni pagando la diferencia.
               </p>
             )}
@@ -380,19 +380,19 @@ export default function ConfiguracionPage() {
               )
             }
             className={`relative h-6 w-11 rounded-full transition ${
-              politica.permiteReprogramacion ? "bg-brand-amber" : "bg-gray-300"
+              politica.permiteReprogramacion ? "bg-ink" : "bg-line-2"
             }`}
           >
             <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
-                politica.permiteReprogramacion ? "left-5" : "left-0.5"
+              className={`absolute top-0.5 h-5 w-5 rounded-full transition ${
+                politica.permiteReprogramacion ? "left-5 bg-kbyellow" : "left-0.5 bg-white"
               }`}
             />
           </button>
         </div>
         {politica.permiteReprogramacion && (
           <div>
-            <label htmlFor="config-horas-reprogramacion" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+            <label htmlFor="config-horas-reprogramacion" className="kb-label">
               Horas mínimas antes de la salida para poder reprogramar
             </label>
             <input
@@ -412,23 +412,23 @@ export default function ConfiguracionPage() {
                     : p,
                 )
               }
-              className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input"
             />
           </div>
         )}
 
         {!politica.permiteCancelacion || !politica.permiteReprogramacion ? (
-          <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200">
+          <p className="kb-alert kb-alert--info !px-3 !py-2 !text-xs">
             El pasajero verá una alerta clara sobre esto antes de pagar, en la pantalla de elegir
             asiento y en la confirmación de compra.
           </p>
         ) : null}
 
-        {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+        {error && <p className="text-sm font-medium text-kberror">{error}</p>}
         <button
           type="submit"
           disabled={guardandoPolitica}
-          className="rounded-lg bg-brand-amber px-5 py-2.5 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+          className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
         >
           {guardandoPolitica ? "Guardando..." : "Guardar política"}
         </button>
@@ -437,11 +437,11 @@ export default function ConfiguracionPage() {
       {/* Configuración fiscal (IVA) */}
       <form
         onSubmit={guardarFiscal}
-        className="mt-6 space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5"
+        className="mt-6 space-y-4 kb-card kb-on-white p-6"
       >
-        <h2 className="font-display text-base font-bold text-brand-dark">IVA</h2>
+        <h2 className="text-base font-bold text-brand-dark">IVA</h2>
         <div>
-          <label htmlFor="config-iva-porcentaje" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="config-iva-porcentaje" className="kb-label">
             Porcentaje de IVA
           </label>
           <input
@@ -452,7 +452,7 @@ export default function ConfiguracionPage() {
             step="0.01"
             value={fiscal.ivaPorcentaje}
             onChange={(e) => setFiscal((f) => (f ? { ...f, ivaPorcentaje: Number(e.target.value) } : f))}
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <label className="flex items-center gap-2 text-sm text-brand-dark">
@@ -476,7 +476,7 @@ export default function ConfiguracionPage() {
         <button
           type="submit"
           disabled={guardandoFiscal}
-          className="rounded-lg bg-brand-amber px-5 py-2.5 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+          className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
         >
           {guardandoFiscal ? "Guardando..." : "Guardar IVA"}
         </button>
@@ -485,15 +485,15 @@ export default function ConfiguracionPage() {
       {/* Recargo VIP -- correccion real 18-ago-2026, antes se pedia en cada viaje */}
       <form
         onSubmit={guardarVip}
-        className="mt-6 space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5"
+        className="mt-6 space-y-4 kb-card kb-on-white p-6"
       >
-        <h2 className="font-display text-base font-bold text-brand-dark">Recargo VIP</h2>
-        <p className="text-sm text-brand-dark/60">
+        <h2 className="text-base font-bold text-brand-dark">Recargo VIP</h2>
+        <p className="text-sm text-muted-2">
           Se cobra sobre los asientos marcados como VIP en tus unidades. Este valor se pre-llena
           automáticamente al crear un viaje nuevo -- puedes ajustarlo puntualmente por viaje si hace falta.
         </p>
         <div>
-          <label htmlFor="config-vip-recargo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="config-vip-recargo" className="kb-label">
             Recargo VIP por defecto (USD)
           </label>
           <input
@@ -503,13 +503,13 @@ export default function ConfiguracionPage() {
             step="0.01"
             value={vip.recargoVipDefault}
             onChange={(e) => setVip((v) => (v ? { ...v, recargoVipDefault: Number(e.target.value) } : v))}
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <button
           type="submit"
           disabled={guardandoVip}
-          className="rounded-lg bg-brand-amber px-5 py-2.5 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+          className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
         >
           {guardandoVip ? "Guardando..." : "Guardar recargo VIP"}
         </button>

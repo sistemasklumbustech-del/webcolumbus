@@ -5,8 +5,8 @@ import { obtenerPerfilPublicoCoop, guardarPerfilPublicoCoop } from "@/lib/api";
 import { obtenerToken } from "@/lib/auth";
 
 const claseCampo =
-  "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium";
-const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+  "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-muted-3 focus:outline-none focus:ring-2 focus:ring-brand-medium";
+const claseEtiqueta = "kb-label";
 
 const SUGERENCIAS_SERVICIOS = [
   "Venta de boletos en línea",
@@ -60,20 +60,20 @@ function ListaEditable({
       <label htmlFor={id} className={claseEtiqueta}>
         {etiqueta}
       </label>
-      <p className="mb-2 text-xs text-brand-dark/50">{ayuda}</p>
+      <p className="mb-2 text-xs text-muted-2">{ayuda}</p>
       {valores.length > 0 && (
         <ul className="mb-2 flex flex-wrap gap-2">
           {valores.map((v) => (
             <li
               key={v}
-              className="flex items-center gap-1.5 rounded-full bg-brand-light px-3 py-1 text-sm text-brand-dark"
+              className="flex items-center gap-1.5 rounded-full bg-kbbg px-3 py-1 text-sm text-brand-dark"
             >
               {v}
               <button
                 type="button"
                 onClick={() => onCambio(valores.filter((x) => x !== v))}
                 aria-label={`Quitar ${v}`}
-                className="text-brand-dark/50 hover:text-red-600"
+                className="text-muted-2 hover:text-kberror"
               >
                 ×
               </button>
@@ -101,7 +101,7 @@ function ListaEditable({
             type="button"
             onClick={() => agregar(nuevo)}
             disabled={!nuevo.trim()}
-            className="shrink-0 rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark hover:bg-brand-light/40 disabled:opacity-40"
+            className="shrink-0 kb-btn kb-btn--outline !h-10 !px-4 !text-sm disabled:opacity-40"
           >
             Agregar
           </button>
@@ -109,20 +109,20 @@ function ListaEditable({
       )}
       {pendientes.length > 0 && valores.length < maximo && (
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-brand-dark/50">Sugerencias:</span>
+          <span className="text-xs text-muted-2">Sugerencias:</span>
           {pendientes.map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => agregar(s)}
-              className="rounded-full border border-dashed border-brand-light px-3 py-1 text-xs text-brand-dark/70 hover:bg-brand-light/40"
+              className="rounded-full border border-dashed border-line px-3 py-1 text-xs text-muted-2 hover:bg-kbbg"
             >
               + {s}
             </button>
           ))}
         </div>
       )}
-      <p className="mt-1 text-xs text-brand-dark/40">
+      <p className="mt-1 text-xs text-muted-3">
         {valores.length} de {maximo}
       </p>
     </div>
@@ -174,15 +174,15 @@ export function PerfilPublicoCoop({ onExito, onError }: { onExito: (m: string) =
   }
 
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:p-6">
-      <h2 className="font-display text-lg font-bold text-brand-dark">Perfil público de la cooperativa</h2>
-      <p className="mt-1 max-w-2xl text-sm text-brand-dark/70">
+    <section className="kb-card kb-on-white p-5 sm:p-6">
+      <h2 className="text-lg font-bold text-brand-dark">Perfil público de la cooperativa</h2>
+      <p className="mt-1 max-w-2xl text-sm text-muted-2">
         Lo que verán los pasajeros en la página <strong>Cooperativas</strong> de Klumbus. Tus buses, las ciudades a las
         que llegas y tus rutas aparecen solos.
       </p>
 
       {cargando ? (
-        <p className="mt-4 text-sm text-brand-dark/50">Cargando...</p>
+        <p className="mt-4 text-sm text-muted-2">Cargando...</p>
       ) : (
         <form onSubmit={guardar} className="mt-4 space-y-5">
           <div>
@@ -198,7 +198,7 @@ export function PerfilPublicoCoop({ onExito, onError }: { onExito: (m: string) =
               placeholder="Cuenta en pocas líneas quién es tu cooperativa, desde cuándo opera y qué te distingue."
               className={claseCampo}
             />
-            <p className="mt-1 text-xs text-brand-dark/40">{descripcion.length} de 600</p>
+            <p className="mt-1 text-xs text-muted-3">{descripcion.length} de 600</p>
           </div>
           <ListaEditable
             id="pp-servicios"
@@ -223,7 +223,7 @@ export function PerfilPublicoCoop({ onExito, onError }: { onExito: (m: string) =
           <button
             type="submit"
             disabled={guardando}
-            className="rounded-lg bg-brand-amber px-5 py-2.5 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+            className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
           >
             {guardando ? "Guardando..." : "Guardar perfil público"}
           </button>

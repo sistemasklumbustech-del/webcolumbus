@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { VigilanteSesion } from "@/components/VigilanteSesion";
-import Image from "next/image";
+import { LogoKlumbus } from "@/components/LogoKlumbus";
 import { obtenerToken, borrarToken, decodificarToken, tokenExpirado, type PayloadToken } from "@/lib/auth";
 import { obtenerEstadoDatosCoop, type EstadoDatosCooperativa } from "@/lib/api";
 
@@ -250,38 +250,36 @@ export default function PanelEmpresaLayout({ children }: { children: React.React
 
   if (verificando) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-brand-light/30">
-        <p className="text-sm text-brand-dark/50">Verificando sesión...</p>
+      <div className="flex flex-1 items-center justify-center bg-kbbg">
+        <p className="text-sm text-muted-2">Verificando sesión...</p>
       </div>
     );
   }
 
   const enlacesVisibles = ENLACES.filter((enlace) => !enlace.soloAdmin || payload?.rol === "admin_cooperativa");
-  const paginaActual = enlacesVisibles.find((e) => e.href === pathname)?.etiqueta ?? "Panel";
+
+  const IconoSalir = (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="shrink-0" aria-hidden="true">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
+    </svg>
+  );
 
   return (
-    <div className="flex min-h-full flex-1 bg-brand-light/20">
-      <VigilanteSesion />
-      <aside
-        className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-black/5 bg-white transition-[width] duration-200 lg:flex ${
-          menuColapsado ? "w-[76px]" : "w-64"
-        }`}
-      >
-        <div className={`flex h-16 items-center gap-2 bg-brand-amber ${menuColapsado ? "justify-center px-2" : "px-6"}`}>
+    <div className={`kb-app flex-1 ${menuColapsado ? "lg:grid-cols-[76px_1fr]" : ""}`}>
+      {/* Menú lateral negro (diseño final): opción activa en amarillo con texto negro. */}
+      <aside className="kb-sidebar sticky top-0 h-screen overflow-y-auto !px-3">
+        <div className={`mb-6 flex items-center ${menuColapsado ? "justify-center" : "px-2"}`}>
           {menuColapsado ? (
-            <Image src="/img/icono-klumbus.png" alt="Klumbus" width={32} height={32} priority />
+            // eslint-disable-next-line @next/next/no-img-element -- ícono SVG propio
+            <img src="/img/klumbus-icono.svg" alt="Klumbus" className="h-8 w-auto" />
           ) : (
-            <Image src="/img/logo-klumbus.png" alt="Klumbus" width={110} height={28} priority />
+            <LogoKlumbus className="h-7" />
           )}
         </div>
-        {!menuColapsado && (
-          <div className="px-4 pt-4">
-            <span className="rounded-full bg-brand-amber/15 px-2.5 py-1 text-xs font-bold text-brand-amber">
-              Panel Empresa
-            </span>
-          </div>
-        )}
-        <nav className={`flex-1 space-y-1 overflow-y-auto py-4 ${menuColapsado ? "px-2" : "px-3"}`}>
+        {!menuColapsado && <span className="kb-tag kb-tag--yellow mb-3 ml-2 self-start">Panel Empresa</span>}
+        <nav className="flex flex-1 flex-col gap-1" aria-label="Menú del panel">
           {enlacesVisibles.map((enlace) => {
             const activo = pathname === enlace.href;
             const Icono = enlace.icono;
@@ -290,13 +288,8 @@ export default function PanelEmpresaLayout({ children }: { children: React.React
                 key={enlace.href}
                 href={enlace.href}
                 title={menuColapsado ? enlace.etiqueta : undefined}
-                className={`flex items-center gap-3 rounded-lg py-2.5 text-sm font-semibold transition ${
-                  menuColapsado ? "justify-center px-2" : "px-3"
-                } ${
-                  activo
-                    ? "bg-brand-amber/15 text-brand-amber"
-                    : "text-brand-dark/60 hover:bg-brand-amber/10 hover:text-brand-amber"
-                }`}
+                aria-current={activo ? "page" : undefined}
+                className={`${activo ? "is-active" : ""} ${menuColapsado ? "justify-center !px-0" : ""}`}
               >
                 <Icono className="h-5 w-5 shrink-0" />
                 {!menuColapsado && enlace.etiqueta}
@@ -304,139 +297,112 @@ export default function PanelEmpresaLayout({ children }: { children: React.React
             );
           })}
         </nav>
-        <div className={`border-t border-black/5 p-4 ${menuColapsado ? "px-2" : ""}`}>
+        <div className="mt-4 flex flex-col gap-1 border-t border-ink-3 pt-4">
           <button
             onClick={alternarMenuColapsado}
             title={menuColapsado ? "Expandir menú" : "Ocultar menú"}
-            className={`flex w-full items-center gap-2 rounded-lg py-2 text-sm font-semibold text-brand-dark/60 transition hover:bg-brand-light hover:text-brand-dark ${
-              menuColapsado ? "justify-center px-2" : "px-3"
+            className={`flex h-11 w-full items-center gap-3 rounded-xl text-sm font-medium text-ondark transition hover:bg-ink-2 hover:text-white ${
+              menuColapsado ? "justify-center" : "px-3"
             }`}
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`shrink-0 transition-transform ${menuColapsado ? "rotate-180" : ""}`}
-            >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 transition-transform ${menuColapsado ? "rotate-180" : ""}`} aria-hidden="true">
               <path d="M15 18l-6-6 6-6" />
               <path d="M9 18V6" strokeOpacity="0.4" />
             </svg>
             {!menuColapsado && "Ocultar menú"}
           </button>
           {!menuColapsado && (
-            <p className="mt-3 px-2 text-xs font-medium text-brand-dark/40">
+            <p className="px-3 pt-1 text-xs text-muted-3">
               {payload?.rol === "admin_cooperativa" ? "Administrador" : "Vendedor"}
             </p>
           )}
           <button
             onClick={salir}
             title={menuColapsado ? "Salir" : undefined}
-            className={`mt-2 flex w-full items-center gap-2 rounded-lg py-2 text-sm font-semibold text-brand-dark/60 transition hover:bg-brand-light hover:text-brand-dark ${
-              menuColapsado ? "justify-center px-2" : "px-3"
+            className={`flex h-11 w-full items-center gap-3 rounded-xl text-sm font-medium text-ondark transition hover:bg-ink-2 hover:text-white ${
+              menuColapsado ? "justify-center" : "px-3"
             }`}
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.75}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="shrink-0"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <path d="M16 17l5-5-5-5" />
-              <path d="M21 12H9" />
-            </svg>
+            {IconoSalir}
             {!menuColapsado && "Salir"}
           </button>
         </div>
       </aside>
 
       {menuMovilAbierto && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setMenuMovilAbierto(false)} />
-          <aside className="absolute inset-y-0 left-0 flex w-72 flex-col overflow-y-auto bg-white shadow-xl">
-            <div className="flex items-center justify-between bg-brand-amber px-4 py-4">
-              <Image src="/img/logo-klumbus.png" alt="Klumbus" width={100} height={26} />
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-ink/60" onClick={() => setMenuMovilAbierto(false)} />
+          <aside className="kb-sidebar absolute inset-y-0 left-0 w-72 overflow-y-auto !flex shadow-float">
+            <div className="mb-4 flex items-center justify-between px-2">
+              <LogoKlumbus className="h-7" />
               <button
                 onClick={() => setMenuMovilAbierto(false)}
                 aria-label="Cerrar menú"
-                className="rounded-lg p-1.5 text-brand-dark/70 hover:bg-black/5"
+                className="rounded-xl p-2 text-ondark hover:bg-ink-2 hover:text-white"
               >
                 ✕
               </button>
             </div>
-            <nav className="space-y-1 p-4">
+            <nav className="flex flex-col gap-1" aria-label="Menú del panel">
               {enlacesVisibles.map((enlace) => {
                 const activo = pathname === enlace.href;
                 const Icono = enlace.icono;
                 return (
-                  <Link
-                    key={enlace.href}
-                    href={enlace.href}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ${
-                      activo ? "bg-brand-amber/15 text-brand-amber" : "text-brand-dark/60"
-                    }`}
-                  >
+                  <Link key={enlace.href} href={enlace.href} className={activo ? "is-active" : ""}>
                     <Icono className="h-5 w-5 shrink-0" />
                     {enlace.etiqueta}
                   </Link>
                 );
               })}
             </nav>
+            <button
+              onClick={salir}
+              className="mt-4 flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium text-ondark hover:bg-ink-2 hover:text-white"
+            >
+              {IconoSalir}
+              Salir
+            </button>
           </aside>
         </div>
       )}
 
-      <div className="flex min-h-full min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-black/5 bg-white px-4 lg:px-8">
-          <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-col">
+        <VigilanteSesion />
+        {/* Celular: barra negra con el menú (en PC el menú es el lateral). */}
+        <header className="kb-header sticky top-0 z-30 lg:hidden">
+          <div className="flex h-16 items-center justify-between px-5">
+            <LogoKlumbus className="h-6" />
             <button
               onClick={() => setMenuMovilAbierto(true)}
               aria-label="Abrir menú"
-              className="rounded-lg p-2 text-brand-dark/60 hover:bg-brand-light lg:hidden"
+              className="grid h-[42px] w-[42px] place-items-center rounded-full bg-white/12 text-white"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                <path d="M4 6h16M4 12h16M4 18h16" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             </button>
-            <h1 className="font-display text-lg font-bold text-brand-dark">{paginaActual}</h1>
           </div>
-          <button
-            onClick={salir}
-            className="rounded-lg border border-black/10 px-3 py-1.5 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light lg:hidden"
-          >
-            Salir
-          </button>
         </header>
-        {estadoDatos && estadoDatos.estado !== "al_dia" && (
-          <div
-            className={`px-4 py-2.5 text-center text-sm font-medium lg:px-8 ${
-              estadoDatos.estado === "bloqueado" ? "bg-red-50 text-red-800" : "bg-amber-50 text-amber-800"
-            }`}
-          >
-            {estadoDatos.estado === "bloqueado" ? (
-              <>
-                Tus datos legales llevan {estadoDatos.mesesSinConfirmar} meses sin confirmarse — crear
-                horarios recurrentes y la carga masiva están bloqueados hasta que los confirmes.{" "}
-              </>
-            ) : (
-              <>Tus datos legales llevan {estadoDatos.mesesSinConfirmar} meses sin confirmarse. </>
-            )}
-            <Link href="/panel-empresa/configuracion" className="font-bold underline">
-              Confirmar mis datos
-            </Link>
-          </div>
-        )}
-        <main className="min-w-0 flex-1 px-4 py-6 lg:px-8">{children}</main>
+        <main className="kb-main kb-on-white">
+          {estadoDatos && estadoDatos.estado !== "al_dia" && (
+            <div className={`kb-alert mb-5 flex-wrap items-center ${estadoDatos.estado === "bloqueado" ? "kb-alert--error" : "kb-alert--info"}`}>
+              <span className="font-medium">
+                {estadoDatos.estado === "bloqueado" ? (
+                  <>
+                    Tus datos legales llevan {estadoDatos.mesesSinConfirmar} meses sin confirmarse — crear
+                    horarios recurrentes y la carga masiva están bloqueados hasta que los confirmes.{" "}
+                  </>
+                ) : (
+                  <>Tus datos legales llevan {estadoDatos.mesesSinConfirmar} meses sin confirmarse. </>
+                )}
+                <Link href="/panel-empresa/configuracion" className="font-bold underline">
+                  Confirmar mis datos
+                </Link>
+              </span>
+            </div>
+          )}
+          {children}
+        </main>
       </div>
     </div>
   );

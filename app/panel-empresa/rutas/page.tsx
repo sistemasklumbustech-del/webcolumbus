@@ -337,8 +337,8 @@ export default function RutasPage() {
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
       <Toast mensaje={mensajeError} onCerrar={() => setMensajeError(null)} tipo="error" />
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Rutas</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="text-2xl font-bold text-brand-dark">Rutas</h1>
+        <p className="mt-1 text-sm text-muted-2">
           Las rutas que operas hoy — el precio base es el punto de partida; cada viaje puede ajustarlo.
         </p>
       </div>
@@ -346,12 +346,12 @@ export default function RutasPage() {
       {esAdmin && (
       <form
         onSubmit={crear}
-        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
+        className="grid grid-cols-1 gap-4 kb-card kb-on-white p-6 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
       >
         <SelectorCiudad etiqueta="Origen" placeholder="¿Desde dónde?" valor={origen} onCambio={setOrigen} soloConRutas={false} />
         <SelectorCiudad etiqueta="Destino" placeholder="¿Hacia dónde?" valor={destino} onCambio={setDestino} soloConRutas={false} />
         <div>
-          <label htmlFor="ruta-precio-base" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="ruta-precio-base" className="kb-label">
             Precio base (USD)
           </label>
           <input
@@ -362,18 +362,18 @@ export default function RutasPage() {
             value={precio}
             onChange={(e) => setPrecio(e.target.value)}
             placeholder="8.50"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <button
           type="submit"
           disabled={guardando}
-          className="h-[42px] rounded-lg bg-brand-amber px-4 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+          className="kb-btn kb-btn--primary !h-[42px] !px-4 !text-sm"
         >
           {guardando ? "Guardando..." : "Crear ruta"}
         </button>
         <div className="sm:col-span-2 lg:col-span-4">
-          <label htmlFor="ruta-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="ruta-nombre" className="kb-label">
             Nombre de la ruta (opcional)
           </label>
           <input
@@ -382,27 +382,27 @@ export default function RutasPage() {
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Ej. Machala - Guayaquil directo"
-            className="w-full max-w-md rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         {errorForm && (
-          <p className="sm:col-span-2 lg:col-span-4 text-sm font-medium text-red-600">{errorForm}</p>
+          <p className="sm:col-span-2 lg:col-span-4 text-sm font-medium text-kberror">{errorForm}</p>
         )}
       </form>
       )}
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
       <form
         onSubmit={filtrarRutas}
-        className="flex flex-wrap items-end gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+        className="flex flex-wrap items-end gap-3 kb-card kb-on-white p-4"
       >
         <div className="min-w-[220px] flex-1">
-          <label htmlFor="rutas-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="rutas-busqueda" className="kb-label">
             Buscar
           </label>
           <input
@@ -410,33 +410,33 @@ export default function RutasPage() {
             value={busquedaFiltro}
             onChange={(e) => setBusquedaFiltro(e.target.value)}
             placeholder="Nombre, origen o destino"
-            className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           />
         </div>
-        <button type="submit" className="rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95">
+        <button type="submit" className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm">
           Filtrar
         </button>
-        <button type="button" onClick={limpiarFiltrosRutas} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+        <button type="button" onClick={limpiarFiltrosRutas} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
           Limpiar
         </button>
       </form>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="border-b border-black/5 px-6 py-4">
-          <h2 className="font-display text-base font-bold text-brand-dark">
+      <div className="overflow-hidden kb-card kb-on-white">
+        <div className="border-b border-line px-6 py-4">
+          <h2 className="text-base font-bold text-brand-dark">
             {resultado === null ? "Cargando..." : `${resultado.total} ruta${resultado.total === 1 ? "" : "s"} con estos filtros`}
           </h2>
         </div>
 
         {resultado !== null && resultado.filas.length === 0 && !cargando && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
+          <p className="px-6 py-8 text-center text-sm text-muted-2">
             No hay rutas que coincidan con estos filtros.
           </p>
         )}
 
         {resultado !== null && resultado.filas.length > 0 && (
-          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+            <thead>
               <tr>
                 <th className="px-6 py-3">Ruta</th>
                 <th className="px-6 py-3">Trayecto</th>
@@ -444,14 +444,14 @@ export default function RutasPage() {
                 {esAdmin && <th className="px-6 py-3 text-right">Acciones</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/5">
+            <tbody>
               {resultado.filas.map((r) => (
                 <Fragment key={r.id}>
                   <tr>
                     <td className="px-6 py-3 font-medium text-brand-dark">
                       {r.nombre ?? `${r.origenCiudad} → ${r.destinoCiudad}`}
                     </td>
-                    <td className="px-6 py-3 text-brand-dark/70">
+                    <td className="px-6 py-3 text-muted-2">
                       {r.origenCiudad} → {r.destinoCiudad}
                     </td>
                     <td className="px-6 py-3 text-right font-semibold text-brand-dark">
@@ -464,7 +464,7 @@ export default function RutasPage() {
                       <button
                         type="button"
                         onClick={() => toggleExpandir(r.id)}
-                        className="rounded-lg bg-brand-light px-3 py-1.5 text-xs font-semibold text-brand-dark transition hover:bg-brand-light/70"
+                        className="kb-btn !h-9 !px-3 !text-xs bg-kbbg text-ink"
                       >
                         {rutaExpandida === r.id ? "Ocultar" : "Gestionar"}
                       </button>
@@ -474,14 +474,14 @@ export default function RutasPage() {
 
                   {esAdmin && rutaExpandida === r.id && (
                     <tr key={`${r.id}-panel`}>
-                      <td colSpan={4} className="bg-brand-light/20 px-6 py-6">
+                      <td colSpan={4} className="bg-kbbg px-6 py-6">
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                           {/* Horarios recurrentes (plantilla) -- ítem 7, RF-COOP-002 */}
-                          <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-                            <h3 className="font-display text-sm font-bold text-brand-dark">
+                          <div className="kb-card kb-on-white p-5">
+                            <h3 className="text-sm font-bold text-brand-dark">
                               Horarios recurrentes
                             </h3>
-                            <p className="mt-1 text-xs text-brand-dark/50">
+                            <p className="mt-1 text-xs text-muted-2">
                               Los viajes se generan solos cada noche para los próximos 21 días. Si editas
                               un viaje ya generado a mano, esa edición nunca se sobrescribe.
                             </p>
@@ -490,25 +490,25 @@ export default function RutasPage() {
                               {(horariosPorRuta[r.id] ?? []).map((h) => (
                                 <div
                                   key={h.id}
-                                  className="flex items-center justify-between rounded-lg bg-brand-light/30 px-3 py-2 text-xs"
+                                  className="flex items-center justify-between rounded-lg bg-kbbg px-3 py-2 text-xs"
                                 >
                                   <div>
                                     <span className="font-semibold text-brand-dark">{h.horaSalida}</span>{" "}
-                                    <span className="text-brand-dark/70">
+                                    <span className="text-muted-2">
                                       ·{" "}
                                       {DIAS_SEMANA.filter((d) => h.diasSemana.includes(d.valor))
                                         .map((d) => d.etiqueta)
                                         .join(", ")}
                                     </span>{" "}
-                                    <span className="text-brand-dark/40">· {h.tipoVehiculoNombre}</span>
+                                    <span className="text-muted-3">· {h.tipoVehiculoNombre}</span>
                                   </div>
                                   <button
                                     type="button"
                                     onClick={() => alternarActivoHorario(r.id, h)}
-                                    className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                    className={`kb-status ${
                                       h.activo
-                                        ? "bg-emerald-50 text-emerald-700"
-                                        : "bg-gray-100 text-gray-500"
+                                        ? "kb-status--ok"
+                                        : "bg-kbbg text-muted-2"
                                     }`}
                                   >
                                     {h.activo ? "Activo" : "Inactivo"}
@@ -516,7 +516,7 @@ export default function RutasPage() {
                                 </div>
                               ))}
                               {horariosPorRuta[r.id]?.length === 0 && (
-                                <p className="text-xs text-brand-dark/40">
+                                <p className="text-xs text-muted-3">
                                   Todavía no tienes ningún horario recurrente en esta ruta.
                                 </p>
                               )}
@@ -524,11 +524,11 @@ export default function RutasPage() {
 
                             <form
                               onSubmit={(e) => crearHorario(r.id, e)}
-                              className="mt-4 space-y-3 border-t border-black/5 pt-4"
+                              className="mt-4 space-y-3 border-t border-line pt-4"
                             >
                               <div className="flex gap-3">
                                 <div>
-                                  <label htmlFor={`ruta-${r.id}-hora`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                  <label htmlFor={`ruta-${r.id}-hora`} className="kb-label">
                                     Hora
                                   </label>
                                   <input
@@ -536,18 +536,18 @@ export default function RutasPage() {
                                     type="time"
                                     value={horaSalida}
                                     onChange={(e) => setHoraSalida(e.target.value)}
-                                    className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                                    className="kb-input !h-11 !text-sm"
                                   />
                                 </div>
                                 <div className="flex-1">
-                                  <label htmlFor={`ruta-${r.id}-tipo-vehiculo`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                  <label htmlFor={`ruta-${r.id}-tipo-vehiculo`} className="kb-label">
                                     Tipo de vehículo
                                   </label>
                                   <select
                                     id={`ruta-${r.id}-tipo-vehiculo`}
                                     value={tipoVehiculoId}
                                     onChange={(e) => setTipoVehiculoId(e.target.value)}
-                                    className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                                    className="w-full kb-input !h-11 !text-sm"
                                   >
                                     <option value="">Elige uno...</option>
                                     {(tiposVehiculo ?? []).map((tv) => (
@@ -559,7 +559,7 @@ export default function RutasPage() {
                                 </div>
                               </div>
                               <div>
-                                <label id={`ruta-${r.id}-dias-label`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                <label id={`ruta-${r.id}-dias-label`} className="kb-label">
                                   Días de la semana
                                 </label>
                                 <div role="group" aria-labelledby={`ruta-${r.id}-dias-label`} className="flex flex-wrap gap-1.5">
@@ -570,8 +570,8 @@ export default function RutasPage() {
                                       onClick={() => alternarDia(d.valor)}
                                       className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
                                         diasSeleccionados.includes(d.valor)
-                                          ? "bg-brand-amber text-brand-dark"
-                                          : "bg-brand-light/40 text-brand-dark/70"
+                                          ? "bg-kbyellow text-brand-dark"
+                                          : "bg-kbbg text-muted-2"
                                       }`}
                                     >
                                       {d.etiqueta}
@@ -580,12 +580,12 @@ export default function RutasPage() {
                                 </div>
                               </div>
                               {errorHorario && (
-                                <p className="text-xs font-medium text-red-600">{errorHorario}</p>
+                                <p className="text-xs font-medium text-kberror">{errorHorario}</p>
                               )}
                               <button
                                 type="submit"
                                 disabled={guardandoHorario}
-                                className="rounded-lg bg-brand-amber px-4 py-2 text-xs font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+                                className="kb-btn kb-btn--primary !h-10 !px-4 !text-xs"
                               >
                                 {guardandoHorario ? "Guardando..." : "Agregar horario"}
                               </button>
@@ -593,11 +593,11 @@ export default function RutasPage() {
                           </div>
 
                           {/* Cancelación/suspensión masiva -- ítem 7 */}
-                          <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-                            <h3 className="font-display text-sm font-bold text-brand-dark">
+                          <div className="kb-card kb-on-white p-5">
+                            <h3 className="text-sm font-bold text-brand-dark">
                               Cancelación masiva
                             </h3>
-                            <p className="mt-1 text-xs text-brand-dark/50">
+                            <p className="mt-1 text-xs text-muted-2">
                               Para contratiempos (cierre de vía, feriado, paro). Cancela todos los viajes
                               programados de esta ruta en el rango de fechas -- incluyendo los que ya
                               tienen boletos vendidos, generando crédito automático y avisando por
@@ -606,7 +606,7 @@ export default function RutasPage() {
 
                             <div className="mt-4 flex gap-3">
                               <div>
-                                <label htmlFor={`ruta-${r.id}-desde`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                <label htmlFor={`ruta-${r.id}-desde`} className="kb-label">
                                   Desde
                                 </label>
                                 <input
@@ -614,11 +614,11 @@ export default function RutasPage() {
                                   type="date"
                                   value={fechaInicioMasivo}
                                   onChange={(e) => setFechaInicioMasivo(e.target.value)}
-                                  className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                                  className="kb-input !h-11 !text-sm"
                                 />
                               </div>
                               <div>
-                                <label htmlFor={`ruta-${r.id}-hasta`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                <label htmlFor={`ruta-${r.id}-hasta`} className="kb-label">
                                   Hasta
                                 </label>
                                 <input
@@ -626,17 +626,17 @@ export default function RutasPage() {
                                   type="date"
                                   value={fechaFinMasivo}
                                   onChange={(e) => setFechaFinMasivo(e.target.value)}
-                                  className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                                  className="kb-input !h-11 !text-sm"
                                 />
                               </div>
                             </div>
 
                             {errorMasivo && (
-                              <p className="mt-3 text-xs font-medium text-red-600">{errorMasivo}</p>
+                              <p className="mt-3 text-xs font-medium text-kberror">{errorMasivo}</p>
                             )}
 
                             {resultadoMasivo && (
-                              <div className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 ring-1 ring-emerald-200">
+                              <div className="mt-3 kb-alert kb-alert--ok !px-3 !py-2 !text-xs">
                                 {resultadoMasivo.viajesCancelados} viaje(s) cancelado(s),{" "}
                                 {resultadoMasivo.boletosCancelados} boleto(s) compensado(s) con crédito y
                                 notificado(s) por WhatsApp.
@@ -649,13 +649,13 @@ export default function RutasPage() {
                                   type="button"
                                   onClick={() => setConfirmandoMasivo(true)}
                                   disabled={!fechaInicioMasivo || !fechaFinMasivo}
-                                  className="rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-40"
+                                  className="kb-btn !h-9 !px-3 !text-xs bg-kberror text-white disabled:opacity-50"
                                 >
                                   Cancelar viajes en este rango
                                 </button>
                               ) : (
-                                <div className="rounded-lg bg-amber-50 p-3 ring-1 ring-amber-200">
-                                  <p className="text-xs font-semibold text-amber-900">
+                                <div className="rounded-ctrl bg-kbyellow-soft p-3">
+                                  <p className="text-xs font-semibold text-[#7A5D00]">
                                     Esto no se puede deshacer. ¿Confirmas la cancelación masiva?
                                   </p>
                                   <div className="mt-2 flex gap-2">
@@ -663,14 +663,14 @@ export default function RutasPage() {
                                       type="button"
                                       onClick={() => ejecutarCancelacionMasiva(r.id)}
                                       disabled={ejecutandoMasivo}
-                                      className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+                                      className="kb-btn !h-9 !px-3 !text-xs bg-kberror text-white disabled:opacity-50"
                                     >
                                       {ejecutandoMasivo ? "Cancelando..." : "Sí, cancelar todo"}
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => setConfirmandoMasivo(false)}
-                                      className="rounded-lg px-3 py-1.5 text-xs font-semibold text-brand-dark/70"
+                                      className="rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-2"
                                     >
                                       Cancelar
                                     </button>
@@ -682,11 +682,11 @@ export default function RutasPage() {
 
                           {/* Paradas intermedias -- RF-COOP-002 (20-ago-2026, Fase 1). El precio de
                               cada parada lo fija la cooperativa a mano, nunca una formula automatica. */}
-                          <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-black/5 lg:col-span-2">
-                            <h3 className="font-display text-sm font-bold text-brand-dark">
+                          <div className="kb-card kb-on-white p-5 lg:col-span-2">
+                            <h3 className="text-sm font-bold text-brand-dark">
                               Paradas intermedias
                             </h3>
-                            <p className="mt-1 text-xs text-brand-dark/50">
+                            <p className="mt-1 text-xs text-muted-2">
                               Puntos por los que pasa el bus entre el origen y el destino. Cada parada
                               tiene su propio precio real, fijado por ustedes -- no un descuento
                               automatico. Puede haber varias paradas dentro de la misma ciudad de
@@ -697,14 +697,14 @@ export default function RutasPage() {
                               {(paradasPorRuta[r.id] ?? []).map((p) => (
                                 <div
                                   key={p.id}
-                                  className="flex items-center justify-between rounded-lg bg-brand-light/30 px-3 py-2 text-xs"
+                                  className="flex items-center justify-between rounded-lg bg-kbbg px-3 py-2 text-xs"
                                 >
                                   <div>
                                     <span className="font-semibold text-brand-dark">
                                       {p.orden}. {p.puntoOperacionCiudad}
                                     </span>{" "}
-                                    <span className="text-brand-dark/70">— {p.puntoOperacionNombre}</span>{" "}
-                                    <span className="text-brand-dark/40">
+                                    <span className="text-muted-2">— {p.puntoOperacionNombre}</span>{" "}
+                                    <span className="text-muted-3">
                                       ·{" "}
                                       {new Intl.NumberFormat("es-EC", { style: "currency", currency: "USD" }).format(
                                         p.tarifaDesdeOrigen,
@@ -714,14 +714,14 @@ export default function RutasPage() {
                                   <button
                                     type="button"
                                     onClick={() => quitarParada(r.id, p.id)}
-                                    className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700"
+                                    className="kb-status kb-status--error"
                                   >
                                     Quitar
                                   </button>
                                 </div>
                               ))}
                               {paradasPorRuta[r.id]?.length === 0 && (
-                                <p className="text-xs text-brand-dark/40">
+                                <p className="text-xs text-muted-3">
                                   Todavía no has agregado ninguna parada intermedia en esta ruta.
                                 </p>
                               )}
@@ -729,7 +729,7 @@ export default function RutasPage() {
 
                             <form
                               onSubmit={(e) => agregarParada(r.id, e)}
-                              className="mt-4 flex flex-wrap items-end gap-3 border-t border-black/5 pt-4"
+                              className="mt-4 flex flex-wrap items-end gap-3 border-t border-line pt-4"
                             >
                               <div className="min-w-[180px] flex-1">
                                 <SelectorCiudad
@@ -741,7 +741,7 @@ export default function RutasPage() {
                                 />
                               </div>
                               <div>
-                                <label htmlFor={`ruta-${r.id}-tarifa-parada`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                <label htmlFor={`ruta-${r.id}-tarifa-parada`} className="kb-label">
                                   Tarifa desde origen
                                 </label>
                                 <input
@@ -751,11 +751,11 @@ export default function RutasPage() {
                                   step="0.01"
                                   value={tarifaParada}
                                   onChange={(e) => setTarifaParada(e.target.value)}
-                                  className="w-28 rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                                  className="kb-input !h-11 !text-sm"
                                 />
                               </div>
                               <div>
-                                <label htmlFor={`ruta-${r.id}-tiempo-parada`} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                <label htmlFor={`ruta-${r.id}-tiempo-parada`} className="kb-label">
                                   Minutos desde origen (opcional)
                                 </label>
                                 <input
@@ -764,22 +764,22 @@ export default function RutasPage() {
                                   min={0}
                                   value={tiempoParada}
                                   onChange={(e) => setTiempoParada(e.target.value)}
-                                  className="w-28 rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                                  className="kb-input !h-11 !text-sm"
                                 />
                               </div>
                               <button
                                 type="submit"
                                 disabled={guardandoParada}
-                                className="rounded-lg bg-brand-amber px-4 py-2 text-xs font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+                                className="kb-btn kb-btn--primary !h-10 !px-4 !text-xs"
                               >
                                 {guardandoParada ? "Guardando..." : "Agregar parada"}
                               </button>
                             </form>
                             {errorParada && (
-                              <p className="mt-2 text-xs font-medium text-red-600">{errorParada}</p>
+                              <p className="mt-2 text-xs font-medium text-kberror">{errorParada}</p>
                             )}
 
-                            <div className="mt-4 border-t border-black/5 pt-3">
+                            <div className="mt-4 border-t border-line pt-3">
                               {!proponiendo ? (
                                 <button
                                   type="button"
@@ -791,21 +791,21 @@ export default function RutasPage() {
                               ) : (
                                 <form onSubmit={enviarPropuesta} className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:items-end">
                                   <div>
-                                    <label htmlFor="prop-tipo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                    <label htmlFor="prop-tipo" className="kb-label">
                                       Tipo
                                     </label>
                                     <select
                                       id="prop-tipo"
                                       value={propTipo}
                                       onChange={(e) => setPropTipo(e.target.value as typeof propTipo)}
-                                      className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                                      className="w-full kb-input !h-11 !text-sm"
                                     >
                                       <option value="parada_intermedia">Parada intermedia</option>
                                       <option value="oficina_agencia">Oficina / agencia</option>
                                     </select>
                                   </div>
                                   <div>
-                                    <label htmlFor="prop-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                    <label htmlFor="prop-nombre" className="kb-label">
                                       Nombre
                                     </label>
                                     <input
@@ -813,48 +813,48 @@ export default function RutasPage() {
                                       value={propNombre}
                                       onChange={(e) => setPropNombre(e.target.value)}
                                       placeholder="Parador Desayuno"
-                                      className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                                      className="w-full kb-input !h-11 !text-sm"
                                     />
                                   </div>
                                   <div>
-                                    <label htmlFor="prop-ciudad" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                    <label htmlFor="prop-ciudad" className="kb-label">
                                       Ciudad
                                     </label>
                                     <input
                                       id="prop-ciudad"
                                       value={propCiudad}
                                       onChange={(e) => setPropCiudad(e.target.value)}
-                                      className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                                      className="w-full kb-input !h-11 !text-sm"
                                     />
                                   </div>
                                   <div>
-                                    <label htmlFor="prop-provincia" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                                    <label htmlFor="prop-provincia" className="kb-label">
                                       Provincia
                                     </label>
                                     <input
                                       id="prop-provincia"
                                       value={propProvincia}
                                       onChange={(e) => setPropProvincia(e.target.value)}
-                                      className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark"
+                                      className="w-full kb-input !h-11 !text-sm"
                                     />
                                   </div>
                                   <div className="flex gap-2 sm:col-span-4">
                                     <button
                                       type="submit"
                                       disabled={guardandoProp}
-                                      className="rounded-lg bg-brand-amber px-4 py-2 text-xs font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+                                      className="kb-btn kb-btn--primary !h-10 !px-4 !text-xs"
                                     >
                                       {guardandoProp ? "Enviando..." : "Enviar propuesta"}
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => setProponiendo(false)}
-                                      className="rounded-lg px-3 py-2 text-xs font-semibold text-brand-dark/70"
+                                      className="rounded-lg px-3 py-2 text-xs font-semibold text-muted-2"
                                     >
                                       Cancelar
                                     </button>
                                   </div>
-                                  {errorProp && <p className="text-xs font-medium text-red-600 sm:col-span-4">{errorProp}</p>}
+                                  {errorProp && <p className="text-xs font-medium text-kberror sm:col-span-4">{errorProp}</p>}
                                 </form>
                               )}
                             </div>
@@ -870,7 +870,7 @@ export default function RutasPage() {
         )}
 
         {resultado !== null && resultado.total > 0 && (
-          <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+          <div className="flex items-center justify-between border-t border-line px-6 py-3 text-sm text-muted-2">
             <span>
               Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_RUTAS_PAGINA))}
             </span>
@@ -878,7 +878,7 @@ export default function RutasPage() {
               <button
                 onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 disabled={pagina <= 1 || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Anterior
               </button>
@@ -889,7 +889,7 @@ export default function RutasPage() {
                   )
                 }
                 disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_RUTAS_PAGINA)) || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Siguiente
               </button>

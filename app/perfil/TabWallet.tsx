@@ -51,18 +51,18 @@ export function TabWallet() {
           Nuevo patrón: tarjeta ancha tipo tarjeta de fidelidad/crédito
           real (Apple Wallet, Google Pay), con decoración sutil, no un
           bloque de texto vertical. */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-cobalto to-[#16307a] px-6 py-6 shadow-xl shadow-brand-cobalto/20 sm:px-8 sm:py-8">
-        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand-amber/10" />
+      <div className="relative overflow-hidden rounded-card bg-ink px-6 py-6 sm:px-8 sm:py-8">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-kbyellow/10" />
         <div className="pointer-events-none absolute -bottom-16 -left-8 h-36 w-36 rounded-full bg-white/5" />
         <div className="relative flex items-start justify-between">
-          <span className="font-display text-sm font-bold tracking-[0.2em] text-white/70">KLUMBUS</span>
-          <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-brand-amber">
+          <span className="text-sm font-bold tracking-[0.2em] text-white/70">KLUMBUS</span>
+          <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-kbyellow">
             Wallet
           </span>
         </div>
         <div className="relative mt-8">
           <p className="text-xs font-semibold uppercase tracking-wide text-white/40">Saldo disponible</p>
-          <p className="mt-1 font-display text-4xl font-bold text-brand-amber sm:text-5xl">
+          <p className="mt-1 text-4xl font-bold text-kbyellow sm:text-5xl">
             {saldo === null ? "—" : `$${saldo.toFixed(2)}`}
           </p>
           <p className="mt-3 text-xs text-white/40">
@@ -73,15 +73,15 @@ export function TabWallet() {
 
       <div className="mt-6">
         {error && (
-          <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+          <div className="kb-alert kb-alert--error">
             {error}
           </div>
         )}
 
-        {movimientos === null && !error && <p className="text-sm text-brand-dark/50">Cargando...</p>}
+        {movimientos === null && !error && <p className="text-sm text-muted-2">Cargando...</p>}
 
         {movimientos !== null && movimientos.length === 0 && (
-          <p className="text-center text-sm text-brand-dark/50">
+          <p className="text-center text-sm text-muted-2">
             Todavía no tienes movimientos — aparecerán aquí cuando ganes cashback en un viaje, o cuando lo
             uses para pagar uno.
           </p>
@@ -89,22 +89,22 @@ export function TabWallet() {
 
         {movimientos !== null && movimientos.length > 0 && (
           <>
-            <h2 className="font-display text-sm font-bold text-brand-dark">Historial</h2>
+            <h2 className="text-sm font-bold text-brand-dark">Historial</h2>
             <div className="mt-2 grid gap-2 md:grid-cols-2">
               {pagMovimientos.visibles.map((m) => {
                 const etiqueta = ETIQUETAS_TIPO[m.tipo] ?? { texto: m.tipo, positivo: m.monto >= 0 };
                 return (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between rounded-xl bg-brand-light/40 px-4 py-3"
+                    className="flex items-center justify-between rounded-ctrl bg-kbbg px-4 py-3"
                   >
                     <div>
                       <p className="font-semibold text-brand-dark">{etiqueta.texto}</p>
-                      <p className="text-xs text-brand-dark/50">{formatearFecha(m.creadoEn)}</p>
+                      <p className="text-xs text-muted-2">{formatearFecha(m.creadoEn)}</p>
                     </div>
                     <p
-                      className={`font-display text-lg font-bold ${
-                        etiqueta.positivo ? "text-emerald-600" : "text-brand-dark/50"
+                      className={`text-lg font-bold ${
+                        etiqueta.positivo ? "text-ok" : "text-muted-2"
                       }`}
                     >
                       {etiqueta.positivo ? "+" : "-"}${Math.abs(m.monto).toFixed(2)}

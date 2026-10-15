@@ -141,22 +141,22 @@ export default function LiquidacionesAdminPage() {
 
   const totalPaginas = resultado ? Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) : 1;
   const claseCampo =
-    "w-full rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
-  const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+    "w-full rounded-lg border border-line px-3 py-2.5 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+  const claseEtiqueta = "kb-label";
 
   return (
     <main className="mx-auto max-w-3xl flex-1 px-4 py-10">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
 
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Liquidaciones</h1>
-      <p className="mt-1 text-sm text-brand-dark/70">
+      <h1 className="text-2xl font-bold text-brand-dark">Liquidaciones</h1>
+      <p className="mt-1 text-sm text-muted-2">
         Genera la liquidación de una cooperativa por período, y márcala como pagada cuando
         corresponda.
       </p>
 
       <form
         onSubmit={generar}
-        className="mt-6 grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-4 sm:items-end"
+        className="mt-6 grid grid-cols-1 gap-4 kb-card kb-on-white p-6 sm:grid-cols-4 sm:items-end"
       >
         <div className="sm:col-span-2">
           <label htmlFor="liq-cooperativa-id" className={claseEtiqueta}>Cooperativa</label>
@@ -181,11 +181,11 @@ export default function LiquidacionesAdminPage() {
           <input id="liq-hasta" type="date" value={periodoFin} onChange={(e) => setPeriodoFin(e.target.value)} className={claseCampo} />
         </div>
         <div className="sm:col-span-4">
-          {error && <p className="mb-2 text-sm font-medium text-red-600">{error}</p>}
+          {error && <p className="mb-2 text-sm font-medium text-kberror">{error}</p>}
           <button
             type="submit"
             disabled={generando}
-            className="rounded-lg bg-brand px-5 py-2.5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+            className="kb-btn kb-btn--dark !h-12 !px-6 !text-sm"
           >
             {generando ? "Generando..." : "Generar liquidación"}
           </button>
@@ -194,7 +194,7 @@ export default function LiquidacionesAdminPage() {
 
       <form
         onSubmit={filtrar}
-        className="mt-6 grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-5 lg:items-end"
+        className="mt-6 grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2 lg:grid-cols-5 lg:items-end"
       >
         <div>
           <label htmlFor="liq-filtro-coop" className={claseEtiqueta}>Cooperativa</label>
@@ -226,51 +226,51 @@ export default function LiquidacionesAdminPage() {
           <label htmlFor="liq-filtro-hasta" className={claseEtiqueta}>Período hasta</label>
           <input id="liq-filtro-hasta" type="date" value={hastaFiltro} onChange={(e) => setHastaFiltro(e.target.value)} className={claseCampo} />
         </div>
-        <div className="flex gap-2">
-          <button type="submit" className="flex-1 rounded-lg bg-brand-amber px-4 py-2.5 text-sm font-semibold text-brand-dark transition hover:brightness-95">
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" className="flex-1 kb-btn kb-btn--primary !h-11 !px-5 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-line px-3 py-2.5 text-sm text-muted-2 hover:bg-kbbg">
             Limpiar
           </button>
         </div>
       </form>
 
-      {resultado === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+      {resultado === null && !error && <p className="mt-6 text-sm text-muted-2">Cargando...</p>}
 
       {resultado !== null && resultado.filas.length === 0 && !cargando && (
-        <p className="mt-8 text-center text-sm text-brand-dark/50">
+        <p className="mt-8 text-center text-sm text-muted-2">
           No hay liquidaciones que coincidan con estos filtros.
         </p>
       )}
 
       <div className="mt-6 space-y-3">
         {resultado?.filas.map((l) => (
-          <div key={l.id} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+          <div key={l.id} className="kb-card kb-on-white p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-brand-dark/50">{nombreCoop(l.cooperativaId)}</p>
+                <p className="text-xs text-muted-2">{nombreCoop(l.cooperativaId)}</p>
                 <p className="text-sm font-semibold text-brand-dark">
                   {formatearFecha(l.periodoInicio)} — {formatearFecha(l.periodoFin)}
                 </p>
               </div>
               <span
-                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                className={`kb-status ${
                   l.estado === "pagada"
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-amber-100 text-amber-700"
+                    ? "kb-status--ok"
+                    : "kb-status--wait"
                 }`}
               >
                 {l.estado === "pagada" ? "Pagada" : "Pendiente"}
               </span>
             </div>
-            <p className="mt-2 font-display text-lg font-bold text-brand-dark">
+            <p className="mt-2 text-lg font-bold text-brand-dark">
               ${l.montoLiquidado.toFixed(2)}
             </p>
             {l.estado === "pendiente" && (
               <button
                 onClick={() => marcarPagada(l.id)}
-                className="mt-2 rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-dark"
+                className="mt-2 kb-btn kb-btn--dark !h-10 !px-4 !text-sm"
               >
                 Marcar como pagada
               </button>
@@ -280,20 +280,20 @@ export default function LiquidacionesAdminPage() {
       </div>
 
       {resultado !== null && resultado.total > 0 && (
-        <div className="mt-4 flex items-center justify-between rounded-2xl bg-white px-5 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+        <div className="mt-4 flex items-center justify-between kb-card kb-on-white px-5 py-3 text-sm text-muted-2">
           <span>Página {pagina} de {totalPaginas}</span>
           <div className="flex gap-2">
             <button
               onClick={() => setPagina((p) => Math.max(1, p - 1))}
               disabled={pagina <= 1 || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Anterior
             </button>
             <button
               onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
               disabled={pagina >= totalPaginas || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Siguiente
             </button>

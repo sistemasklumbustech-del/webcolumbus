@@ -37,12 +37,12 @@ export function Toast({ mensaje, onCerrar, duracion, tipo = "exito" }: ToastProp
 
   if (!mensaje) return null;
 
-  const colorFondo = tipo === "error" ? "bg-red-600" : "bg-emerald-600";
+  const clasesToast = tipo === "error" ? "kb-toast kb-toast--error" : "kb-toast";
 
   return (
     <div
       role="status"
-      className={`fixed right-4 top-4 z-50 flex max-w-sm items-start gap-3 rounded-xl ${colorFondo} px-4 py-3 text-sm font-semibold text-white shadow-lg ring-1 ring-black/5`}
+      className={`${clasesToast} max-w-[calc(100vw-32px)] md:max-w-md`}
     >
       {tipo === "error" ? (
         <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-5 w-5 shrink-0">

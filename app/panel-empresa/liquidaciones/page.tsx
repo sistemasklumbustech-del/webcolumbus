@@ -81,20 +81,20 @@ export default function LiquidacionesCoopPage() {
   const pagadas = liquidaciones?.filter((l) => l.estado === "pagada") ?? [];
   const totalPaginas = resultado ? Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) : 1;
   const claseCampo =
-    "w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
-  const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+    "w-full kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+  const claseEtiqueta = "kb-label";
 
   return (
     <main className="mx-auto max-w-2xl flex-1 px-4 py-10">
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Liquidaciones</h1>
-      <p className="mt-1 text-sm text-brand-dark/70">
+      <h1 className="text-2xl font-bold text-brand-dark">Liquidaciones</h1>
+      <p className="mt-1 text-sm text-muted-2">
         Tu historial de liquidaciones — cuánto se te debe y cuándo se te ha pagado. La plataforma
         las genera según su calendario; aquí solo las consultas.
       </p>
 
       <form
         onSubmit={filtrar}
-        className="mt-6 grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
+        className="mt-6 grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
       >
         <div>
           <label htmlFor="mis-liq-estado" className={claseEtiqueta}>Estado</label>
@@ -117,43 +117,43 @@ export default function LiquidacionesCoopPage() {
           <label htmlFor="mis-liq-hasta" className={claseEtiqueta}>Período hasta</label>
           <input id="mis-liq-hasta" type="date" value={hastaFiltro} onChange={(e) => setHastaFiltro(e.target.value)} className={claseCampo} />
         </div>
-        <div className="flex gap-2">
-          <button type="submit" className="flex-1 rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95">
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" className="flex-1 kb-btn kb-btn--primary !h-11 !px-5 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiarFiltros} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </div>
       </form>
 
       {error && (
-        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="mt-4 kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
-      {resultado === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+      {resultado === null && !error && <p className="mt-6 text-sm text-muted-2">Cargando...</p>}
 
       {resultado !== null && liquidaciones !== null && liquidaciones.length === 0 && (
-        <p className="mt-8 text-center text-sm text-brand-dark/50">
+        <p className="mt-8 text-center text-sm text-muted-2">
           No hay liquidaciones que coincidan con estos filtros.
         </p>
       )}
 
       {pendientes.length > 0 && (
         <div className="mt-6">
-          <h2 className="font-display text-sm font-bold text-brand-dark">Pendientes de pago</h2>
+          <h2 className="text-sm font-bold text-brand-dark">Pendientes de pago</h2>
           <div className="mt-2 space-y-2">
             {pendientes.map((l) => (
               <div
                 key={l.id}
-                className="flex items-center justify-between rounded-xl bg-brand-amber/10 px-4 py-3 ring-1 ring-brand-amber/30"
+                className="flex items-center justify-between rounded-ctrl bg-kbyellow-soft px-4 py-3"
               >
                 <p className="text-sm text-brand-dark">
                   {formatearFecha(l.periodoInicio)} — {formatearFecha(l.periodoFin)}
                 </p>
-                <p className="font-display text-lg font-bold text-brand-dark">
+                <p className="text-lg font-bold text-brand-dark">
                   ${l.montoLiquidado.toFixed(2)}
                 </p>
               </div>
@@ -164,22 +164,22 @@ export default function LiquidacionesCoopPage() {
 
       {pagadas.length > 0 && (
         <div className="mt-6">
-          <h2 className="font-display text-sm font-bold text-brand-dark/50">Ya pagadas</h2>
+          <h2 className="text-sm font-bold text-muted-2">Ya pagadas</h2>
           <div className="mt-2 space-y-2">
             {pagadas.map((l) => (
               <div
                 key={l.id}
-                className="flex items-center justify-between rounded-xl bg-brand-light/30 px-4 py-3"
+                className="flex items-center justify-between rounded-ctrl bg-kbbg px-4 py-3"
               >
                 <div>
-                  <p className="text-sm text-brand-dark/70">
+                  <p className="text-sm text-muted-2">
                     {formatearFecha(l.periodoInicio)} — {formatearFecha(l.periodoFin)}
                   </p>
                   {l.pagadoEn && (
-                    <p className="text-xs text-brand-dark/40">Pagada el {formatearFecha(l.pagadoEn)}</p>
+                    <p className="text-xs text-muted-3">Pagada el {formatearFecha(l.pagadoEn)}</p>
                   )}
                 </div>
-                <p className="font-display text-lg font-bold text-brand-dark/40">
+                <p className="text-lg font-bold text-muted-3">
                   ${l.montoLiquidado.toFixed(2)}
                 </p>
               </div>
@@ -189,20 +189,20 @@ export default function LiquidacionesCoopPage() {
       )}
 
       {resultado !== null && resultado.total > 0 && (
-        <div className="mt-6 flex items-center justify-between rounded-2xl bg-white px-5 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+        <div className="mt-6 flex items-center justify-between kb-card kb-on-white px-5 py-3 text-sm text-muted-2">
           <span>Página {pagina} de {totalPaginas}</span>
           <div className="flex gap-2">
             <button
               onClick={() => setPagina((p) => Math.max(1, p - 1))}
               disabled={pagina <= 1 || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Anterior
             </button>
             <button
               onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
               disabled={pagina >= totalPaginas || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Siguiente
             </button>

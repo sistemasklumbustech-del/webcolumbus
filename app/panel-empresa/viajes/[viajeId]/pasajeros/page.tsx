@@ -21,9 +21,9 @@ const ETIQUETA_ESTADO: Record<string, string> = {
 };
 
 const ESTILO_ESTADO: Record<string, string> = {
-  vigente: "bg-brand-light text-brand",
-  usado: "bg-emerald-100 text-emerald-700",
-  cancelado: "bg-red-100 text-red-700",
+  vigente: "bg-kbbg text-brand",
+  usado: "kb-status--ok",
+  cancelado: "kb-status--error",
 };
 
 export default function ManifiestoViajePage() {
@@ -66,29 +66,29 @@ export default function ManifiestoViajePage() {
         <Link href="/panel-empresa/viajes" className="text-sm font-semibold text-brand hover:underline">
           ← Volver a viajes
         </Link>
-        <h1 className="mt-2 font-display text-2xl font-bold text-brand-dark">Lista de pasajeros</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="mt-2 text-2xl font-bold text-brand-dark">Lista de pasajeros</h1>
+        <p className="mt-1 text-sm text-muted-2">
           {pasajeros === null ? "Cargando..." : `${vigentes} pasajero${vigentes === 1 ? "" : "s"} · ${abordaron} ya abordó/aron`}
         </p>
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+      <div className="overflow-hidden kb-card kb-on-white">
         {pasajeros !== null && pasajeros.length === 0 && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
+          <p className="px-6 py-8 text-center text-sm text-muted-2">
             Todavía no hay boletos vendidos para este viaje.
           </p>
         )}
 
         {pasajeros !== null && pasajeros.length > 0 && (
-          <div className="flex flex-wrap items-end gap-3 border-b border-black/5 px-4 py-3 sm:px-6">
+          <div className="flex flex-wrap items-end gap-3 border-b border-line px-4 py-3 sm:px-6">
             <div className="min-w-[200px] flex-1">
-              <label htmlFor="manifiesto-buscar" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="manifiesto-buscar" className="kb-label">
                 Buscar pasajero
               </label>
               <input
@@ -96,10 +96,10 @@ export default function ManifiestoViajePage() {
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 placeholder="Nombre, documento o número de asiento"
-                className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="w-full kb-input !h-11 !text-sm"
               />
             </div>
-            <label className="flex items-center gap-2 pb-2 text-sm font-semibold text-brand-dark/80">
+            <label className="flex items-center gap-2 pb-2 text-sm font-semibold text-ink">
               <input
                 type="checkbox"
                 checked={soloPendientes}
@@ -108,19 +108,19 @@ export default function ManifiestoViajePage() {
               />
               Solo los que faltan por abordar
             </label>
-            <p className="pb-2 text-xs text-brand-dark/50">
+            <p className="pb-2 text-xs text-muted-2">
               {pasajerosVisibles.length} de {pasajeros.length}
             </p>
           </div>
         )}
 
         {pasajeros !== null && pasajeros.length > 0 && pasajerosVisibles.length === 0 && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">No hay pasajeros con ese filtro.</p>
+          <p className="px-6 py-8 text-center text-sm text-muted-2">No hay pasajeros con ese filtro.</p>
         )}
 
         {pasajeros !== null && pasajerosVisibles.length > 0 && (
-          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+            <thead>
               <tr>
                 <th className="px-6 py-3">Asiento</th>
                 <th className="px-6 py-3">Nombre</th>
@@ -130,7 +130,7 @@ export default function ManifiestoViajePage() {
                 <th className="px-6 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/5">
+            <tbody>
               {pasajerosVisibles.map((p) => (
                 <tr key={p.numeroAsiento}>
                   <td className="px-6 py-3 font-semibold text-brand-dark">
@@ -138,7 +138,7 @@ export default function ManifiestoViajePage() {
                     {p.soloMujeres && (
                       <span
                         title="Asiento exclusivo para mujeres"
-                        className="ml-2 inline-block h-2.5 w-2.5 rounded-full bg-pink-500 align-middle"
+                        className="ml-2 inline-block h-2.5 w-2.5 rounded-full bg-women align-middle"
                         aria-label="Asiento exclusivo para mujeres"
                       />
                     )}
@@ -147,8 +147,8 @@ export default function ManifiestoViajePage() {
                     {p.nombreCompleto}
                     {p.soloMujeres && p.estadoBoleto !== "cancelado" && (
                       <span
-                        className={`ml-2 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          p.sexo === "femenino" ? "bg-pink-100 text-pink-700" : "bg-red-100 text-red-700"
+                        className={`ml-2 kb-status ${
+                          p.sexo === "femenino" ? "bg-women-bg text-women" : "kb-status--error"
                         }`}
                       >
                         {p.sexo === "femenino"
@@ -157,16 +157,16 @@ export default function ManifiestoViajePage() {
                       </span>
                     )}
                     {p.esMenorEdad && (
-                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                      <span className="kb-status kb-status--wait ml-2">
                         Menor
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-3 text-brand-dark/70">{p.documento}</td>
-                  <td className="px-6 py-3 text-brand-dark/70">{ETIQUETA_TARIFA[p.tipoTarifa] ?? p.tipoTarifa}</td>
+                  <td className="px-6 py-3 text-muted-2">{p.documento}</td>
+                  <td className="px-6 py-3 text-muted-2">{ETIQUETA_TARIFA[p.tipoTarifa] ?? p.tipoTarifa}</td>
                   <td className="px-6 py-3">
                     <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${ESTILO_ESTADO[p.estadoBoleto] ?? "bg-slate-100 text-slate-600"}`}
+                      className={`kb-status ${ESTILO_ESTADO[p.estadoBoleto] ?? "kb-status--off"}`}
                     >
                       {ETIQUETA_ESTADO[p.estadoBoleto] ?? p.estadoBoleto}
                     </span>
@@ -187,9 +187,9 @@ export default function ManifiestoViajePage() {
       </div>
 
       {pasajeroConQrAbierto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl">
-            <p className="font-display text-sm font-bold text-brand-dark">
+        <div className="kb-modal-bg">
+          <div className="w-full max-w-sm kb-card kb-on-white p-6 text-center shadow-xl">
+            <p className="text-sm font-bold text-brand-dark">
               Asiento {pasajeroConQrAbierto.numeroAsiento} — {pasajeroConQrAbierto.nombreCompleto}
             </p>
             <div className="mt-3">
@@ -197,7 +197,7 @@ export default function ManifiestoViajePage() {
             </div>
             <button
               onClick={() => setPasajeroConQrAbierto(null)}
-              className="mt-4 w-full rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 transition hover:bg-brand-light/40"
+              className="mt-4 w-full kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Cerrar
             </button>

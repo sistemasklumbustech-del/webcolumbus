@@ -85,10 +85,10 @@ function TabEspacios({ onExito, onError }: { onExito: (m: string) => void; onErr
     <>
       <form
         onSubmit={crear}
-        className="grid grid-cols-1 gap-3 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-5 sm:items-end"
+        className="grid grid-cols-1 gap-3 kb-card kb-on-white p-5 sm:grid-cols-5 sm:items-end"
       >
         <div className="sm:col-span-2">
-          <label htmlFor="comercial-espacio-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="comercial-espacio-nombre" className="kb-label">
             Nombre
           </label>
           <input
@@ -96,11 +96,11 @@ function TabEspacios({ onExito, onError }: { onExito: (m: string) => void; onErr
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Banner horizontal"
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="comercial-espacio-ubicacion" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="comercial-espacio-ubicacion" className="kb-label">
             Ubicación
           </label>
           <input
@@ -108,11 +108,11 @@ function TabEspacios({ onExito, onError }: { onExito: (m: string) => void; onErr
             value={ubicacion}
             onChange={(e) => setUbicacion(e.target.value)}
             placeholder="landing_top"
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="comercial-espacio-ancho" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="comercial-espacio-ancho" className="kb-label">
             Ancho (px)
           </label>
           <input
@@ -121,11 +121,11 @@ function TabEspacios({ onExito, onError }: { onExito: (m: string) => void; onErr
             value={anchoPx}
             onChange={(e) => setAnchoPx(e.target.value)}
             placeholder="970"
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="comercial-espacio-alto" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="comercial-espacio-alto" className="kb-label">
             Alto (px)
           </label>
           <input
@@ -134,14 +134,14 @@ function TabEspacios({ onExito, onError }: { onExito: (m: string) => void; onErr
             value={altoPx}
             onChange={(e) => setAltoPx(e.target.value)}
             placeholder="250"
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div className="sm:col-span-5">
           <button
             type="submit"
             disabled={guardando}
-            className="rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+            className="kb-btn kb-btn--dark !h-11 !px-5 !text-sm disabled:opacity-50"
           >
             {guardando ? "Creando..." : "Crear espacio"}
           </button>
@@ -150,16 +150,16 @@ function TabEspacios({ onExito, onError }: { onExito: (m: string) => void; onErr
 
       <div className="mt-4 space-y-2">
         {espacios?.map((e) => (
-          <div key={e.id} className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+          <div key={e.id} className="flex items-center justify-between kb-card kb-on-white p-4">
             <div>
               <p className="font-semibold text-brand-dark">{e.nombre}</p>
-              <p className="text-xs text-brand-dark/50">
+              <p className="text-xs text-muted-2">
                 {e.ubicacion} · {e.anchoPx}×{e.altoPx}px
               </p>
             </div>
             <span
-              className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                e.activo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+              className={`kb-status ${
+                e.activo ? "kb-status--ok" : "kb-status--off"
               }`}
             >
               {e.activo ? "Activo" : "Inactivo"}
@@ -212,17 +212,17 @@ function TabPlanes({ onExito, onError }: { onExito: (m: string) => void; onError
     <>
       <form
         onSubmit={crear}
-        className="grid grid-cols-1 gap-3 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-4 sm:items-end"
+        className="grid grid-cols-1 gap-3 kb-card kb-on-white p-5 sm:grid-cols-4 sm:items-end"
       >
         <div>
-          <label htmlFor="comercial-plan-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="comercial-plan-nombre" className="kb-label">
             Plan
           </label>
           <select
             id="comercial-plan-nombre"
             value={nombre}
             onChange={(e) => setNombre(e.target.value as typeof nombre)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           >
             <option value="basico">Básico</option>
             <option value="destacado">Destacado</option>
@@ -230,7 +230,7 @@ function TabPlanes({ onExito, onError }: { onExito: (m: string) => void; onError
           </select>
         </div>
         <div>
-          <label htmlFor="comercial-plan-precio" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="comercial-plan-precio" className="kb-label">
             Precio mensual (opcional)
           </label>
           <input
@@ -239,11 +239,11 @@ function TabPlanes({ onExito, onError }: { onExito: (m: string) => void; onError
             value={precio}
             onChange={(e) => setPrecio(e.target.value)}
             placeholder="150"
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="comercial-plan-duracion" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="comercial-plan-duracion" className="kb-label">
             Duración por defecto (días)
           </label>
           <input
@@ -252,13 +252,13 @@ function TabPlanes({ onExito, onError }: { onExito: (m: string) => void; onError
             value={duracion}
             onChange={(e) => setDuracion(e.target.value)}
             placeholder="30"
-            className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <button
           type="submit"
           disabled={guardando}
-          className="rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+          className="kb-btn kb-btn--dark !h-11 !px-5 !text-sm disabled:opacity-50"
         >
           {guardando ? "Creando..." : "Crear plan"}
         </button>
@@ -266,9 +266,9 @@ function TabPlanes({ onExito, onError }: { onExito: (m: string) => void; onError
 
       <div className="mt-4 space-y-2">
         {planes?.map((p) => (
-          <div key={p.id} className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+          <div key={p.id} className="flex items-center justify-between kb-card kb-on-white p-4">
             <p className="font-semibold capitalize text-brand-dark">{p.nombre}</p>
-            <p className="text-sm text-brand-dark/70">
+            <p className="text-sm text-muted-2">
               {p.precioMensual ? `$${p.precioMensual}/mes` : "Sin precio fijo"}
               {p.duracionDiasDefault && ` · ${p.duracionDiasDefault} días`}
             </p>
@@ -343,20 +343,20 @@ function TabLeads({ onExito, onError }: { onExito: (m: string) => void; onError:
   }
 
   const colores = {
-    nuevo: "bg-amber-100 text-amber-700",
-    contactado: "bg-blue-100 text-blue-700",
-    cerrado: "bg-emerald-100 text-emerald-700",
+    nuevo: "kb-status--wait",
+    contactado: "kb-status--wait",
+    cerrado: "kb-status--ok",
   };
   const totalPaginas = resultado ? Math.max(1, Math.ceil(resultado.total / LIMITE_LEADS_PAGINA)) : 1;
   const claseCampo =
-    "w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
-  const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+    "w-full kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+  const claseEtiqueta = "kb-label";
 
   return (
     <div className="space-y-4">
       <form
         onSubmit={filtrar}
-        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-5 lg:items-end"
+        className="grid grid-cols-1 gap-4 kb-card kb-on-white p-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end"
       >
         <div>
           <label htmlFor="leads-estado" className={claseEtiqueta}>Estado</label>
@@ -390,11 +390,11 @@ function TabLeads({ onExito, onError }: { onExito: (m: string) => void; onError:
             className={claseCampo}
           />
         </div>
-        <div className="flex gap-2">
-          <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" className="flex-1 kb-btn kb-btn--dark !h-10 !px-4 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiarFiltros} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </div>
@@ -402,20 +402,20 @@ function TabLeads({ onExito, onError }: { onExito: (m: string) => void; onError:
 
       <div className="space-y-2">
         {resultado !== null && resultado.filas.length === 0 && !cargando && (
-          <p className="mt-8 text-center text-sm text-brand-dark/50">No hay leads que coincidan con estos filtros.</p>
+          <p className="mt-8 text-center text-sm text-muted-2">No hay leads que coincidan con estos filtros.</p>
         )}
         {resultado?.filas.map((l) => (
-          <div key={l.id} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+          <div key={l.id} className="kb-card kb-on-white p-4">
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-semibold text-brand-dark">{l.nombreEmpresa}</p>
-                <p className="text-xs text-brand-dark/50">
+                <p className="text-xs text-muted-2">
                   {l.contactoNombre ?? "Sin nombre"} · {l.contactoCorreo}
                   {l.contactoTelefono && ` · ${l.contactoTelefono}`}
                 </p>
-                {l.mensaje && <p className="mt-1 text-sm text-brand-dark/70">{l.mensaje}</p>}
+                {l.mensaje && <p className="mt-1 text-sm text-muted-2">{l.mensaje}</p>}
               </div>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${colores[l.estado]}`}>
+              <span className={`kb-status ${colores[l.estado]}`}>
                 {l.estado}
               </span>
             </div>
@@ -426,7 +426,7 @@ function TabLeads({ onExito, onError }: { onExito: (m: string) => void; onError:
                   <button
                     key={e}
                     onClick={() => cambiarEstado(l.id, e)}
-                    className="rounded-lg border border-brand-light px-3 py-1 text-xs font-semibold text-brand-dark/70 hover:bg-brand-light/40"
+                    className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
                   >
                     Marcar {e}
                   </button>
@@ -437,20 +437,20 @@ function TabLeads({ onExito, onError }: { onExito: (m: string) => void; onError:
       </div>
 
       {resultado !== null && resultado.total > 0 && (
-        <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+        <div className="flex items-center justify-between kb-card kb-on-white px-4 py-3 text-sm text-muted-2">
           <span>Página {pagina} de {totalPaginas}</span>
           <div className="flex gap-2">
             <button
               onClick={() => setPagina((p) => Math.max(1, p - 1))}
               disabled={pagina <= 1 || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Anterior
             </button>
             <button
               onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
               disabled={pagina >= totalPaginas || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Siguiente
             </button>
@@ -463,12 +463,12 @@ function TabLeads({ onExito, onError }: { onExito: (m: string) => void; onError:
 
 function VistaPrevia({ campana }: { campana: CampanaPublicitaria }) {
   return (
-    <div className="mt-2 overflow-hidden rounded-lg bg-brand-dark/5 ring-1 ring-black/5">
-      <div className="flex items-center justify-between border-b border-black/5 bg-white px-3 py-1.5">
-        <span className="text-[10px] font-bold uppercase tracking-wide text-brand-dark/40">
+    <div className="mt-2 overflow-hidden rounded-ctrl bg-kbbg">
+      <div className="flex items-center justify-between border-b border-line bg-white px-3 py-1.5">
+        <span className="text-[10px] font-bold uppercase tracking-wide text-muted-3">
           Vista previa — así se vería en la landing
         </span>
-        <span className="rounded bg-brand-dark/80 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+        <span className="rounded bg-ink px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
           Publicidad
         </span>
       </div>
@@ -590,12 +590,12 @@ function TabCampanas({ onExito, onError }: { onExito: (m: string) => void; onErr
     <>
       <form
         onSubmit={crear}
-        className="grid grid-cols-1 gap-3 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2"
+        className="grid grid-cols-1 gap-3 kb-card kb-on-white p-5 sm:grid-cols-2"
       >
         <select
           value={nuevaCampana.espacioPublicitarioId}
           onChange={(e) => setNuevaCampana((d) => ({ ...d, espacioPublicitarioId: e.target.value }))}
-          className="rounded-lg border border-brand-light bg-white px-3 py-2.5 text-sm text-brand-dark"
+          className="kb-input"
         >
           <option value="">Elige un espacio...</option>
           {espacios.map((e) => (
@@ -607,7 +607,7 @@ function TabCampanas({ onExito, onError }: { onExito: (m: string) => void; onErr
         <select
           value={nuevaCampana.planComercialId}
           onChange={(e) => setNuevaCampana((d) => ({ ...d, planComercialId: e.target.value }))}
-          className="rounded-lg border border-brand-light bg-white px-3 py-2.5 text-sm text-brand-dark"
+          className="kb-input"
         >
           <option value="">Elige un plan...</option>
           {planes.map((p) => (
@@ -620,12 +620,12 @@ function TabCampanas({ onExito, onError }: { onExito: (m: string) => void; onErr
           value={nuevaCampana.nombreAnunciante}
           onChange={(e) => setNuevaCampana((d) => ({ ...d, nombreAnunciante: e.target.value }))}
           placeholder="Nombre del anunciante"
-          className="rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/35"
+          className="kb-input"
         />
         <select
           value={nuevaCampana.formato}
           onChange={(e) => setNuevaCampana((d) => ({ ...d, formato: e.target.value as typeof d.formato }))}
-          className="rounded-lg border border-brand-light bg-white px-3 py-2.5 text-sm text-brand-dark"
+          className="kb-input"
         >
           <option value="imagen_texto">Imagen</option>
           <option value="imagen_texto_video">Video</option>
@@ -634,24 +634,24 @@ function TabCampanas({ onExito, onError }: { onExito: (m: string) => void; onErr
           value={nuevaCampana.archivoUrl}
           onChange={(e) => setNuevaCampana((d) => ({ ...d, archivoUrl: e.target.value }))}
           placeholder="URL de la imagen o video"
-          className="rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/35 sm:col-span-2"
+          className="kb-input"
         />
         <input
           type="date"
           value={nuevaCampana.fechaInicio}
           onChange={(e) => setNuevaCampana((d) => ({ ...d, fechaInicio: e.target.value }))}
-          className="rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark"
+          className="kb-input"
         />
         <input
           type="date"
           value={nuevaCampana.fechaFin}
           onChange={(e) => setNuevaCampana((d) => ({ ...d, fechaFin: e.target.value }))}
-          className="rounded-lg border border-brand-light px-3 py-2.5 text-sm text-brand-dark"
+          className="kb-input"
         />
         <button
           type="submit"
           disabled={guardando}
-          className="rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50 sm:col-span-2"
+          className="kb-btn kb-btn--dark !h-11 !px-5 !text-sm disabled:opacity-50 sm:col-span-2"
         >
           {guardando ? "Creando..." : "Crear campaña"}
         </button>
@@ -659,24 +659,24 @@ function TabCampanas({ onExito, onError }: { onExito: (m: string) => void; onErr
 
       {pendientes.length > 0 && (
         <div className="mt-6">
-          <h2 className="font-display text-sm font-bold text-amber-700">Pendientes de revisión</h2>
+          <h2 className="text-sm font-bold text-[#7A5D00]">Pendientes de revisión</h2>
           <div className="mt-2 space-y-3">
             {pendientes.map((c) => (
-              <div key={c.id} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+              <div key={c.id} className="kb-card kb-on-white p-4">
                 <p className="font-semibold text-brand-dark">
-                  {c.nombreAnunciante} <span className="text-xs font-normal text-brand-dark/50">· {c.espacioNombre} · {c.planNombre}</span>
+                  {c.nombreAnunciante} <span className="text-xs font-normal text-muted-2">· {c.espacioNombre} · {c.planNombre}</span>
                 </p>
                 <VistaPrevia campana={c} />
                 <div className="mt-2 flex gap-2">
                   <button
                     onClick={() => aprobar(c.id)}
-                    className="rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-dark"
+                    className="kb-btn kb-btn--dark !h-10 !px-4 !text-sm"
                   >
                     Aprobar
                   </button>
                   <button
                     onClick={() => rechazar(c.id)}
-                    className="rounded-lg border border-red-200 px-4 py-1.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                    className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-kberror"
                   >
                     Rechazar
                   </button>
@@ -689,7 +689,7 @@ function TabCampanas({ onExito, onError }: { onExito: (m: string) => void; onErr
 
       {activas.length > 0 && (
         <div className="mt-6">
-          <h2 className="font-display text-sm font-bold text-emerald-700">Activas</h2>
+          <h2 className="text-sm font-bold text-ok">Activas</h2>
           <div className="mt-2 space-y-3">
             {activas.map((c) => {
               const filas = metricas[c.id];
@@ -697,11 +697,11 @@ function TabCampanas({ onExito, onError }: { onExito: (m: string) => void; onErr
               const totalClics = filas?.reduce((a, f) => a + f.clics, 0) ?? 0;
               const ctr = totalImpresiones > 0 ? ((totalClics / totalImpresiones) * 100).toFixed(2) : null;
               return (
-                <div key={c.id} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+                <div key={c.id} className="kb-card kb-on-white p-4">
                   <p className="font-semibold text-brand-dark">
-                    {c.nombreAnunciante} <span className="text-xs font-normal text-brand-dark/50">· {c.espacioNombre}</span>
+                    {c.nombreAnunciante} <span className="text-xs font-normal text-muted-2">· {c.espacioNombre}</span>
                   </p>
-                  <p className="text-xs text-brand-dark/40">
+                  <p className="text-xs text-muted-3">
                     {c.fechaInicio} — {c.fechaFin}
                   </p>
                   {!filas ? (
@@ -712,7 +712,7 @@ function TabCampanas({ onExito, onError }: { onExito: (m: string) => void; onErr
                       Ver métricas
                     </button>
                   ) : (
-                    <div className="mt-2 flex items-center justify-between rounded-lg bg-brand-light/30 px-3 py-2">
+                    <div className="mt-2 flex items-center justify-between rounded-lg bg-kbbg px-3 py-2">
                       <p className="text-sm text-brand-dark">
                         {totalImpresiones} impresiones · {totalClics} clics
                         {ctr !== null && <span className="font-semibold"> · CTR {ctr}%</span>}
@@ -734,11 +734,11 @@ function TabCampanas({ onExito, onError }: { onExito: (m: string) => void; onErr
 
       {rechazadas.length > 0 && (
         <div className="mt-6">
-          <h2 className="font-display text-sm font-bold text-brand-dark/40">Rechazadas</h2>
+          <h2 className="text-sm font-bold text-muted-3">Rechazadas</h2>
           <div className="mt-2 space-y-2">
             {rechazadas.map((c) => (
-              <div key={c.id} className="rounded-xl bg-brand-light/20 px-4 py-3">
-                <p className="text-sm text-brand-dark/50">{c.nombreAnunciante} · {c.espacioNombre}</p>
+              <div key={c.id} className="rounded-ctrl bg-kbbg px-4 py-3">
+                <p className="text-sm text-muted-2">{c.nombreAnunciante} · {c.espacioNombre}</p>
               </div>
             ))}
           </div>
@@ -757,13 +757,13 @@ export default function ComercialAdminPage() {
     <main className="mx-auto max-w-3xl flex-1 px-4 py-10">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
 
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Comercial / Publicidad</h1>
-      <p className="mt-1 text-sm text-brand-dark/70">
+      <h1 className="text-2xl font-bold text-brand-dark">Comercial / Publicidad</h1>
+      <p className="mt-1 text-sm text-muted-2">
         Espacios, planes, leads de anunciantes, y campañas — con aprobación obligatoria antes de
         que cualquier anuncio salga en vivo.
       </p>
 
-      <div className="mt-4 flex gap-1 border-b border-black/5">
+      <div className="mt-4 flex gap-1 border-b border-line">
         {PESTANAS.map((p) => (
           <button
             key={p.valor}
@@ -771,7 +771,7 @@ export default function ComercialAdminPage() {
             className={`rounded-t-lg px-4 py-2 text-sm font-semibold transition ${
               pestanaActiva === p.valor
                 ? "border-b-2 border-brand text-brand-dark"
-                : "text-brand-dark/50 hover:text-brand-dark/80"
+                : "text-muted-2 hover:text-ink"
             }`}
           >
             {p.etiqueta}
@@ -780,7 +780,7 @@ export default function ComercialAdminPage() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="mt-4 kb-alert kb-alert--error">
           {error}
         </div>
       )}

@@ -10,9 +10,9 @@ const LIMITE_PAGINA = 25;
 const ETIQUETA_CANAL: Record<string, string> = { en_linea: "En línea", ventanilla: "Ventanilla" };
 const ETIQUETA_ESTADO: Record<string, string> = { vigente: "Vigente", usado: "Abordó", cancelado: "Cancelado" };
 const ESTILO_ESTADO: Record<string, string> = {
-  vigente: "bg-brand-light text-brand",
-  usado: "bg-emerald-100 text-emerald-700",
-  cancelado: "bg-red-100 text-red-700",
+  vigente: "bg-kbbg text-brand",
+  usado: "kb-status--ok",
+  cancelado: "kb-status--error",
 };
 const ETIQUETA_METODO: Record<string, string> = {
   efectivo: "Efectivo",
@@ -167,15 +167,15 @@ export default function VentasPage() {
 
   const totalPaginas = resultado ? Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) : 1;
   const claseCampo =
-    "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
-  const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+    "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium";
+  const claseEtiqueta = "kb-label";
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold text-brand-dark">Ventas</h1>
-          <p className="mt-1 text-sm text-brand-dark/70">
+          <h1 className="text-2xl font-bold text-brand-dark">Ventas</h1>
+          <p className="mt-1 text-sm text-muted-2">
             {esAdmin
               ? "Todos los boletos vendidos de tu cooperativa, con pasajero, QR, canal y forma de pago."
               : "Los boletos que vendiste tú en ventanilla."}
@@ -184,7 +184,7 @@ export default function VentasPage() {
         <button
           onClick={exportarCsv}
           disabled={exportando || !resultado || resultado.total === 0}
-          className="rounded-lg border border-brand-light bg-white px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/40 disabled:opacity-50"
+          className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
         >
           {exportando ? "Exportando..." : "Exportar a CSV"}
         </button>
@@ -192,7 +192,7 @@ export default function VentasPage() {
 
       <form
         onSubmit={filtrar}
-        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-6 lg:items-end"
+        className="grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2 lg:grid-cols-6 lg:items-end"
       >
         <div>
           <label htmlFor="ventas-desde" className={claseEtiqueta}>Vendido desde</label>
@@ -231,11 +231,11 @@ export default function VentasPage() {
             className={claseCampo}
           />
         </div>
-        <div className="flex gap-2">
-          <button type="submit" className="flex-1 rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95">
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" className="flex-1 kb-btn kb-btn--primary !h-11 !px-5 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiar} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiar} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </div>
@@ -243,29 +243,29 @@ export default function VentasPage() {
 
       {resultado && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/50">Boletos (sin cancelados)</p>
-            <p className="mt-1 font-display text-2xl font-extrabold text-brand-dark">{resultado.resumen.boletos}</p>
+          <div className="kb-card kb-on-white p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">Boletos (sin cancelados)</p>
+            <p className="mt-1 text-2xl font-extrabold text-brand-dark">{resultado.resumen.boletos}</p>
           </div>
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/50">Total cobrado</p>
-            <p className="mt-1 font-display text-2xl font-extrabold text-brand-dark">{dolares(resultado.resumen.totalCobrado)}</p>
+          <div className="kb-card kb-on-white p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">Total cobrado</p>
+            <p className="mt-1 text-2xl font-extrabold text-brand-dark">{dolares(resultado.resumen.totalCobrado)}</p>
           </div>
-          <div className="col-span-2 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:col-span-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/50">Filas con estos filtros</p>
-            <p className="mt-1 font-display text-2xl font-extrabold text-brand-dark">{resultado.total}</p>
+          <div className="col-span-2 kb-card kb-on-white p-5 sm:col-span-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">Filas con estos filtros</p>
+            <p className="mt-1 text-2xl font-extrabold text-brand-dark">{resultado.total}</p>
           </div>
         </div>
       )}
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">{error}</div>
+        <div className="kb-alert kb-alert--error">{error}</div>
       )}
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+      <div className="overflow-hidden kb-card kb-on-white">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px] text-left text-sm">
-            <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <table className="kb-table min-w-[1100px]">
+            <thead>
               <tr>
                 <th className="px-4 py-3">Vendido</th>
                 <th className="px-4 py-3">Pasajero</th>
@@ -279,42 +279,42 @@ export default function VentasPage() {
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/5">
+            <tbody>
               {resultado?.filas.map((f) => (
                 <tr key={f.boletoId} className={f.estadoBoleto === "cancelado" ? "opacity-60" : ""}>
-                  <td className="whitespace-nowrap px-4 py-3 text-brand-dark/70">{fechaHora(f.fechaVenta)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-muted-2">{fechaHora(f.fechaVenta)}</td>
                   <td className="px-4 py-3">
                     <p className="font-semibold text-brand-dark">{f.pasajeroNombre}</p>
-                    <p className="text-xs text-brand-dark/50">
+                    <p className="text-xs text-muted-2">
                       {f.tipoDocumento === "pasaporte" ? "Pasaporte" : "Cédula"} {f.documento} ·{" "}
                       {ETIQUETA_TARIFA[f.tipoTarifa] ?? f.tipoTarifa}
                     </p>
                   </td>
-                  <td className="px-4 py-3 text-xs text-brand-dark/70">
+                  <td className="px-4 py-3 text-xs text-muted-2">
                     {f.contactoTelefono && <p>{f.contactoTelefono}</p>}
                     {f.contactoCorreo && <p>{f.contactoCorreo}</p>}
-                    {!f.contactoTelefono && !f.contactoCorreo && <span className="text-brand-dark/30">Sin contacto</span>}
+                    {!f.contactoTelefono && !f.contactoCorreo && <span className="text-muted-3">Sin contacto</span>}
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-medium text-brand-dark">{f.rutaNombre}</p>
-                    <p className="text-xs text-brand-dark/50">{fechaHora(f.horaSalida)}</p>
+                    <p className="text-xs text-muted-2">{fechaHora(f.horaSalida)}</p>
                   </td>
-                  <td className="px-4 py-3 text-brand-dark/70">
+                  <td className="px-4 py-3 text-muted-2">
                     {f.numeroAsiento}
                     {f.esVip && (
-                      <span className="ml-1 rounded-full bg-brand-amber px-1.5 py-0.5 text-[10px] font-semibold text-brand-dark">VIP</span>
+                      <span className="ml-1 rounded-full bg-kbyellow px-1.5 py-0.5 text-[10px] font-semibold text-brand-dark">VIP</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-brand-dark/70">
+                  <td className="px-4 py-3 text-muted-2">
                     <p>{ETIQUETA_CANAL[f.canal] ?? f.canal}</p>
-                    {f.vendedorNombre && <p className="text-xs text-brand-dark/50">{f.vendedorNombre}</p>}
+                    {f.vendedorNombre && <p className="text-xs text-muted-2">{f.vendedorNombre}</p>}
                   </td>
-                  <td className="px-4 py-3 text-brand-dark/70">
+                  <td className="px-4 py-3 text-muted-2">
                     {f.metodoPago ? (ETIQUETA_METODO[f.metodoPago] ?? f.metodoPago) : "—"}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-brand-dark">{dolares(f.total)}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${ESTILO_ESTADO[f.estadoBoleto] ?? "bg-slate-100 text-slate-600"}`}>
+                    <span className={`kb-status ${ESTILO_ESTADO[f.estadoBoleto] ?? "kb-status--off"}`}>
                       {ETIQUETA_ESTADO[f.estadoBoleto] ?? f.estadoBoleto}
                     </span>
                   </td>
@@ -330,12 +330,12 @@ export default function VentasPage() {
         </div>
 
         {resultado && resultado.filas.length === 0 && !cargando && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">No hay ventas con estos filtros.</p>
+          <p className="px-6 py-8 text-center text-sm text-muted-2">No hay ventas con estos filtros.</p>
         )}
-        {cargando && !resultado && <p className="px-6 py-8 text-center text-sm text-brand-dark/50">Cargando...</p>}
+        {cargando && !resultado && <p className="px-6 py-8 text-center text-sm text-muted-2">Cargando...</p>}
 
         {resultado && resultado.total > 0 && (
-          <div className="flex items-center justify-between border-t border-black/5 px-4 py-3 text-sm text-brand-dark/70">
+          <div className="flex items-center justify-between border-t border-line px-4 py-3 text-sm text-muted-2">
             <span>
               Página {pagina} de {totalPaginas}
             </span>
@@ -343,14 +343,14 @@ export default function VentasPage() {
               <button
                 onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 disabled={pagina <= 1 || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
                 disabled={pagina >= totalPaginas || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Siguiente
               </button>
@@ -360,26 +360,26 @@ export default function VentasPage() {
       </div>
 
       {qrAbierto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onMouseDown={() => setQrAbierto(null)}>
+        <div className="kb-modal-bg" onMouseDown={() => setQrAbierto(null)}>
           <div
             role="dialog"
             aria-modal="true"
             onMouseDown={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl"
+            className="w-full max-w-sm kb-card kb-on-white p-6 text-center shadow-xl"
           >
-            <p className="font-display text-sm font-bold text-brand-dark">
+            <p className="text-sm font-bold text-brand-dark">
               Asiento {qrAbierto.numeroAsiento} — {qrAbierto.pasajeroNombre}
             </p>
-            <p className="text-xs text-brand-dark/50">
+            <p className="text-xs text-muted-2">
               {qrAbierto.rutaNombre} · {fechaHora(qrAbierto.horaSalida)}
             </p>
             <div className="mt-3">
               <CodigoQr valor={qrAbierto.codigoQr} />
             </div>
-            <p className="mt-2 break-all text-[10px] text-brand-dark/40">{qrAbierto.codigoQr}</p>
+            <p className="mt-2 break-all text-[10px] text-muted-3">{qrAbierto.codigoQr}</p>
             {(qrAbierto.referenciaPago || qrAbierto.comprobantePagoUrl) && (
-              <div className="mt-3 rounded-lg bg-brand-light/20 p-3 text-left text-xs text-brand-dark/70">
-                <p className="font-semibold uppercase tracking-wide text-brand-dark/50">Respaldo del pago</p>
+              <div className="mt-3 rounded-lg bg-kbbg p-3 text-left text-xs text-muted-2">
+                <p className="font-semibold uppercase tracking-wide text-muted-2">Respaldo del pago</p>
                 {qrAbierto.referenciaPago && <p className="mt-1">Referencia: {qrAbierto.referenciaPago}</p>}
                 {qrAbierto.comprobantePagoUrl && (
                   <a
@@ -395,7 +395,7 @@ export default function VentasPage() {
             )}
             <button
               onClick={() => setQrAbierto(null)}
-              className="mt-4 w-full rounded-lg border border-brand-light px-4 py-2 text-sm font-semibold text-brand-dark/70 hover:bg-brand-light/40"
+              className="mt-4 w-full kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Cerrar
             </button>

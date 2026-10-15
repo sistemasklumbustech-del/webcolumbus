@@ -1,0 +1,279 @@
+/* =====================================================================
+   KLUMBUS · ESTILOS OFICIALES (v1.1 · octubre 2026)
+   Fuente de verdad del diseño. Referencias visuales:
+     - klumbus-app-movil.html  (celular, hasta 767 px)
+     - klumbus-web-pc.html     (computador, desde 768 px)
+   Regla: copiar valores de aquí. No inventar colores, radios ni sombras.
+
+   Fuente: agregar en el <head>
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+   ===================================================================== */
+
+:root{
+  /* Colores */
+  --kb-ink:#0B0D12;      /* negro: encabezado, botón secundario, textos */
+  --kb-ink-2:#171A22;    /* campos sobre fondo oscuro */
+  --kb-ink-3:#262A35;    /* líneas sobre fondo oscuro */
+  --kb-yellow:#FDD514;   /* acción principal. Texto encima SIEMPRE negro */
+  --kb-yellow-soft:#FFF6C2;
+  --kb-bg:#F5F6F8;       /* fondo de página */
+  --kb-card:#FFFFFF;
+  --kb-line:#E9EBF0;
+  --kb-line-2:#D6D9E0;
+  --kb-text-2:#6B7080;   /* texto secundario */
+  --kb-text-3:#9AA0AE;   /* texto terciario */
+  --kb-on-dark:#C7CAD3;  /* texto secundario sobre negro */
+  --kb-ok:#14804A;  --kb-ok-bg:#E5F5EC;
+  --kb-error:#D32F2F; --kb-error-bg:#FDECEC;
+  --kb-women:#B8336A; --kb-women-bg:#FCE7F0;
+  --kb-occupied:#DDE0E6;
+  /* Sin azul en ninguna parte */
+
+  /* Tipografía */
+  --kb-font:"Poppins","Segoe UI",Roboto,Arial,sans-serif;
+
+  /* Radios */
+  --kb-r-card:24px;    /* tarjetas */
+  --kb-r-ctrl:16px;    /* botones, campos */
+  --kb-r-tab:14px;     /* pestañas (contenedor) */
+  --kb-r-pill:999px;   /* chips, etiquetas */
+  --kb-r-phone-sheet:28px; /* hoja inferior en celular */
+
+  /* Sombras */
+  --kb-shadow-card:0 2px 14px rgba(11,13,18,.05);
+  --kb-shadow-float:0 16px 40px rgba(11,13,18,.14);  /* buscador, boleto */
+  --kb-shadow-btn-round:0 2px 10px rgba(11,13,18,.08);
+
+  /* Medidas */
+  --kb-control-h:54px;   /* campos */
+  --kb-button-h:56px;    /* botones */
+  --kb-gutter-m:20px;    /* margen lateral celular */
+  --kb-gutter-d:64px;    /* margen lateral PC */
+  --kb-max:1280px;       /* ancho máximo PC */
+}
+
+/* ---------- Base ---------- */
+body{margin:0;background:var(--kb-bg);color:var(--kb-ink);font-family:var(--kb-font);font-size:14px;line-height:1.45}
+a{color:inherit}
+h1,h2,h3{font-weight:600;letter-spacing:-.01em;margin:0}
+.kb-h1{font-size:32px;line-height:1.12}          /* celular */
+.kb-h2{font-size:21px}
+@media (min-width:768px){.kb-h1{font-size:54px;line-height:1.08}.kb-h2{font-size:24px}}
+.kb-eyebrow{display:block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--kb-text-2);margin-bottom:6px}
+.kb-muted{color:var(--kb-text-2)}
+.kb-num{font-variant-numeric:tabular-nums}
+.kb-highlight{color:var(--kb-yellow)} /* palabra resaltada en títulos sobre negro */
+:focus-visible{outline:3px solid var(--kb-yellow);outline-offset:2px}
+
+/* ---------- Contenedor ---------- */
+.kb-container{max-width:var(--kb-max);margin:0 auto;padding:0 var(--kb-gutter-m)}
+@media (min-width:768px){.kb-container{padding:0 var(--kb-gutter-d)}}
+
+/* ---------- Encabezado (siempre negro) ---------- */
+.kb-header{background:var(--kb-ink);color:#fff}
+.kb-header__in{height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.kb-header__logo{height:24px}
+.kb-header__nav{display:none;gap:34px;font-size:14px;font-weight:500;color:var(--kb-on-dark)}
+.kb-header__nav a{text-decoration:none}.kb-header__nav a:hover,.kb-header__nav .is-active{color:#fff}
+@media (min-width:768px){.kb-header__in{height:76px}.kb-header__logo{height:32px}.kb-header__nav{display:flex}}
+
+/* ---------- Botones ---------- */
+.kb-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:var(--kb-button-h);padding:0 28px;border:0;border-radius:var(--kb-r-ctrl);font-family:inherit;font-weight:600;font-size:15px;text-decoration:none;cursor:pointer;white-space:nowrap}
+.kb-btn--primary{background:var(--kb-yellow);color:var(--kb-ink)}     /* una sola por pantalla */
+.kb-btn--primary:hover{background:#F2C800}
+.kb-btn--dark{background:var(--kb-ink);color:#fff}
+.kb-btn--outline{background:#fff;color:var(--kb-ink);box-shadow:inset 0 0 0 1.5px var(--kb-line-2)}
+.kb-btn--block{width:100%}
+.kb-btn:disabled{opacity:.5;cursor:not-allowed}
+.kb-btn-round{width:44px;height:44px;border-radius:50%;border:0;background:#fff;display:grid;place-items:center;box-shadow:var(--kb-shadow-btn-round)} /* volver, filtros, compartir */
+
+/* ---------- Campos ---------- */
+.kb-label{display:block;font-size:13px;font-weight:500;color:var(--kb-text-2);margin-bottom:6px}
+.kb-input{width:100%;height:var(--kb-control-h);border:1.5px solid transparent;border-radius:var(--kb-r-ctrl);background:var(--kb-bg);padding:0 18px;font:inherit;font-size:14px;outline:none;box-sizing:border-box}
+.kb-input:focus{border-color:var(--kb-ink);background:#fff}
+.kb-input.is-error{border-color:var(--kb-error)}
+.kb-on-white .kb-input{background:#fff;border-color:var(--kb-line)}   /* campos dentro de tarjeta blanca sobre fondo gris */
+.kb-dark .kb-label{color:var(--kb-on-dark)}
+.kb-dark .kb-input{background:var(--kb-ink-2);border-color:var(--kb-ink-3);color:#fff}
+.kb-dark .kb-input::placeholder{color:#7C8190}
+.kb-dark .kb-input:focus{border-color:var(--kb-yellow)}
+
+/* ---------- Pestañas (Solo ida/Ida y vuelta, Cédula/Pasaporte, Piso 1/Piso 2) ---------- */
+.kb-tabs{display:inline-flex;background:var(--kb-bg);border-radius:var(--kb-r-tab);padding:4px}
+.kb-tabs button{flex:1;border:0;background:transparent;border-radius:11px;padding:10px 20px;font:inherit;font-size:13px;font-weight:500;color:var(--kb-text-2);cursor:pointer}
+.kb-tabs button.is-active{background:var(--kb-ink);color:#fff;font-weight:600}
+.kb-dark .kb-tabs{background:var(--kb-ink-2)}
+.kb-dark .kb-tabs button{color:var(--kb-on-dark)}
+.kb-dark .kb-tabs button.is-active{background:var(--kb-yellow);color:var(--kb-ink)}
+
+/* ---------- Chips y etiquetas ---------- */
+.kb-chip{border:0;background:#fff;border-radius:var(--kb-r-pill);padding:9px 16px;font:inherit;font-size:13px;font-weight:500;box-shadow:inset 0 0 0 1px var(--kb-line);cursor:pointer}
+.kb-chip.is-active{background:var(--kb-ink);color:#fff;box-shadow:none}
+.kb-tag{font-size:11px;font-weight:600;border-radius:var(--kb-r-pill);padding:3px 10px}
+.kb-tag--yellow{background:var(--kb-yellow);color:var(--kb-ink)}   /* "Más barato", "Foto nueva" */
+.kb-tag--ok{background:var(--kb-ok-bg);color:var(--kb-ok)}         /* "54 libres", "Pago confirmado" */
+.kb-tag--error{background:var(--kb-error-bg);color:var(--kb-error)} /* "Agotado" */
+
+/* ---------- Tarjetas ---------- */
+.kb-card{background:var(--kb-card);border-radius:var(--kb-r-card);box-shadow:var(--kb-shadow-card)}
+.kb-card--dark{background:var(--kb-ink);color:#fff}       /* resumen de viaje, búsquedas recientes */
+.kb-card--soft{background:var(--kb-yellow-soft)}          /* ¿Por qué Klumbus? */
+.kb-float{box-shadow:var(--kb-shadow-float)}              /* buscador sobre la foto, boleto */
+.kb-icon-tile{width:46px;height:46px;border-radius:14px;background:var(--kb-yellow-soft);display:grid;place-items:center;position:relative}
+.kb-step-num{width:32px;height:32px;border-radius:50%;background:var(--kb-ink);color:var(--kb-yellow);display:grid;place-items:center;font-weight:600;font-size:14px}
+
+/* ---------- Origen / destino ---------- */
+.kb-dot{width:12px;height:12px;border-radius:50%;border:3px solid var(--kb-ink);box-sizing:border-box}
+.kb-dot--to{background:var(--kb-yellow);border-color:var(--kb-yellow)}
+.kb-swap{width:42px;height:42px;border-radius:50%;border:0;background:var(--kb-ink);display:grid;place-items:center} /* icono amarillo */
+
+/* ---------- Tira de fechas (resultados) ---------- */
+.kb-day{border:0;background:#fff;border-radius:18px;padding:10px 0;min-width:64px;display:flex;flex-direction:column;align-items:center;box-shadow:inset 0 0 0 1px var(--kb-line)}
+.kb-day small{font-size:11px;color:var(--kb-text-2)}
+.kb-day b{font-size:17px;font-weight:600}
+.kb-day em{font-style:normal;font-size:11px;color:var(--kb-text-2)}
+.kb-day.is-active{background:var(--kb-ink);color:#fff;box-shadow:none}
+.kb-day.is-active em{color:var(--kb-yellow);font-weight:600}
+
+/* ---------- Línea de tiempo del viaje ---------- */
+.kb-timeline{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.kb-timeline__time{font-size:18px;font-weight:600}  /* 22px en PC, 26-30px en el boleto */
+.kb-timeline__city{font-size:12px;color:var(--kb-text-2)}
+.kb-timeline__line{display:flex;align-items:center;gap:6px}
+.kb-timeline__line::before,.kb-timeline__line::after{content:"";flex:1;border-top:1.5px dashed var(--kb-line-2)}
+.kb-timeline__bus{width:30px;height:30px;border-radius:50%;background:var(--kb-yellow-soft);display:grid;place-items:center}
+
+/* ---------- Asientos (SVG de silla, ver archivo de referencia) ----------
+   Silla: <svg viewBox="0 0 40 40"> con 4 rect class="kb-seat__shape":
+   (7,3,26,11,r4) respaldo · (9,15,22,20,r6) asiento · (3,16,5,15) y (32,16,5,15) brazos
+   En PC el SVG va rotado -90° (bus acostado, frente a la izquierda). */
+.kb-seat{border:0;background:transparent;padding:0;width:52px;height:56px;position:relative;color:var(--kb-line-2);cursor:pointer}
+.kb-seat svg{width:46px;height:46px}
+.kb-seat__shape{fill:#fff;stroke:currentColor;stroke-width:2}
+.kb-seat__label{position:absolute;top:22px;left:0;right:0;text-align:center;font-size:11px;font-weight:600;color:var(--kb-text-2)}
+.kb-seat.is-selected{color:var(--kb-ink)}.kb-seat.is-selected .kb-seat__shape{fill:var(--kb-yellow)}.kb-seat.is-selected .kb-seat__label{color:var(--kb-ink)}
+.kb-seat.is-occupied{color:var(--kb-occupied);cursor:not-allowed}.kb-seat.is-occupied .kb-seat__shape{fill:var(--kb-occupied)}
+.kb-seat.is-women{color:var(--kb-women)}.kb-seat.is-women .kb-seat__shape{fill:var(--kb-women-bg)}.kb-seat.is-women .kb-seat__label{color:var(--kb-women)}
+
+/* ---------- Hoja inferior fija (celular: asientos y pago) ---------- */
+.kb-sheet{position:sticky;bottom:0;background:#fff;border-radius:var(--kb-r-phone-sheet) var(--kb-r-phone-sheet) 0 0;padding:16px 20px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(11,13,18,.10);display:flex;align-items:center;gap:14px}
+@media (min-width:768px){.kb-sheet{display:none}} /* en PC el resumen va a la derecha */
+
+/* ---------- Boleto ---------- */
+.kb-ticket{border-radius:28px;overflow:hidden;background:#fff;box-shadow:var(--kb-shadow-float)}
+.kb-ticket__top{background:var(--kb-ink);color:#fff;padding:20px}
+.kb-ticket__cut{position:relative;border-top:2px dashed var(--kb-line-2);margin:0 18px}
+.kb-ticket__cut::before,.kb-ticket__cut::after{content:"";position:absolute;top:-13px;width:24px;height:24px;border-radius:50%;background:var(--kb-bg)}
+.kb-ticket__cut::before{left:-31px}.kb-ticket__cut::after{right:-31px}
+
+/* ---------- Pie de página ---------- */
+.kb-footer{background:var(--kb-ink);color:var(--kb-on-dark);font-size:13px}
+.kb-footer b{color:#fff}
+
+/* =====================================================================
+   PÁGINAS INTERNAS (sin diseño dibujado todavía)
+   Mis boletos, perfil, panel de cooperativa, panel de administración,
+   reportes, liquidaciones, configuración, etc. Se arman SOLO con estas
+   piezas y con las de arriba. No crear estilos nuevos sin aprobación.
+   ===================================================================== */
+
+/* ---------- Estructura de panel ---------- */
+.kb-app{display:grid;grid-template-columns:1fr;min-height:100vh;background:var(--kb-bg)}
+@media (min-width:1024px){.kb-app{grid-template-columns:260px 1fr}}
+.kb-sidebar{display:none;background:var(--kb-ink);color:var(--kb-on-dark);padding:24px 16px;flex-direction:column;gap:4px}
+@media (min-width:1024px){.kb-sidebar{display:flex}}
+.kb-sidebar__logo{height:28px;margin:0 8px 24px}
+.kb-sidebar__group{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--kb-text-3);margin:18px 12px 6px}
+.kb-sidebar a{display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border-radius:12px;text-decoration:none;font-size:14px;font-weight:500}
+.kb-sidebar a:hover{background:var(--kb-ink-2);color:#fff}
+.kb-sidebar a.is-active{background:var(--kb-yellow);color:var(--kb-ink);font-weight:600}
+.kb-main{min-width:0;padding:20px}
+@media (min-width:768px){.kb-main{padding:32px 40px}}
+.kb-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.kb-topbar h1{font-size:24px}
+.kb-topbar p{margin:2px 0 0;font-size:13px;color:var(--kb-text-2)}
+/* En celular el menú lateral se reemplaza por kb-header negro + menú desplegable */
+
+/* ---------- Indicadores (números del día) ---------- */
+.kb-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.kb-stat{background:#fff;border-radius:var(--kb-r-card);box-shadow:var(--kb-shadow-card);padding:20px}
+.kb-stat small{display:block;font-size:13px;color:var(--kb-text-2)}
+.kb-stat b{display:block;font-size:28px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.kb-stat .kb-trend-up{color:var(--kb-ok);font-size:12px;font-weight:600}
+.kb-stat .kb-trend-down{color:var(--kb-error);font-size:12px;font-weight:600}
+.kb-stat--dark{background:var(--kb-ink);color:#fff}.kb-stat--dark small{color:var(--kb-on-dark)}
+
+/* ---------- Tablas ---------- */
+.kb-table-wrap{background:#fff;border-radius:var(--kb-r-card);box-shadow:var(--kb-shadow-card);overflow-x:auto}
+.kb-table{width:100%;border-collapse:collapse;font-size:14px}
+.kb-table th{text-align:left;font-size:12px;font-weight:600;color:var(--kb-text-2);padding:14px 16px;border-bottom:1px solid var(--kb-line);white-space:nowrap}
+.kb-table td{padding:14px 16px;border-bottom:1px solid var(--kb-line);vertical-align:middle}
+.kb-table tr:last-child td{border-bottom:0}
+.kb-table tbody tr:hover{background:#FAFBFC}
+.kb-table .kb-num,.kb-table td.is-money{text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---------- Estados (pastillas) ---------- */
+.kb-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:var(--kb-r-pill);padding:4px 10px;white-space:nowrap}
+.kb-status::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.kb-status--ok{background:var(--kb-ok-bg);color:var(--kb-ok)}          /* pagado, activo, confirmado */
+.kb-status--wait{background:#FFF6C2;color:#7A5D00}                       /* pendiente, en revisión */
+.kb-status--error{background:var(--kb-error-bg);color:var(--kb-error)}  /* rechazado, anulado, agotado */
+.kb-status--off{background:var(--kb-bg);color:var(--kb-text-2)}        /* inactivo, borrador */
+
+/* ---------- Barra de filtros / búsqueda ---------- */
+.kb-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.kb-search{flex:1;min-width:220px;height:48px;border:0;border-radius:var(--kb-r-ctrl);background:#fff;box-shadow:inset 0 0 0 1px var(--kb-line);padding:0 16px;font:inherit}
+
+/* ---------- Paginación ---------- */
+.kb-pager{display:flex;gap:6px;justify-content:flex-end;padding:14px 16px}
+.kb-pager button{min-width:38px;height:38px;border:0;border-radius:10px;background:#fff;box-shadow:inset 0 0 0 1px var(--kb-line);font:inherit;font-weight:500}
+.kb-pager button.is-active{background:var(--kb-ink);color:#fff;box-shadow:none}
+
+/* ---------- Ventana emergente (confirmaciones) ---------- */
+.kb-modal-bg{position:fixed;inset:0;background:rgba(11,13,18,.6);display:grid;place-items:end center;padding:16px;z-index:100}
+@media (min-width:600px){.kb-modal-bg{place-items:center}}
+.kb-modal{width:100%;max-width:460px;background:#fff;border-radius:var(--kb-r-card);padding:24px;display:flex;flex-direction:column;gap:16px}
+.kb-modal__actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ---------- Aviso flotante (guardado, error) ---------- */
+.kb-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--kb-ink);color:#fff;border-radius:14px;padding:12px 18px;font-size:14px;font-weight:500;box-shadow:var(--kb-shadow-float);display:flex;gap:10px;align-items:center;z-index:110}
+.kb-toast--error{background:var(--kb-error)}
+
+/* ---------- Avisos dentro de la página ---------- */
+.kb-alert{border-radius:16px;padding:14px 16px;font-size:14px;display:flex;gap:10px}
+.kb-alert--info{background:var(--kb-yellow-soft);color:#4A4F5C}
+.kb-alert--ok{background:var(--kb-ok-bg);color:var(--kb-ok)}
+.kb-alert--error{background:var(--kb-error-bg);color:var(--kb-error)}
+
+/* ---------- Estado vacío ---------- */
+.kb-empty{text-align:center;padding:48px 20px;color:var(--kb-text-2)}
+.kb-empty b{display:block;color:var(--kb-ink);font-size:16px;margin:12px 0 4px}
+
+/* ---------- Pestañas de sección (Activos / Pasados / Anulados) ---------- */
+.kb-subnav{display:flex;gap:24px;border-bottom:1px solid var(--kb-line);margin-bottom:20px;overflow-x:auto}
+.kb-subnav a{padding:12px 0;font-size:14px;font-weight:500;color:var(--kb-text-2);text-decoration:none;border-bottom:3px solid transparent;white-space:nowrap}
+.kb-subnav a.is-active{color:var(--kb-ink);font-weight:600;border-bottom-color:var(--kb-yellow)}
+
+/* ---------- Interruptor (activar / desactivar) ---------- */
+.kb-switch{width:46px;height:28px;border-radius:999px;background:var(--kb-line-2);position:relative;border:0;cursor:pointer}
+.kb-switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s}
+.kb-switch.is-on{background:var(--kb-ink)}.kb-switch.is-on::after{left:21px;background:var(--kb-yellow)}
+
+/* ---------- Gráficas en paneles ----------
+   Serie principal: #0B0D12 · serie de comparación: #FDD514 · rejilla: #E9EBF0
+   Texto de ejes: #6B7080, 12px. Nunca azul. */
+
+/* ---------------------------------------------------------------------
+   SI EL PROYECTO USA TAILWIND, agregar en tailwind.config:
+   theme:{extend:{
+     colors:{ink:{DEFAULT:'#0B0D12',2:'#171A22',3:'#262A35'},kbyellow:{DEFAULT:'#FDD514',soft:'#FFF6C2'},
+             kbbg:'#F5F6F8',line:{DEFAULT:'#E9EBF0',2:'#D6D9E0'},muted:{2:'#6B7080',3:'#9AA0AE'},
+             ok:{DEFAULT:'#14804A',bg:'#E5F5EC'},kberror:{DEFAULT:'#D32F2F',bg:'#FDECEC'},
+             women:{DEFAULT:'#B8336A',bg:'#FCE7F0'},occupied:'#DDE0E6'},
+     fontFamily:{sans:['Poppins','Segoe UI','Roboto','Arial','sans-serif']},
+     borderRadius:{card:'24px',ctrl:'16px',tab:'14px'},
+     boxShadow:{card:'0 2px 14px rgba(11,13,18,.05)',float:'0 16px 40px rgba(11,13,18,.14)'}
+   }}
+   --------------------------------------------------------------------- */

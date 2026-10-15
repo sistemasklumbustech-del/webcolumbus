@@ -32,23 +32,23 @@ export default function RecuperarPasswordPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-brand-light/40 px-4 py-16">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg ring-1 ring-black/5">
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Recuperar contraseña</h1>
+    <main className="kb-on-white flex flex-1 items-center justify-center bg-kbbg px-4 py-16">
+      <div className="w-full max-w-sm kb-card kb-on-white p-8 shadow-lg ring-1 ring-line">
+        <h1 className="text-2xl font-bold text-brand-dark">Recuperar contraseña</h1>
 
         {enviado ? (
-          <p className="mt-4 text-sm text-brand-dark/70">
+          <p className="mt-4 text-sm text-muted-2">
             Si <strong>{correo}</strong> está registrado, te enviamos un enlace para restablecer tu
             contraseña. Revisá tu bandeja de entrada (y la carpeta de spam).
           </p>
         ) : (
           <>
-            <p className="mt-1 text-sm text-brand-dark/70">
+            <p className="mt-1 text-sm text-muted-2">
               Ingresá tu correo y te mandamos un enlace para restablecer tu contraseña.
             </p>
             <form onSubmit={enviar} className="mt-6 space-y-4">
               <div>
-                <label htmlFor="recuperar-correo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+                <label htmlFor="recuperar-correo" className="kb-label">
                   Correo
                 </label>
                 <input
@@ -57,14 +57,14 @@ export default function RecuperarPasswordPage() {
                   required
                   value={correo}
                   onChange={(e) => setCorreo(e.target.value)}
-                  className="w-full rounded-lg border border-brand-light px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                  className="w-full kb-input"
                 />
               </div>
-              {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+              {error && <p className="text-sm font-medium text-kberror">{error}</p>}
               <button
                 type="submit"
                 disabled={cargando}
-                className="w-full rounded-lg bg-brand px-6 py-2.5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-60"
+                className="kb-btn kb-btn--dark w-full disabled:opacity-60"
               >
                 {cargando ? "Enviando..." : "Enviar enlace"}
               </button>
@@ -72,7 +72,7 @@ export default function RecuperarPasswordPage() {
           </>
         )}
 
-        <p className="mt-4 text-center text-sm text-brand-dark/70">
+        <p className="mt-4 text-center text-sm text-muted-2">
           <Link href="/ingresar" className="font-semibold text-brand hover:underline">
             Volver a iniciar sesión
           </Link>

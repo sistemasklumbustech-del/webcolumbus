@@ -10,8 +10,9 @@ import {
   type MapaAsientos,
 } from "@/lib/api";
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
-import { MapaAsientosBus } from "@/components/MapaAsientosBus";
+import { MapaAsientosBus, ubicacionDeAsiento } from "@/components/MapaAsientosBus";
 import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
+import { leerResumenViaje, parametrosDeResumen } from "@/lib/resumen-viaje";
 
 /**
  * Vacío real de diseño encontrado el 29-jul-2026: hasta ahora esta
@@ -69,6 +70,16 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
   const idaAsientosParam = searchParams.get("idaAsientos");
   const esTramoVuelta = !!idaViajeId && !!idaAsientosParam;
 
+  // Datos informativos que manda la pantalla de resultados para el resumen
+  // (ruta, salida, cooperativa y tarifa de referencia). Pueden faltar si se
+  // llega a esta pantalla por un enlace directo: entonces el resumen no los muestra.
+  const resumen = leerResumenViaje(searchParams);
+  const rOrigen = resumen.origen;
+  const rDestino = resumen.destino;
+  const rCoop = resumen.cooperativa;
+  const rPrecio = resumen.precio;
+  const lineaSalida = resumen.lineaSalida;
+
   function alternarAsiento(numero: string) {
     setSeleccionados((actual) => {
       if (actual.includes(numero)) {
@@ -89,8 +100,8 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
   if (error) {
     return (
       <main className="mx-auto max-w-2xl flex-1 px-4 py-16 text-center">
-        <p className="text-red-600">{error}</p>
-        <Link href="/" className="mt-4 inline-block font-semibold text-brand-cobalto hover:underline">
+        <p className="kb-alert kb-alert--error justify-center">{error}</p>
+        <Link href="/" className="mt-4 inline-block font-semibold text-ink underline">
           Volver al inicio
         </Link>
       </main>
@@ -99,7 +110,7 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
 
   if (!mapa) {
     return (
-      <main className="flex-1 px-4 py-16 text-center text-brand-dark/70">
+      <main className="flex-1 px-4 py-16 text-center text-muted-2">
         Cargando mapa de asientos...
       </main>
     );
@@ -165,14 +176,15 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
           idaViajeId,
           idaAsientos: idaAsientosParam,
         });
+        parametrosDeResumen(searchParams).forEach((valor, clave) => params.set(clave, valor));
         router.push(`/viajes/${viajeId}/checkout?${params.toString()}`);
         return;
       }
 
       // Caso normal, sin ida y vuelta.
-      router.push(
-        `/viajes/${viajeId}/checkout?asientos=${encodeURIComponent(seleccionados.join(","))}`,
-      );
+      const paramsCheckout = new URLSearchParams({ asientos: seleccionados.join(",") });
+      parametrosDeResumen(searchParams).forEach((valor, clave) => paramsCheckout.set(clave, valor));
+      router.push(`/viajes/${viajeId}/checkout?${paramsCheckout.toString()}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo bloquear el asiento.");
       setSeleccionados([]);
@@ -186,72 +198,157 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
   const ocupados = mapa.asientosNoDisponibles.length;
   const disponibles = mapa.capacidadTotal - ocupados;
 
+  const textoBotonCompleto = bloqueando
+    ? "Reservando..."
+    : seleccionados.length === 0
+      ? "Elige un asiento"
+      : esTramoIda
+        ? "Continuar y buscar la vuelta"
+        : seleccionados.length === 1
+          ? `Continuar con el asiento ${seleccionados[0]}`
+          : `Continuar con ${seleccionados.length} asientos`;
+  const textoBotonCorto = bloqueando ? "Reservando..." : seleccionados.length === 0 ? "Elige asiento" : "Continuar";
+  const resumenSeleccion = seleccionados.map((n) => {
+    const u = ubicacionDeAsiento(pisos, n);
+    return { numero: n, ubicacion: u ? `${u.posicion}${pisos.length > 1 ? ` · piso ${u.piso}` : ""}` : "" };
+  });
+  const hayMujeres = seleccionados.some((n) => esAsientoSoloMujeres(mapa, n));
+
   return (
-    <main className="flex-1 bg-brand-light/40 px-4 py-10">
-      <div className={`mx-auto ${pisos.length > 1 ? "max-w-3xl" : "max-w-md"}`}>
-        <h1 className="font-display text-xl font-bold text-brand-dark">Elige tu asiento</h1>
-        <p className="mt-1 flex items-center gap-3 text-sm text-brand-dark/70">
-          <span>
-            <span className="font-semibold text-brand-dark">{disponibles}</span> disponibles
-          </span>
-          <span className="text-brand-dark/30">·</span>
-          <span>
-            <span className="font-semibold text-brand-dark">{ocupados}</span> ocupados
-          </span>
-          <span className="text-brand-dark/30">·</span>
-          <span>{mapa.capacidadTotal} en total</span>
-        </p>
-        {(!mapa.permiteCancelacion || !mapa.permiteReprogramacion) && (
-          <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
-            <p className="font-semibold">Antes de comprar, lee esto:</p>
-            {!mapa.permiteCancelacion && !mapa.permiteReprogramacion ? (
-              <p className="mt-1">
-                Esta cooperativa no permite cambios ni devoluciones — si no viajas, pierdes el
-                boleto completo.
-              </p>
-            ) : (
-              <ul className="mt-1 list-inside list-disc space-y-0.5">
-                {!mapa.permiteCancelacion && <li>No se puede cancelar este boleto.</li>}
-                {!mapa.permiteReprogramacion && <li>No se puede reprogramar este boleto.</li>}
-              </ul>
-            )}
+    <main className="flex flex-1 flex-col">
+      {/* Barra de título (diseño final). */}
+      <div className="border-b border-line bg-white">
+        <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-5 py-3.5 md:px-16 md:py-[18px]">
+          <button type="button" onClick={() => router.back()} aria-label="Volver" className="kb-btn-round shrink-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </button>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-base font-semibold md:text-xl">Elige tu asiento</h1>
+            <p className="text-xs text-muted-2 md:text-[13px]">
+              {[rCoop, lineaSalida, mapa.tipoVehiculoNombre].filter(Boolean).join(" · ")}
+              {rCoop || lineaSalida || mapa.tipoVehiculoNombre ? " · " : ""}
+              <span className="font-semibold text-ink">{disponibles}</span> disponibles ·{" "}
+              <span className="font-semibold text-ink">{ocupados}</span> ocupados · {mapa.capacidadTotal} en total
+            </p>
           </div>
-        )}
-        <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-          <MapaAsientosBus
-            pisos={pisos}
-            estadoPorNumero={estadoPorNumero}
-            seleccionados={seleccionados}
-            onAlternar={alternarAsiento}
-            tieneBano={(mapa.tipoVehiculoAmenidades ?? []).includes("bano_a_bordo")}
-          />
         </div>
-        {seleccionados.some((n) => esAsientoSoloMujeres(mapa, n)) && (
-          <p className="mt-3 rounded-lg bg-pink-50 px-3 py-2 text-xs font-medium text-pink-800 ring-1 ring-pink-200">
-            Elegiste un asiento exclusivo para mujeres. Al comprar te pediremos confirmar el sexo del pasajero.
-          </p>
-        )}
-        {(esTramoIda || esTramoVuelta) && (
-          <p className="mt-3 text-center text-sm font-semibold text-brand-cobalto">
-            {esTramoIda ? "Tramo 1 de 2: Ida" : "Tramo 2 de 2: Vuelta"}
-          </p>
-        )}
-        {error && <p className="mt-4 text-sm font-medium text-red-600">{error}</p>}
+      </div>
+
+      <div className="mx-auto grid w-full max-w-[1280px] flex-1 items-start gap-6 px-5 py-5 md:px-16 md:py-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="flex min-w-0 flex-col gap-3.5">
+          {(!mapa.permiteCancelacion || !mapa.permiteReprogramacion) && (
+            <div className="kb-alert kb-alert--info flex-col !gap-1">
+              <p className="font-semibold text-ink">Antes de comprar, lee esto:</p>
+              {!mapa.permiteCancelacion && !mapa.permiteReprogramacion ? (
+                <p>
+                  Esta cooperativa no permite cambios ni devoluciones — si no viajas, pierdes el
+                  boleto completo.
+                </p>
+              ) : (
+                <ul className="list-inside list-disc space-y-0.5">
+                  {!mapa.permiteCancelacion && <li>No se puede cancelar este boleto.</li>}
+                  {!mapa.permiteReprogramacion && <li>No se puede reprogramar este boleto.</li>}
+                </ul>
+              )}
+            </div>
+          )}
+          <div className="rounded-[28px] bg-white p-4 shadow-card md:rounded-card md:p-[26px]">
+            <MapaAsientosBus
+              pisos={pisos}
+              estadoPorNumero={estadoPorNumero}
+              seleccionados={seleccionados}
+              onAlternar={alternarAsiento}
+              tieneBano={(mapa.tipoVehiculoAmenidades ?? []).includes("bano_a_bordo")}
+            />
+          </div>
+          {hayMujeres && (
+            <p className="rounded-ctrl bg-women-bg px-4 py-3 text-[13px] font-medium text-women">
+              Elegiste un asiento exclusivo para mujeres. Al comprar te pediremos confirmar el sexo del pasajero.
+            </p>
+          )}
+          {(esTramoIda || esTramoVuelta) && (
+            <p className="text-center text-sm font-semibold">
+              {esTramoIda ? "Tramo 1 de 2: Ida" : "Tramo 2 de 2: Vuelta"}
+            </p>
+          )}
+          {error && <p className="kb-alert kb-alert--error">{error}</p>}
+        </div>
+
+        {/* PC: resumen negro a la derecha. */}
+        <aside className="hidden flex-col gap-4 md:flex">
+          <div className="flex flex-col gap-3.5 rounded-card bg-ink p-6 text-white">
+            <span className="text-xs font-semibold uppercase tracking-[.08em] text-kbyellow">Tu viaje</span>
+            <b className="text-[22px] font-semibold leading-tight">
+              {rOrigen && rDestino ? `${rOrigen} → ${rDestino}` : (mapa.tipoVehiculoNombre ?? "Tu viaje")}
+            </b>
+            {(lineaSalida || rCoop || (rOrigen && mapa.tipoVehiculoNombre)) && (
+              <span className="text-[13px] text-ondark">
+                {lineaSalida}
+                {lineaSalida && <br />}
+                {[rCoop, mapa.tipoVehiculoNombre].filter(Boolean).join(" · ")}
+              </span>
+            )}
+            <hr className="h-px border-0 bg-ink-3" />
+            {resumenSeleccion.length === 0 ? (
+              <p className="text-sm text-ondark">Elige uno o más asientos en el mapa.</p>
+            ) : (
+              resumenSeleccion.map((r) => (
+                <div key={r.numero} className="flex justify-between gap-3 text-sm">
+                  <span className="text-ondark">Asiento</span>
+                  <b className="text-right font-semibold">
+                    {r.numero}
+                    {r.ubicacion && <span className="block text-xs font-normal text-ondark">{r.ubicacion}</span>}
+                  </b>
+                </div>
+              ))
+            )}
+            {rPrecio !== null && (
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-ondark">Tarifa{seleccionados.length > 1 ? " por asiento" : ""}</span>
+                <b className="text-[26px] font-bold tabular-nums">${rPrecio.toFixed(2)}</b>
+              </div>
+            )}
+            <button
+              type="button"
+              disabled={seleccionados.length === 0 || bloqueando}
+              onClick={continuar}
+              className="kb-btn kb-btn--primary w-full"
+            >
+              {textoBotonCompleto}
+            </button>
+          </div>
+          <div className="kb-card px-[18px] py-4 text-[13px] text-muted-2">
+            Los asientos rosados son solo para pasajeras; se valida con el documento.
+          </div>
+        </aside>
+      </div>
+
+      {/* Celular: barra blanca fija abajo. */}
+      <div className="kb-sheet z-40 mt-auto">
+        <div className="min-w-0 flex-1">
+          <span className="block truncate text-xs text-muted-2">
+            {resumenSeleccion.length === 0
+              ? "Ningún asiento elegido"
+              : resumenSeleccion.length === 1
+                ? `Asiento ${resumenSeleccion[0].numero}${resumenSeleccion[0].ubicacion ? ` · ${resumenSeleccion[0].ubicacion.toLowerCase()}` : ""}`
+                : `Asientos ${resumenSeleccion.map((r) => r.numero).join(", ")}`}
+          </span>
+          {rPrecio !== null && (
+            <b className="text-[22px] font-bold tabular-nums">
+              ${rPrecio.toFixed(2)}
+              {seleccionados.length > 1 && <small className="ml-1 text-xs font-normal text-muted-2">por asiento</small>}
+            </b>
+          )}
+        </div>
         <button
           type="button"
           disabled={seleccionados.length === 0 || bloqueando}
           onClick={continuar}
-          className="mt-6 w-full rounded-lg bg-brand px-6 py-3 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+          className="kb-btn kb-btn--dark shrink-0 px-6"
         >
-          {bloqueando
-            ? "Reservando..."
-            : seleccionados.length === 0
-              ? "Elige un asiento"
-              : esTramoIda
-                ? "Continuar y buscar la vuelta"
-                : seleccionados.length === 1
-                  ? `Continuar con el asiento ${seleccionados[0]}`
-                  : `Continuar con ${seleccionados.length} asientos`}
+          {textoBotonCorto}
         </button>
       </div>
     </main>

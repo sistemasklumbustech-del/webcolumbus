@@ -11,10 +11,38 @@ function hoyISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** Marco de un campo: en pantallas medianas y grandes cada campo es una "casilla" con borde propio. */
-function Casilla({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+const ICONO_FECHA = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="5" width="18" height="16" rx="3" />
+    <path d="M16 3v4M8 3v4M3 10h18" />
+  </svg>
+);
+const ICONO_HORA = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 2" />
+  </svg>
+);
+const PUNTO_ORIGEN = <span className="h-3 w-3 shrink-0 rounded-full border-[3px] border-ink" aria-hidden="true" />;
+const PUNTO_DESTINO = <span className="h-3 w-3 shrink-0 rounded-full border-[3px] border-kbyellow bg-kbyellow" aria-hidden="true" />;
+
+/** Casilla de un campo del buscador: fondo gris sin borde, borde negro al escribir (diseño final). */
+function Casilla({
+  children,
+  icono,
+  className = "",
+}: {
+  children: React.ReactNode;
+  icono?: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={`md:rounded-lg md:bg-white/10 md:px-3 md:py-2 md:ring-1 md:ring-white/20 ${className}`}>{children}</div>
+    <div
+      className={`flex min-w-0 items-center gap-3 rounded-[18px] border-[1.5px] border-transparent bg-kbbg px-4 py-2.5 focus-within:border-ink focus-within:bg-white md:min-h-16 md:px-[18px] md:py-3 ${className}`}
+    >
+      {icono}
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
   );
 }
 
@@ -29,14 +57,14 @@ function SelectorHora({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-white/60">
+      <label htmlFor={id} className="block text-[11px] text-muted-2 md:text-xs">
         Hora de salida
       </label>
       <select
         id={id}
         value={valor}
         onChange={(e) => onCambio(e.target.value)}
-        className="w-full rounded-lg border border-white/20 bg-white/10 px-2.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-medium md:border-0 md:bg-transparent md:p-0 md:focus:ring-0 [&>option]:text-brand-dark"
+        className="w-full bg-transparent p-0 text-sm font-semibold text-ink focus:outline-none md:text-[15px]"
       >
         <option value="">Cualquier hora</option>
         {FRANJAS_HORARIO.map((f) => (
@@ -128,36 +156,20 @@ export function BuscadorForm() {
     router.push(`/buscar?${params.toString()}`);
   }
 
-  const claseTitulo = "mb-2 flex items-center gap-2 text-sm font-bold text-white";
+  const claseTitulo = "mb-2 flex items-center gap-2 text-sm font-semibold text-ink";
+  const claseGrilla = "grid grid-cols-2 gap-2.5 lg:grid-cols-[1fr_1fr_190px_210px]";
+  const claseNumeroTramo = "rounded-full bg-kbyellow px-2 py-0.5 text-xs font-bold text-ink";
 
   return (
     <form
       onSubmit={buscar}
-      className="w-full max-w-5xl rounded-2xl bg-white/5 p-3 shadow-xl shadow-black/30 ring-1 ring-white/15 md:p-5"
+      className="flex w-full flex-col gap-2.5 rounded-[26px] bg-white p-4 shadow-float md:gap-4 md:rounded-[28px] md:p-[22px]"
     >
-      <div
-        role="group"
-        aria-label="Tipo de viaje"
-        className="mb-3 inline-flex overflow-hidden rounded-lg ring-1 ring-white/20"
-      >
-        <button
-          type="button"
-          onClick={() => setIdaYVuelta(false)}
-          aria-pressed={!idaYVuelta}
-          className={`px-4 py-1.5 text-sm font-semibold transition ${
-            !idaYVuelta ? "bg-brand text-white" : "bg-transparent text-white/60 hover:bg-white/10"
-          }`}
-        >
+      <div role="group" aria-label="Tipo de viaje" className="kb-tabs w-full self-start md:w-auto">
+        <button type="button" onClick={() => setIdaYVuelta(false)} aria-pressed={!idaYVuelta} className={`whitespace-nowrap ${!idaYVuelta ? "is-active" : ""}`}>
           Solo ida
         </button>
-        <button
-          type="button"
-          onClick={() => setIdaYVuelta(true)}
-          aria-pressed={idaYVuelta}
-          className={`px-4 py-1.5 text-sm font-semibold transition ${
-            idaYVuelta ? "bg-brand text-white" : "bg-transparent text-white/60 hover:bg-white/10"
-          }`}
-        >
+        <button type="button" onClick={() => setIdaYVuelta(true)} aria-pressed={idaYVuelta} className={`whitespace-nowrap ${idaYVuelta ? "is-active" : ""}`}>
           Ida y vuelta
         </button>
       </div>
@@ -165,17 +177,17 @@ export function BuscadorForm() {
       <section aria-label={idaYVuelta ? "Viaje de ida" : "Viaje"}>
         {idaYVuelta && (
           <p className={claseTitulo}>
-            <span className="rounded-full bg-brand-amber px-2 py-0.5 text-xs font-bold text-brand-dark">1</span> Ida
+            <span className={claseNumeroTramo}>1</span> Ida
           </p>
         )}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Casilla className="col-span-2 md:col-span-1">
+        <div className={claseGrilla}>
+          <Casilla icono={PUNTO_ORIGEN} className="col-span-2 lg:col-span-1">
             <SelectorCiudad etiqueta="Origen" placeholder="¿Desde dónde sales?" valor={origen} onCambio={setOrigen} compacto />
           </Casilla>
-          <Casilla className="col-span-2 md:col-span-1">
+          <Casilla icono={PUNTO_DESTINO} className="col-span-2 lg:col-span-1">
             <SelectorCiudad etiqueta="Destino" placeholder="¿A dónde vas?" valor={destino} onCambio={setDestino} compacto />
           </Casilla>
-          <Casilla>
+          <Casilla icono={ICONO_FECHA}>
             <CampoFecha
               etiqueta={idaYVuelta ? "Fecha de ida" : "Fecha"}
               valor={fecha}
@@ -186,22 +198,22 @@ export function BuscadorForm() {
               }}
             />
           </Casilla>
-          <Casilla>
+          <Casilla icono={ICONO_HORA}>
             <SelectorHora id="buscador-hora-ida" valor={franja} onCambio={setFranja} />
           </Casilla>
         </div>
       </section>
 
       {idaYVuelta && (
-        <section aria-label="Viaje de vuelta" className="mt-4 border-t border-white/10 pt-4">
+        <section aria-label="Viaje de vuelta" className="border-t border-line pt-4">
           <p className={claseTitulo}>
-            <span className="rounded-full bg-brand-amber px-2 py-0.5 text-xs font-bold text-brand-dark">2</span> Vuelta
+            <span className={claseNumeroTramo}>2</span> Vuelta
           </p>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className={claseGrilla}>
             {/* key: si cambia el destino/origen de la ida y la vuelta lo
                 sigue automáticamente, el selector se vuelve a crear para
                 mostrar la ciudad nueva. */}
-            <Casilla className="col-span-2 md:col-span-1">
+            <Casilla icono={PUNTO_ORIGEN} className="col-span-2 lg:col-span-1">
               <SelectorCiudad
                 key={`vuelta-origen-${vueltaOrigen === undefined ? (destino?.id ?? "vacio") : "manual"}`}
                 etiqueta="Origen de la vuelta"
@@ -211,7 +223,7 @@ export function BuscadorForm() {
                 compacto
               />
             </Casilla>
-            <Casilla className="col-span-2 md:col-span-1">
+            <Casilla icono={PUNTO_DESTINO} className="col-span-2 lg:col-span-1">
               <SelectorCiudad
                 key={`vuelta-destino-${vueltaDestino === undefined ? (origen?.id ?? "vacio") : "manual"}`}
                 etiqueta="Destino de la vuelta"
@@ -221,30 +233,33 @@ export function BuscadorForm() {
                 compacto
               />
             </Casilla>
-            <Casilla>
+            <Casilla icono={ICONO_FECHA}>
               <CampoFecha etiqueta="Fecha de vuelta" valor={fechaVuelta} minimo={fecha} onCambio={(v) => setFechaVuelta(v)} />
             </Casilla>
-            <Casilla>
+            <Casilla icono={ICONO_HORA}>
               <SelectorHora id="buscador-hora-vuelta" valor={franjaVuelta} onCambio={setFranjaVuelta} />
             </Casilla>
           </div>
         </section>
       )}
 
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center justify-between gap-3 sm:justify-start">
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-white/60">Pasajeros</span>
-          <div className="flex items-center gap-3 rounded-lg bg-white/10 px-2 py-1 ring-1 ring-white/20">
+      <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between md:gap-4">
+        <div className="flex items-center justify-between gap-6 rounded-ctrl bg-kbbg py-2 pl-4 pr-2.5 md:justify-start md:gap-[22px] md:rounded-[18px] md:pl-[18px]">
+          <div>
+            <span className="block text-[11px] text-muted-2 md:text-xs">Pasajeros</span>
+            <span className="block text-sm font-semibold text-ink md:text-[15px]">Adultos y niños</span>
+          </div>
+          <div className="flex items-center gap-3 md:gap-3.5">
             <button
               type="button"
               aria-label="Menos pasajeros"
               disabled={pasajeros <= 1}
               onClick={() => setPasajeros((p) => Math.max(1, p - 1))}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-lg font-bold text-white transition hover:bg-white/15 disabled:opacity-30"
+              className="h-9 w-9 rounded-xl bg-white text-lg font-semibold text-ink shadow-[0_1px_4px_rgba(11,13,18,.08)] transition disabled:opacity-30 md:h-10 md:w-10"
             >
               −
             </button>
-            <span className="min-w-6 text-center text-sm font-semibold text-white" aria-live="polite">
+            <span className="min-w-5 text-center text-sm font-semibold tabular-nums text-ink md:text-[15px]" aria-live="polite">
               {pasajeros}
             </span>
             <button
@@ -252,20 +267,17 @@ export function BuscadorForm() {
               aria-label="Más pasajeros"
               disabled={pasajeros >= 10}
               onClick={() => setPasajeros((p) => Math.min(10, p + 1))}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-lg font-bold text-white transition hover:bg-white/15 disabled:opacity-30"
+              className="h-9 w-9 rounded-xl bg-white text-lg font-semibold text-ink shadow-[0_1px_4px_rgba(11,13,18,.08)] transition disabled:opacity-30 md:h-10 md:w-10"
             >
               +
             </button>
           </div>
         </div>
-        <button
-          type="submit"
-          className="rounded-lg bg-brand-amber px-8 py-3 text-sm font-semibold text-brand-dark transition hover:brightness-95"
-        >
+        <button type="submit" className="kb-btn kb-btn--primary w-full text-base md:h-[60px] md:w-auto md:px-11">
           Buscar pasajes
         </button>
       </div>
-      {error && <p className="mt-3 text-sm font-medium text-red-300">{error}</p>}
+      {error && <p className="text-sm font-medium text-kberror">{error}</p>}
     </form>
   );
 }

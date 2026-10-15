@@ -141,7 +141,7 @@ export function SelectorCiudad({ etiqueta, placeholder, valor, onCambio, compact
 
   return (
     <div className="relative min-w-[140px] flex-1">
-      <label htmlFor={idCampo} className={`block font-semibold uppercase tracking-wide ${compacto ? "mb-0.5 text-[10px] text-white/60" : "mb-1 text-xs text-brand-dark/70"}`}>
+      <label htmlFor={idCampo} className={compacto ? "block text-[11px] text-muted-2 md:text-xs" : "kb-label"}>
         {etiqueta}
       </label>
       <input
@@ -167,8 +167,8 @@ export function SelectorCiudad({ etiqueta, placeholder, valor, onCambio, compact
         onKeyDown={alPresionarTecla}
         className={
           compacto
-            ? "w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2.5 text-base text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-brand-medium md:border-0 md:bg-transparent md:p-0 md:text-sm md:placeholder:text-white/40 md:focus:ring-0"
-            : "w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            ? "w-full bg-transparent p-0 text-sm font-semibold text-ink placeholder:font-semibold placeholder:text-ink/80 focus:outline-none md:text-[15px]"
+            : "kb-input"
         }
       />
       {abierto && sugerencias.length > 0 && (() => {
@@ -177,11 +177,11 @@ export function SelectorCiudad({ etiqueta, placeholder, valor, onCambio, compact
             id={idListbox}
             role="listbox"
             aria-label={etiqueta}
-            style={compacto ? { position: "fixed", top: posicion.top, left: posicion.left, width: posicion.width } : undefined}
+            style={compacto ? { position: "fixed", top: posicion.top + 14, left: posicion.left, width: posicion.width } : undefined}
             className={
               compacto
-                ? "z-[100] overflow-hidden rounded-b-2xl border border-t-0 border-white/15 bg-brand-dark/40 shadow-xl shadow-black/30 backdrop-blur-md"
-                : "absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-brand-light bg-white shadow-lg"
+                ? "z-[100] min-w-[260px] overflow-hidden rounded-ctrl border border-line bg-white shadow-float"
+                : "absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-line bg-white shadow-lg"
             }
           >
             {sugerencias.map((s, i) => (
@@ -192,12 +192,12 @@ export function SelectorCiudad({ etiqueta, placeholder, valor, onCambio, compact
                   onClick={() => elegir(s)}
                   className={
                     compacto
-                      ? `block w-full px-3 py-2 text-left text-sm ${i === indiceResaltado ? "bg-white/15" : "hover:bg-white/10"}`
-                      : `block w-full px-3 py-2 text-left text-sm ${i === indiceResaltado ? "bg-brand-light" : "hover:bg-brand-light"}`
+                      ? `block w-full px-4 py-2.5 text-left text-sm ${i === indiceResaltado ? "bg-kbbg" : "hover:bg-kbbg"}`
+                      : `block w-full px-3 py-2 text-left text-sm ${i === indiceResaltado ? "bg-kbbg" : "hover:bg-kbbg"}`
                   }
                 >
-                  <span className={compacto ? "font-medium text-white" : "font-medium text-brand-dark"}>{s.ciudad}</span>{" "}
-                  <span className={compacto ? "text-white/50" : "text-brand-dark/50"}>— {s.nombre}</span>
+                  <span className={compacto ? "font-semibold text-ink" : "font-medium text-ink"}>{s.ciudad}</span>{" "}
+                  <span className={compacto ? "text-muted-2" : "text-muted-2"}>— {s.nombre}</span>
                 </button>
               </li>
             ))}

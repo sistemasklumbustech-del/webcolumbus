@@ -43,8 +43,8 @@ function formatearFechaHora(iso: string) {
 }
 
 const CLASE_INPUT =
-  "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium";
-const CLASE_ETIQUETA = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+  "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-muted-3 focus:outline-none focus:ring-2 focus:ring-brand-medium";
+const CLASE_ETIQUETA = "kb-label";
 
 /**
  * Ventas en línea que Klumbus ya cobró y que la cooperativa debe facturar y registrar en el
@@ -129,15 +129,15 @@ export default function VentasPorConfirmarPage() {
     <div className="mx-auto w-full max-w-3xl">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
 
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Ventas por confirmar</h1>
-      <p className="mt-1 text-sm text-brand-dark/70">
+      <h1 className="text-2xl font-bold text-brand-dark">Ventas por confirmar</h1>
+      <p className="mt-1 text-sm text-muted-2">
         Ventas en línea que Klumbus ya cobró y que tu cooperativa debe facturar y registrar en el SIAT 3000.
         Si tu sistema está conectado, se confirman solas. Si no, o si algo falló, carga aquí el número de
         factura y el código de tasa. Pasados 30 minutos sin confirmar, la venta se marca como vencida: el
         pasajero ya pagó, así que conviene resolverla cuanto antes.
       </p>
 
-      <div className="mt-5 inline-flex rounded-xl bg-brand-light/40 p-1 text-sm font-semibold">
+      <div className="mt-5 inline-flex rounded-ctrl bg-kbbg p-1 text-sm font-semibold">
         {(
           [
             ["por_confirmar", "Por confirmar"],
@@ -148,9 +148,7 @@ export default function VentasPorConfirmarPage() {
             key={valor}
             type="button"
             onClick={() => cambiarVista(valor)}
-            className={`rounded-lg px-4 py-1.5 transition ${
-              vista === valor ? "bg-white text-brand-dark shadow-sm" : "text-brand-dark/60 hover:text-brand-dark"
-            }`}
+            className={`rounded-xl px-4 py-1.5 transition ${vista === valor ? "bg-ink text-white" : "text-muted-2 hover:text-ink"}`}
           >
             {texto}
           </button>
@@ -158,15 +156,15 @@ export default function VentasPorConfirmarPage() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="mt-4 kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
-      {resultado === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+      {resultado === null && !error && <p className="mt-6 text-sm text-muted-2">Cargando...</p>}
 
       {resultado !== null && resultado.filas.length === 0 && !cargando && (
-        <p className="mt-8 text-center text-sm text-brand-dark/50">
+        <p className="mt-8 text-center text-sm text-muted-2">
           {vista === "por_confirmar"
             ? "No tienes ventas esperando confirmación. Todo al día."
             : "Todavía no hay ventas confirmadas."}
@@ -181,7 +179,7 @@ export default function VentasPorConfirmarPage() {
             abierta={abierta === v.compraId}
             onAbrir={() => abrirFormulario(v.compraId)}
           >
-            <form onSubmit={guardar} className="mt-4 space-y-3 rounded-xl bg-brand-light/20 p-4">
+            <form onSubmit={guardar} className="mt-4 space-y-3 rounded-ctrl bg-kbbg p-4">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label htmlFor={`factura-${v.compraId}`} className={CLASE_ETIQUETA}>
@@ -225,19 +223,19 @@ export default function VentasPorConfirmarPage() {
                   className={CLASE_INPUT}
                 />
               </div>
-              {errorForm && <p className="text-sm font-medium text-red-600">{errorForm}</p>}
+              {errorForm && <p className="text-sm font-medium text-kberror">{errorForm}</p>}
               <div className="flex gap-2">
                 <button
                   type="submit"
                   disabled={guardando}
-                  className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+                  className="kb-btn kb-btn--dark !h-10 !px-4 !text-sm disabled:opacity-50"
                 >
                   {guardando ? "Guardando..." : "Confirmar venta"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setAbierta(null)}
-                  className="rounded-lg px-4 py-2 text-sm font-semibold text-brand-dark/70"
+                  className="rounded-lg px-4 py-2 text-sm font-semibold text-muted-2"
                 >
                   Cancelar
                 </button>
@@ -248,7 +246,7 @@ export default function VentasPorConfirmarPage() {
       </div>
 
       {resultado !== null && resultado.total > 0 && (
-        <div className="mt-6 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+        <div className="mt-6 flex items-center justify-between kb-card kb-on-white px-4 py-3 text-sm text-muted-2">
           <span>
             {resultado.total} venta(s) · Página {pagina} de {totalPaginas}
           </span>
@@ -256,14 +254,14 @@ export default function VentasPorConfirmarPage() {
             <button
               onClick={() => setPagina((p) => Math.max(1, p - 1))}
               disabled={pagina <= 1 || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Anterior
             </button>
             <button
               onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
               disabled={pagina >= totalPaginas || cargando}
-              className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Siguiente
             </button>
@@ -286,19 +284,19 @@ function TarjetaVenta({
   children: React.ReactNode;
 }) {
   const insignia = venta.confirmada
-    ? { texto: "Confirmada", clase: "bg-emerald-50 text-emerald-700 ring-emerald-200" }
+    ? { texto: "Confirmada", clase: "bg-ok-bg text-ok ring-ok-bg" }
     : venta.vencida
-      ? { texto: "Vencida", clase: "bg-red-50 text-red-700 ring-red-200" }
-      : { texto: "Esperando a tu sistema", clase: "bg-amber-50 text-amber-800 ring-amber-200" };
+      ? { texto: "Vencida", clase: "bg-kberror-bg text-kberror ring-kberror-bg" }
+      : { texto: "Esperando a tu sistema", clase: "bg-amber-50 text-[#7A5D00] ring-amber-200" };
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+    <div className="kb-card kb-on-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="font-mono text-xs text-brand-dark/50" title={venta.compraId}>
+          <p className="font-mono text-xs text-muted-2" title={venta.compraId}>
             Compra {venta.compraId.slice(0, 8)}
           </p>
-          <p className="text-xs text-brand-dark/50">Vendida el {formatearFechaHora(venta.creadoEn)}</p>
+          <p className="text-xs text-muted-2">Vendida el {formatearFechaHora(venta.creadoEn)}</p>
         </div>
         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${insignia.clase}`}>
           {insignia.texto}
@@ -315,34 +313,34 @@ function TarjetaVenta({
                 {ETIQUETA_IDENTIFICACION[venta.cliente.tipoIdentificacion] ?? venta.cliente.tipoIdentificacion}{" "}
                 {venta.cliente.identificacion}
               </p>
-              {venta.cliente.correo && <p className="text-brand-dark/70">{venta.cliente.correo}</p>}
+              {venta.cliente.correo && <p className="text-muted-2">{venta.cliente.correo}</p>}
             </div>
           ) : (
-            <p className="text-sm text-brand-dark/50">Sin datos de facturación.</p>
+            <p className="text-sm text-muted-2">Sin datos de facturación.</p>
           )}
         </div>
         <div>
           <p className={CLASE_ETIQUETA}>Total a facturar</p>
-          <p className="font-display text-xl font-bold text-brand-dark">{formatearDolares(venta.totalAFacturar)}</p>
-          <p className="text-xs text-brand-dark/50">Pasajes más tasa de terminal. No incluye el cargo de servicio de Klumbus.</p>
+          <p className="text-xl font-bold text-brand-dark">{formatearDolares(venta.totalAFacturar)}</p>
+          <p className="text-xs text-muted-2">Pasajes más tasa de terminal. No incluye el cargo de servicio de Klumbus.</p>
         </div>
       </div>
 
       <div className="mt-4">
         <p className={CLASE_ETIQUETA}>Pasajeros</p>
-        <ul className="divide-y divide-black/5 rounded-xl ring-1 ring-black/5">
+        <ul className="divide-y divide-black/5 rounded-ctrl ring-1 ring-line">
           {venta.pasajeros.map((p) => (
             <li key={`${p.asientoEtiqueta}-${p.documento}`} className="px-3 py-2 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-1">
                 <span className="font-semibold text-brand-dark">
                   Asiento {p.asientoEtiqueta} · {p.nombres} {p.apellidos}
                 </span>
-                <span className="text-xs text-brand-dark/60">
+                <span className="text-xs text-muted-2">
                   {ETIQUETA_TARIFA[p.tipoTarifa] ?? p.tipoTarifa} · {formatearDolares(p.precioPagado)} + tasa{" "}
                   {formatearDolares(p.tasaTerminal)}
                 </span>
               </div>
-              <p className="text-xs text-brand-dark/60">
+              <p className="text-xs text-muted-2">
                 {p.documento} · {p.origenCiudad} → {p.destinoCiudad} · {formatearFechaHora(p.horaSalidaProgramada)}
                 {p.viajeReferencia && <> · Viaje {p.viajeReferencia}</>}
               </p>
@@ -352,7 +350,7 @@ function TarjetaVenta({
       </div>
 
       {venta.confirmada ? (
-        <div className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <div className="kb-alert kb-alert--ok mt-4">
           <p>
             Factura <span className="font-mono font-semibold">{venta.numeroFactura}</span>
           </p>
@@ -369,7 +367,7 @@ function TarjetaVenta({
         <button
           type="button"
           onClick={onAbrir}
-          className="mt-4 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark"
+          className="mt-4 kb-btn kb-btn--dark !h-10 !px-4 !text-sm"
         >
           Cargar factura y tasa
         </button>

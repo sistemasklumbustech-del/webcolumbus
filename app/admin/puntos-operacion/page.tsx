@@ -81,18 +81,18 @@ function TasaEditable({
         autoFocus
         value={valor}
         onChange={(e) => setValor(e.target.value)}
-        className="w-20 rounded border border-brand-light px-2 py-1 text-right text-sm"
+        className="w-20 rounded border border-line px-2 py-1 text-right text-sm"
       />
       <button
         onClick={guardar}
         disabled={guardando}
-        className="rounded bg-brand px-2 py-1 text-xs font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+        className="kb-btn kb-btn--dark !h-8 !px-3 !text-xs disabled:opacity-50"
       >
         ✓
       </button>
       <button
         onClick={() => setEditando(false)}
-        className="rounded border border-brand-light px-2 py-1 text-xs text-brand-dark/70 hover:bg-brand-light/40"
+        className="rounded border border-line px-2 py-1 text-xs text-muted-2 hover:bg-kbbg"
       >
         ✕
       </button>
@@ -176,18 +176,18 @@ function CoordenadasEditables({
         onChange={(e) => setPegado(e.target.value)}
         placeholder="-3.2649, -79.9612"
         title='Clic derecho sobre el punto real en Google Maps, copia las coordenadas, y pégalas aquí tal cual (formato "lat, long")'
-        className="w-40 rounded border border-brand-light px-2 py-1 text-right text-sm"
+        className="w-40 rounded border border-line px-2 py-1 text-right text-sm"
       />
       <button
         onClick={guardar}
         disabled={guardando}
-        className="rounded bg-brand px-2 py-1 text-xs font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+        className="kb-btn kb-btn--dark !h-8 !px-3 !text-xs disabled:opacity-50"
       >
         ✓
       </button>
       <button
         onClick={() => setEditando(false)}
-        className="rounded border border-brand-light px-2 py-1 text-xs text-brand-dark/70 hover:bg-brand-light/40"
+        className="rounded border border-line px-2 py-1 text-xs text-muted-2 hover:bg-kbbg"
       >
         ✕
       </button>
@@ -328,18 +328,18 @@ export default function PuntosOperacionAdminPage() {
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
       <Toast mensaje={mensajeError} onCerrar={() => setMensajeError(null)} tipo="error" />
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Puntos de operación</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="text-2xl font-bold text-brand-dark">Puntos de operación</h1>
+        <p className="mt-1 text-sm text-muted-2">
           Terminales, oficinas y paradas — cada terminal puede tener su propia tasa fija por pasajero (RF-FLOTA-003).
         </p>
       </div>
 
       {pendientes.length > 0 && (
-        <div className="rounded-2xl bg-amber-50 p-6 ring-1 ring-amber-200">
-          <h2 className="font-display text-base font-bold text-amber-900">
+        <div className="kb-card !bg-kbyellow-soft p-6">
+          <h2 className="text-base font-bold text-[#7A5D00]">
             Propuestas de cooperativas pendientes ({pendientes.length})
           </h2>
-          <p className="mt-1 text-xs text-amber-800/80">
+          <p className="mt-1 text-xs text-[#7A5D00]/80">
             Un punto solo aparece en las búsquedas y en las paradas de las rutas después de aprobarlo.
           </p>
           <ul className="mt-4 divide-y divide-amber-200">
@@ -347,7 +347,7 @@ export default function PuntosOperacionAdminPage() {
               <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
                 <div>
                   <p className="font-semibold text-brand-dark">{p.nombre}</p>
-                  <p className="text-xs text-brand-dark/60">
+                  <p className="text-xs text-muted-2">
                     {ETIQUETA_TIPO[p.tipo] ?? p.tipo} · {p.ciudad}, {p.provincia} · propone{" "}
                     {p.cooperativaPropietariaNombre ?? "una cooperativa"}
                   </p>
@@ -356,14 +356,14 @@ export default function PuntosOperacionAdminPage() {
                   <button
                     onClick={() => resolverPropuesta(p.id, "aprobar")}
                     disabled={resolviendoId === p.id}
-                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                    className="kb-btn !h-9 !px-3 !text-xs bg-ok text-white disabled:opacity-50"
                   >
                     Aprobar
                   </button>
                   <button
                     onClick={() => resolverPropuesta(p.id, "rechazar")}
                     disabled={resolviendoId === p.id}
-                    className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+                    className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-kberror disabled:opacity-50"
                   >
                     Rechazar
                   </button>
@@ -376,17 +376,17 @@ export default function PuntosOperacionAdminPage() {
 
       <form
         onSubmit={crear}
-        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid grid-cols-1 gap-4 kb-card kb-on-white p-6 sm:grid-cols-2 lg:grid-cols-3"
       >
         <div>
-          <label htmlFor="punto-tipo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="punto-tipo" className="kb-label">
             Tipo
           </label>
           <select
 id="punto-tipo"
             value={tipo}
             onChange={(e) => setTipo(e.target.value as typeof tipo)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           >
             <option value="terminal_terrestre">Terminal terrestre</option>
             <option value="oficina_agencia">Oficina / agencia</option>
@@ -394,7 +394,7 @@ id="punto-tipo"
           </select>
         </div>
         <div>
-          <label htmlFor="punto-nombre" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="punto-nombre" className="kb-label">
             Nombre
           </label>
           <input
@@ -403,11 +403,11 @@ id="punto-nombre"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Terminal Terrestre de Machala"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="punto-ciudad" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="punto-ciudad" className="kb-label">
             Ciudad
           </label>
           <input
@@ -416,11 +416,11 @@ id="punto-ciudad"
             value={ciudad}
             onChange={(e) => setCiudad(e.target.value)}
             placeholder="Machala"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="punto-provincia" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="punto-provincia" className="kb-label">
             Provincia
           </label>
           <input
@@ -429,18 +429,18 @@ id="punto-provincia"
             value={provincia}
             onChange={(e) => setProvincia(e.target.value)}
             placeholder="El Oro"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
         <div>
-          <label htmlFor="punto-cooperativa" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="punto-cooperativa" className="kb-label">
             Cooperativa propietaria (opcional)
           </label>
           <select
 id="punto-cooperativa"
             value={cooperativaPropietariaId}
             onChange={(e) => setCooperativaPropietariaId(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           >
             <option value="">— Ninguna (terminal público) —</option>
             {cooperativas.map((c) => (
@@ -451,7 +451,7 @@ id="punto-cooperativa"
           </select>
         </div>
         <div>
-          <label htmlFor="punto-tasa" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="punto-tasa" className="kb-label">
             Tasa por pasajero (USD, opcional)
           </label>
           <input
@@ -462,42 +462,42 @@ id="punto-tasa"
             value={tasaMonto}
             onChange={(e) => setTasaMonto(e.target.value)}
             placeholder="0.60"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input"
           />
         </div>
 
         {errorForm && (
-          <p className="sm:col-span-2 lg:col-span-3 text-sm font-medium text-red-600">{errorForm}</p>
+          <p className="sm:col-span-2 lg:col-span-3 text-sm font-medium text-kberror">{errorForm}</p>
         )}
 
         <button
           type="submit"
           disabled={guardando}
-          className="h-[42px] w-fit rounded-lg bg-brand px-5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50 sm:col-span-2 lg:col-span-3"
+          className="kb-btn kb-btn--dark !h-[42px] w-fit !px-5 !text-sm disabled:opacity-50 sm:col-span-2 lg:col-span-3"
         >
           {guardando ? "Creando..." : "Crear punto de operación"}
         </button>
       </form>
 
       {error && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
       <form
         onSubmit={filtrar}
-        className="grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
+        className="grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
       >
         <div>
-          <label htmlFor="punto-filtro-tipo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="punto-filtro-tipo" className="kb-label">
             Tipo
           </label>
           <select
             id="punto-filtro-tipo"
             value={tipoFiltro}
             onChange={(e) => setTipoFiltro(e.target.value)}
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           >
             <option value="">Todos</option>
             <option value="terminal_terrestre">Terminal terrestre</option>
@@ -506,7 +506,7 @@ id="punto-tasa"
           </select>
         </div>
         <div className="lg:col-span-2">
-          <label htmlFor="punto-filtro-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <label htmlFor="punto-filtro-busqueda" className="kb-label">
             Buscar
           </label>
           <input
@@ -514,22 +514,22 @@ id="punto-tasa"
             value={busquedaFiltro}
             onChange={(e) => setBusquedaFiltro(e.target.value)}
             placeholder="Nombre, ciudad o provincia"
-            className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           />
         </div>
-        <div className="flex gap-2">
-          <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" className="flex-1 kb-btn kb-btn--dark !h-10 !px-4 !text-sm">
             Filtrar
           </button>
-          <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+          <button type="button" onClick={limpiarFiltros} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
             Limpiar
           </button>
         </div>
       </form>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="border-b border-black/5 px-6 py-4">
-          <h2 className="font-display text-base font-bold text-brand-dark">
+      <div className="overflow-hidden kb-card kb-on-white">
+        <div className="border-b border-line px-6 py-4">
+          <h2 className="text-base font-bold text-brand-dark">
             {resultado === null
               ? "Cargando..."
               : `${resultado.total} punto${resultado.total === 1 ? "" : "s"} de operación con estos filtros`}
@@ -537,14 +537,14 @@ id="punto-tasa"
         </div>
 
         {resultado !== null && resultado.filas.length === 0 && !cargandoPuntos && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
+          <p className="px-6 py-8 text-center text-sm text-muted-2">
             No hay puntos de operación que coincidan con estos filtros.
           </p>
         )}
 
         {resultado !== null && resultado.filas.length > 0 && (
-          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+            <thead>
               <tr>
                 <th className="px-6 py-3">Nombre</th>
                 <th className="px-6 py-3">Tipo</th>
@@ -554,15 +554,15 @@ id="punto-tasa"
                 <th className="px-6 py-3 text-right">Tasa</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/5">
+            <tbody>
               {resultado?.filas.map((p) => (
                 <tr key={p.id}>
                   <td className="px-6 py-3 font-medium text-brand-dark">{p.nombre}</td>
-                  <td className="px-6 py-3 text-brand-dark/70">{ETIQUETA_TIPO[p.tipo] ?? p.tipo}</td>
-                  <td className="px-6 py-3 text-brand-dark/70">
+                  <td className="px-6 py-3 text-muted-2">{ETIQUETA_TIPO[p.tipo] ?? p.tipo}</td>
+                  <td className="px-6 py-3 text-muted-2">
                     {p.ciudad}, {p.provincia}
                   </td>
-                  <td className="px-6 py-3 text-brand-dark/70">{p.cooperativaPropietariaNombre ?? "—"}</td>
+                  <td className="px-6 py-3 text-muted-2">{p.cooperativaPropietariaNombre ?? "—"}</td>
                   <td className="px-6 py-3 text-right font-semibold text-brand-dark">
                     <CoordenadasEditables
                       puntoId={p.id}
@@ -597,7 +597,7 @@ id="punto-tasa"
         )}
 
         {resultado !== null && resultado.total > 0 && (
-          <div className="flex items-center justify-between border-t border-black/5 px-6 py-3 text-sm text-brand-dark/70">
+          <div className="flex items-center justify-between border-t border-line px-6 py-3 text-sm text-muted-2">
             <span>
               Página {pagina} de {Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA))}
             </span>
@@ -605,14 +605,14 @@ id="punto-tasa"
               <button
                 onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 disabled={pagina <= 1 || cargandoPuntos}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setPagina((p) => Math.min(Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)), p + 1))}
                 disabled={pagina >= Math.max(1, Math.ceil(resultado.total / LIMITE_PAGINA)) || cargandoPuntos}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Siguiente
               </button>

@@ -12,20 +12,9 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
  * resultados de esta búsqueda -- nunca códigos ni nombres de otro
  * conjunto de datos.
  *
- * Colores cíclicos reales (16-ago-2026, pedido del director: "que
- * tenga esos diseños de colores que le dan vida") -- dentro de
- * nuestra paleta de marca ya establecida, no colores inventados
- * sueltos.
+ * Rediseño final (oct-2026): chips negros/blancos del diseño; se
+ * quitaron los colores cíclicos (incluían azules y violetas).
  */
-const COLORES_PILDORA = [
-  "bg-brand-cobalto text-white",
-  "bg-amber-500 text-white",
-  "bg-emerald-600 text-white",
-  "bg-rose-500 text-white",
-  "bg-violet-600 text-white",
-  "bg-cyan-600 text-white",
-];
-
 export function FiltroCooperativaPills({
   cooperativas,
 }: {
@@ -50,19 +39,15 @@ export function FiltroCooperativaPills({
 
   return (
     <div className="mb-4 flex flex-wrap gap-2">
-      {cooperativas.map((c, i) => {
-        const colorActivo = COLORES_PILDORA[i % COLORES_PILDORA.length];
+      {cooperativas.map((c) => {
         const seleccionada = cooperativaActiva === c.id;
         return (
           <button
             key={c.id}
             type="button"
+            aria-pressed={seleccionada}
             onClick={() => alternar(c.id)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-              seleccionada
-                ? colorActivo
-                : "bg-white text-brand-dark/70 ring-1 ring-black/10 hover:bg-brand-light/40"
-            }`}
+            className={`kb-chip ${seleccionada ? "is-active" : ""}`}
           >
             {c.nombre}
           </button>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
+import { LogoKlumbus } from "./LogoKlumbus";
 import { obtenerContactoSoporte, type ContactoSoporte } from "@/lib/api";
 
 /**
@@ -34,18 +34,18 @@ export function Footer() {
   }
 
   return (
-    <footer className="border-t border-black/5 bg-brand-dark px-4 py-10 sm:px-8 lg:px-12">
-      <div className="mx-auto grid max-w-screen-2xl grid-cols-2 gap-8 sm:grid-cols-4">
-        <div className="col-span-2 sm:col-span-1">
-          <Image src="/img/logo-klumbus.png" alt="Klumbus" width={100} height={26} />
-          <p className="mt-3 text-xs text-white/50">
+    <footer className="kb-footer mt-8 md:mt-[72px]">
+      <div className="mx-auto grid max-w-[1280px] grid-cols-2 gap-[22px] px-5 pb-[34px] pt-7 md:grid-cols-[1.6fr_1fr_1fr_1fr] md:gap-8 md:px-16 md:pb-12 md:pt-12">
+        <div className="col-span-2 md:col-span-1">
+          <LogoKlumbus className="mb-2.5 h-[26px] md:mb-3 md:h-[30px]" />
+          <p className="text-[13px] md:text-sm">
             Compara y compra tu boleto de bus en Ecuador, de forma simple y segura.
           </p>
         </div>
 
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wide text-white/40">Compañía</h3>
-          <ul className="mt-3 space-y-2 text-xs text-white/60">
+          <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[.12em] text-white md:mb-3 md:text-sm md:normal-case md:tracking-normal">Compañía</h3>
+          <ul className="space-y-1.5 text-[13px] md:space-y-2 md:text-sm">
             <li>
               <a href="/anunciar" className="hover:text-white">
                 Anuncia con nosotros
@@ -60,8 +60,8 @@ export function Footer() {
         </div>
 
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wide text-white/40">Legal</h3>
-          <ul className="mt-3 space-y-2 text-xs text-white/60">
+          <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[.12em] text-white md:mb-3 md:text-sm md:normal-case md:tracking-normal">Legal</h3>
+          <ul className="space-y-1.5 text-[13px] md:space-y-2 md:text-sm">
             <li>
               <a href="/terminos" className="hover:text-white">
                 Términos de Servicio
@@ -75,9 +75,9 @@ export function Footer() {
           </ul>
         </div>
 
-        <div>
-          <h3 className="text-xs font-bold uppercase tracking-wide text-white/40">Ayuda</h3>
-          <ul className="mt-3 space-y-2 text-xs text-white/60">
+        <div className="col-span-2 md:col-span-1">
+          <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[.12em] text-white md:mb-3 md:text-sm md:normal-case md:tracking-normal">Ayuda</h3>
+          <ul className="space-y-1.5 text-[13px] [overflow-wrap:anywhere] md:space-y-2 md:text-sm">
             {contacto.correo && (
               <li>
                 <a href={`mailto:${contacto.correo}`} className="hover:text-white">
@@ -93,14 +93,14 @@ export function Footer() {
               </li>
             )}
             {!contacto.correo && !contacto.telefono && (
-              <li className="text-white/30">Próximamente</li>
+              <li className="text-muted-3">Próximamente</li>
             )}
           </ul>
         </div>
-      </div>
 
-      <div className="mx-auto mt-8 max-w-screen-2xl border-t border-white/10 pt-6 text-center text-xs text-white/40">
-        © Klumbus {new Date().getFullYear()}
+        <div className="col-span-2 border-t border-ink-3 pt-3.5 text-xs text-muted-3 md:col-span-4 md:pt-[18px] md:text-[13px]">
+          © {new Date().getFullYear()} Klumbus. Todos los derechos reservados.
+        </div>
       </div>
     </footer>
   );

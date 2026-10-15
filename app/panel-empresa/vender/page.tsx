@@ -18,8 +18,8 @@ function hoyEcuador(desplazamientoDias = 0) {
 }
 
 const claseCampo =
-  "w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium";
-const claseEtiqueta = "mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70";
+  "w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-muted-3 focus:outline-none focus:ring-2 focus:ring-brand-medium";
+const claseEtiqueta = "kb-label";
 
 /**
  * Atajos de fecha para el mostrador: lo normal es vender la salida de hoy o
@@ -109,13 +109,13 @@ export default function VenderVentanillaPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Vender boleto en ventanilla</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="text-2xl font-bold text-brand-dark">Vender boleto en ventanilla</h1>
+        <p className="mt-1 text-sm text-muted-2">
           Para el pasajero que llega directo al mostrador -- sin celular, sin cuenta. Elige la salida.
         </p>
       </div>
 
-      <div className="space-y-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 sm:p-5">
+      <div className="space-y-4 kb-card kb-on-white p-4 sm:p-5">
         <div className="flex flex-wrap gap-2" role="group" aria-label="Atajos de fecha">
           {ATAJOS.map((a) => (
             <button
@@ -125,8 +125,8 @@ export default function VenderVentanillaPage() {
               onClick={() => aplicarAtajo(a.id)}
               className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                 atajoActivo === a.id
-                  ? "bg-brand-cobalto text-white"
-                  : "border border-brand-light bg-white text-brand-dark/70 hover:bg-brand-light/40"
+                  ? "bg-ink text-white"
+                  : "border border-line bg-white text-muted-2 hover:bg-kbbg"
               }`}
             >
               {a.etiqueta}
@@ -207,7 +207,7 @@ export default function VenderVentanillaPage() {
             <button
               type="button"
               onClick={limpiar}
-              className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm font-semibold text-brand-dark/70 hover:bg-brand-light/40"
+              className="w-full kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Limpiar
             </button>
@@ -215,29 +215,29 @@ export default function VenderVentanillaPage() {
         </div>
       </div>
 
-      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+      {error && <p className="text-sm font-medium text-kberror">{error}</p>}
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="border-b border-black/5 px-4 py-3 sm:px-6">
-          <h2 className="font-display text-base font-bold text-brand-dark">
+      <div className="overflow-hidden kb-card kb-on-white">
+        <div className="border-b border-line px-4 py-3 sm:px-6">
+          <h2 className="text-base font-bold text-brand-dark">
             {resultado === null
               ? "Cargando salidas..."
               : `${resultado.total} salida${resultado.total === 1 ? "" : "s"} disponible${resultado.total === 1 ? "" : "s"}`}
             {cargando && resultado !== null && (
-              <span className="ml-2 text-xs font-normal text-brand-dark/50">actualizando...</span>
+              <span className="ml-2 text-xs font-normal text-muted-2">actualizando...</span>
             )}
           </h2>
         </div>
 
         {resultado !== null && resultado.total === 0 ? (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
+          <p className="px-6 py-8 text-center text-sm text-muted-2">
             No hay salidas programadas con estos filtros. Prueba con otra fecha o ruta.
           </p>
         ) : (
           resultado !== null && (
             <div className={`overflow-x-auto transition-opacity ${cargando ? "opacity-60" : ""}`}>
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/60">
+              <table className="kb-table min-w-[640px]">
+                <thead>
                   <tr>
                     <th className="px-4 py-3">Ruta</th>
                     <th className="px-4 py-3">Fecha y hora</th>
@@ -246,13 +246,13 @@ export default function VenderVentanillaPage() {
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-black/5">
+                <tbody>
                   {resultado.filas.map((v) => (
                     <tr key={v.id}>
                       <td className="px-4 py-3 font-semibold text-brand-dark">
                         {v.origenCiudad} → {v.destinoCiudad}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-brand-dark/70">
+                      <td className="whitespace-nowrap px-4 py-3 text-muted-2">
                         {new Date(v.horaSalidaProgramada).toLocaleString("es-EC", {
                           weekday: "short",
                           day: "numeric",
@@ -262,12 +262,12 @@ export default function VenderVentanillaPage() {
                           timeZone: "America/Guayaquil",
                         })}
                       </td>
-                      <td className="px-4 py-3 text-brand-dark/70">{v.unidadPlaca}</td>
-                      <td className="px-4 py-3 text-brand-dark/70">${v.precioBase.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-muted-2">{v.unidadPlaca}</td>
+                      <td className="px-4 py-3 text-muted-2">${v.precioBase.toFixed(2)}</td>
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/panel-empresa/vender/${v.id}`}
-                          className="rounded-lg bg-brand-amber px-4 py-1.5 text-xs font-semibold text-brand-dark transition hover:brightness-95"
+                          className="rounded-lg bg-kbyellow px-4 py-1.5 text-xs font-semibold text-brand-dark transition hover:brightness-95"
                         >
                           Vender aquí
                         </Link>
@@ -281,7 +281,7 @@ export default function VenderVentanillaPage() {
         )}
 
         {resultado !== null && resultado.total > 0 && (
-          <div className="flex items-center justify-between border-t border-black/5 px-4 py-3 text-sm text-brand-dark/70 sm:px-6">
+          <div className="flex items-center justify-between border-t border-line px-4 py-3 text-sm text-muted-2 sm:px-6">
             <span>
               Página {pagina} de {totalPaginas}
             </span>
@@ -290,7 +290,7 @@ export default function VenderVentanillaPage() {
                 type="button"
                 onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 disabled={pagina <= 1 || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Anterior
               </button>
@@ -298,7 +298,7 @@ export default function VenderVentanillaPage() {
                 type="button"
                 onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
                 disabled={pagina >= totalPaginas || cargando}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Siguiente
               </button>

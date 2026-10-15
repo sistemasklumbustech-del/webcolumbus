@@ -68,12 +68,12 @@ function TarjetaMetrica({
   valor: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-cobalto-claro text-brand-cobalto">
+    <div className="kb-card kb-on-white p-6">
+      <div className="flex h-11 w-11 items-center justify-center rounded-ctrl bg-kbyellow-soft text-ink">
         <Icono className="h-5 w-5" />
       </div>
-      <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-brand-dark/50">{etiqueta}</p>
-      <p className="mt-1 font-display text-3xl font-extrabold text-brand-dark">{valor}</p>
+      <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-2">{etiqueta}</p>
+      <p className="mt-1 text-3xl font-extrabold text-brand-dark">{valor}</p>
     </div>
   );
 }
@@ -225,14 +225,14 @@ export default function AdminHome() {
     <div className="space-y-6">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
       <div>
-        <h1 className="font-display text-2xl font-bold text-brand-dark">Dashboard nacional</h1>
-        <p className="mt-1 text-sm text-brand-dark/70">
+        <h1 className="text-2xl font-bold text-brand-dark">Dashboard nacional</h1>
+        <p className="mt-1 text-sm text-muted-2">
           Ventas acumuladas por cooperativa, en toda la red (RF-ADMIN-002).
         </p>
       </div>
 
       {errorVentas && (
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="kb-alert kb-alert--error">
           {errorVentas}
         </div>
       )}
@@ -255,9 +255,9 @@ export default function AdminHome() {
         />
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 px-6 py-4">
-          <h2 className="font-display text-base font-bold text-brand-dark">Ventas por cooperativa</h2>
+      <div className="overflow-hidden kb-card kb-on-white">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-6 py-4">
+          <h2 className="text-base font-bold text-brand-dark">Ventas por cooperativa</h2>
           {ventas !== null && ventas.length > 0 && (
             <div className="w-full sm:w-64">
               <label htmlFor="ventas-buscar" className="sr-only">
@@ -271,40 +271,40 @@ export default function AdminHome() {
                   pagVentas.setPagina(1);
                 }}
                 placeholder="Buscar cooperativa"
-                className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="w-full kb-input !h-11 !text-sm"
               />
             </div>
           )}
         </div>
 
         {ventas === null && !errorVentas && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">Cargando...</p>
+          <p className="px-6 py-8 text-center text-sm text-muted-2">Cargando...</p>
         )}
 
         {ventas !== null && ventas.length === 0 && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">
+          <p className="px-6 py-8 text-center text-sm text-muted-2">
             Todavía no hay cooperativas registradas.
           </p>
         )}
 
         {ventas !== null && ventas.length > 0 && ventasFiltradas.length === 0 && (
-          <p className="px-6 py-8 text-center text-sm text-brand-dark/50">Ninguna cooperativa coincide con la búsqueda.</p>
+          <p className="px-6 py-8 text-center text-sm text-muted-2">Ninguna cooperativa coincide con la búsqueda.</p>
         )}
 
         {ventasFiltradas.length > 0 && (
-          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="bg-brand-light/40 text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+          <div className="overflow-x-auto"><table className="kb-table min-w-[640px]">
+            <thead>
               <tr>
                 <th className="px-6 py-3">Cooperativa</th>
                 <th className="px-6 py-3 text-right">Boletos vendidos</th>
                 <th className="px-6 py-3 text-right">Total vendido</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/5">
+            <tbody>
               {pagVentas.visibles.map((v, i) => (
                 <tr key={i}>
                   <td className="px-6 py-3 font-medium text-brand-dark">{v.cooperativaNombre}</td>
-                  <td className="px-6 py-3 text-right text-brand-dark/70">{v.totalBoletos}</td>
+                  <td className="px-6 py-3 text-right text-muted-2">{v.totalBoletos}</td>
                   <td className="px-6 py-3 text-right font-semibold text-brand-dark">
                     {formatearDolares(v.totalVentas)}
                   </td>
@@ -319,39 +319,39 @@ export default function AdminHome() {
           total={pagVentas.total}
           etiqueta="cooperativa"
           onCambio={pagVentas.setPagina}
-          className="border-t border-black/5"
+          className="border-t border-line"
         />
       </div>
 
-      <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5">
-        <h2 className="font-display text-lg font-bold text-brand-dark">Usuarios registrados</h2>
-        <p className="mt-1 text-sm text-brand-dark/70">
+      <div className="kb-card kb-on-white p-8">
+        <h2 className="text-lg font-bold text-brand-dark">Usuarios registrados</h2>
+        <p className="mt-1 text-sm text-muted-2">
           Total de cuentas activas en la plataforma, desglosado por rol (RF-ADMIN, sección 3.13).
         </p>
 
         {errorUsuarios && (
-          <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+          <div className="mt-4 kb-alert kb-alert--error">
             {errorUsuarios}
           </div>
         )}
 
         {usuarios === null && !errorUsuarios && (
-          <p className="mt-4 text-sm text-brand-dark/50">Cargando...</p>
+          <p className="mt-4 text-sm text-muted-2">Cargando...</p>
         )}
 
         {usuarios !== null && (
           <>
-            <p className="mt-4 font-display text-3xl font-extrabold text-brand-dark">
+            <p className="mt-4 text-3xl font-extrabold text-brand-dark">
               {usuarios.total}
-              <span className="ml-2 text-sm font-normal text-brand-dark/50">usuarios activos en total</span>
+              <span className="ml-2 text-sm font-normal text-muted-2">usuarios activos en total</span>
             </p>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-4">
               {usuarios.porRol.map((fila) => (
-                <div key={fila.rol} className="rounded-xl bg-brand-light/40 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark/50">
+                <div key={fila.rol} className="rounded-ctrl bg-kbbg px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">
                     {ETIQUETA_ROL[fila.rol] ?? fila.rol}
                   </p>
-                  <p className="mt-1 font-display text-2xl font-extrabold text-brand-dark">{fila.cantidad}</p>
+                  <p className="mt-1 text-2xl font-extrabold text-brand-dark">{fila.cantidad}</p>
                 </div>
               ))}
             </div>
@@ -359,19 +359,19 @@ export default function AdminHome() {
         )}
       </div>
 
-      <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5">
-        <h2 className="font-display text-lg font-bold text-brand-dark">IVA nacional</h2>
-        <p className="mt-1 text-sm text-brand-dark/70">
+      <div className="kb-card kb-on-white p-8">
+        <h2 className="text-lg font-bold text-brand-dark">IVA nacional</h2>
+        <p className="mt-1 text-sm text-muted-2">
           Al cambiarlo, se propaga de inmediato a todas las cooperativas que estén en modo automático. Las que
           fijaron su propio valor manualmente no se ven afectadas.
         </p>
 
         {cargando ? (
-          <p className="mt-4 text-sm text-brand-dark/50">Cargando...</p>
+          <p className="mt-4 text-sm text-muted-2">Cargando...</p>
         ) : (
           <form onSubmit={guardar} className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
             <div>
-              <label htmlFor="admin-iva-nacional" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="admin-iva-nacional" className="kb-label">
                 Porcentaje de IVA vigente
               </label>
               <div className="flex items-center gap-1">
@@ -383,40 +383,40 @@ id="admin-iva-nacional"
                   step="0.01"
                   value={ivaPorcentaje}
                   onChange={(e) => setIvaPorcentaje(e.target.value)}
-                  className="w-28 rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                  className="kb-input"
                 />
-                <span className="text-brand-dark/70">%</span>
+                <span className="text-muted-2">%</span>
               </div>
             </div>
             <button
               type="submit"
               disabled={guardando}
-              className="h-[42px] rounded-lg bg-brand-amber px-4 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+              className="kb-btn kb-btn--primary !h-[42px] !px-4 !text-sm"
             >
               {guardando ? "Propagando..." : "Guardar y propagar"}
             </button>
           </form>
         )}
-        {mensaje && <p className="mt-3 text-sm font-medium text-emerald-600">{mensaje}</p>}
-        {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
+        {mensaje && <p className="mt-3 text-sm font-medium text-ok">{mensaje}</p>}
+        {error && <p className="mt-3 text-sm font-medium text-kberror">{error}</p>}
       </div>
 
-      <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5">
-        <h2 className="font-display text-lg font-bold text-brand-dark">Cargo de plataforma</h2>
-        <p className="mt-1 text-sm text-brand-dark/70">
+      <div className="kb-card kb-on-white p-8">
+        <h2 className="text-lg font-bold text-brand-dark">Cargo de plataforma</h2>
+        <p className="mt-1 text-sm text-muted-2">
           Monto fijo que la plataforma cobra por cada pasajero, sumado aparte de la tarifa (RN-002).
         </p>
 
         {cargandoCargo ? (
-          <p className="mt-4 text-sm text-brand-dark/50">Cargando...</p>
+          <p className="mt-4 text-sm text-muted-2">Cargando...</p>
         ) : (
           <form onSubmit={guardarCargo} className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
             <div>
-              <label htmlFor="admin-cargo-plataforma" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="admin-cargo-plataforma" className="kb-label">
                 Monto por pasajero
               </label>
               <div className="flex items-center gap-1">
-                <span className="text-brand-dark/70">$</span>
+                <span className="text-muted-2">$</span>
                 <input
 id="admin-cargo-plataforma"
                   type="number"
@@ -424,34 +424,34 @@ id="admin-cargo-plataforma"
                   step="0.01"
                   value={cargoPlataforma}
                   onChange={(e) => setCargoPlataforma(e.target.value)}
-                  className="w-28 rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                  className="kb-input"
                 />
               </div>
             </div>
             <button
               type="submit"
               disabled={guardandoCargo}
-              className="h-[42px] rounded-lg bg-brand-amber px-4 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+              className="kb-btn kb-btn--primary !h-[42px] !px-4 !text-sm"
             >
               {guardandoCargo ? "Guardando..." : "Guardar"}
             </button>
           </form>
         )}
-        {errorCargo && <p className="mt-3 text-sm font-medium text-red-600">{errorCargo}</p>}
+        {errorCargo && <p className="mt-3 text-sm font-medium text-kberror">{errorCargo}</p>}
       </div>
 
-      <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5">
-        <h2 className="font-display text-lg font-bold text-brand-dark">Contacto de soporte</h2>
-        <p className="mt-1 text-sm text-brand-dark/70">
+      <div className="kb-card kb-on-white p-8">
+        <h2 className="text-lg font-bold text-brand-dark">Contacto de soporte</h2>
+        <p className="mt-1 text-sm text-muted-2">
           Correo y teléfono que se muestran en el pie de página del sitio.
         </p>
 
         {cargandoSoporte ? (
-          <p className="mt-4 text-sm text-brand-dark/50">Cargando...</p>
+          <p className="mt-4 text-sm text-muted-2">Cargando...</p>
         ) : rolActual === "super_admin" ? (
           <form onSubmit={guardarSoporte} className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
             <div>
-              <label htmlFor="admin-soporte-correo" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="admin-soporte-correo" className="kb-label">
                 Correo
               </label>
               <input
@@ -460,11 +460,11 @@ id="admin-cargo-plataforma"
                 value={correoSoporte}
                 onChange={(e) => setCorreoSoporte(e.target.value)}
                 placeholder="soporte@klumbustech.com"
-                className="w-64 rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="kb-input"
               />
             </div>
             <div>
-              <label htmlFor="admin-soporte-telefono" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">
+              <label htmlFor="admin-soporte-telefono" className="kb-label">
                 Teléfono
               </label>
               <input
@@ -473,13 +473,13 @@ id="admin-cargo-plataforma"
                 value={telefonoSoporte}
                 onChange={(e) => setTelefonoSoporte(e.target.value)}
                 placeholder="1800265862"
-                className="w-48 rounded-lg border border-brand-light bg-white px-3 py-2.5 text-base text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+                className="kb-input"
               />
             </div>
             <button
               type="submit"
               disabled={guardandoSoporte}
-              className="h-[42px] rounded-lg bg-brand-amber px-4 font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+              className="kb-btn kb-btn--primary !h-[42px] !px-4 !text-sm"
             >
               {guardandoSoporte ? "Guardando..." : "Guardar"}
             </button>
@@ -499,12 +499,12 @@ id="admin-cargo-plataforma"
             <p className="text-sm text-brand-dark">
               <span className="font-semibold">Teléfono:</span> {telefonoSoporte || "— sin definir —"}
             </p>
-            <p className="text-xs text-brand-dark/50">
+            <p className="text-xs text-muted-2">
               Solo un super admin puede editar el contacto de soporte.
             </p>
           </div>
         )}
-        {errorSoporte && <p className="mt-3 text-sm font-medium text-red-600">{errorSoporte}</p>}
+        {errorSoporte && <p className="mt-3 text-sm font-medium text-kberror">{errorSoporte}</p>}
       </div>
     </div>
   );

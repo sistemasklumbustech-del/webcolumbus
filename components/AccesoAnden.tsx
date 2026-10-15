@@ -15,20 +15,20 @@ export function AccesoAnden({ estado, codigo }: { estado: EstadoTasaBoleto; codi
 
   if (estado === "lista" && codigo) {
     return (
-      <div className="mt-4 rounded-xl bg-brand-light/30 p-4 text-center">
-        <p className="text-xs font-bold uppercase tracking-wide text-brand-dark/70">Acceso al andén</p>
-        <p className="mt-0.5 text-xs text-brand-dark/60">Preséntalo en el torniquete del terminal.</p>
+      <div className="mt-2 w-full rounded-ctrl bg-kbyellow-soft p-4 text-center">
+        <p className="text-xs font-bold uppercase tracking-wide">Acceso al andén</p>
+        <p className="mt-0.5 text-xs text-[#4A4F5C]">Preséntalo en el torniquete del terminal.</p>
         <div className="mt-2">
           <CodigoQr valor={codigo} />
         </div>
-        <p className="mt-1 font-mono text-xs tracking-wider text-brand-dark/60">{codigo}</p>
+        <p className="mt-1 font-mono text-xs tracking-wider text-[#4A4F5C]">{codigo}</p>
       </div>
     );
   }
 
   return (
-    <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-left text-xs text-amber-900 ring-1 ring-amber-200">
-      <p className="font-bold">Acceso al andén</p>
+    <div className="kb-alert kb-alert--info mt-2 w-full flex-col !gap-0.5 text-left text-xs">
+      <p className="font-bold text-ink">Acceso al andén</p>
       {estado === "en_revision" ? (
         <p className="mt-0.5">
           Tu código de acceso al andén está en revisión. Si no llega antes de tu salida, escríbenos a soporte.

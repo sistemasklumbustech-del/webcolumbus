@@ -75,14 +75,14 @@ function TarjetaPago({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+    <div className="kb-card kb-on-white p-5">
       <div className="flex items-start justify-between">
         <div className="min-w-0">
-          <p className="break-words font-display font-bold text-brand-dark">{pago.compradorNombre}</p>
-          <p className="text-sm text-brand-dark/70">
+          <p className="break-words font-bold text-brand-dark">{pago.compradorNombre}</p>
+          <p className="text-sm text-muted-2">
             {ETIQUETAS_PROVEEDOR[pago.proveedor] ?? pago.proveedor} · ${pago.monto.toFixed(2)}
           </p>
-          <p className="text-xs text-brand-dark/40">Subido {formatearFecha(pago.creadoEn)}</p>
+          <p className="text-xs text-muted-3">Subido {formatearFecha(pago.creadoEn)}</p>
         </div>
       </div>
 
@@ -91,10 +91,10 @@ function TarjetaPago({
           href={pago.comprobanteUrl}
           target="_blank"
           rel="noreferrer"
-          className="mt-3 block overflow-hidden rounded-lg ring-1 ring-black/5"
+          className="mt-3 block overflow-hidden rounded-lg ring-1 ring-line"
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- comprobante subido por el usuario, no un asset local */}
-          <img src={pago.comprobanteUrl} alt="Comprobante de pago" className="max-h-64 w-full object-contain bg-brand-light/20" />
+          <img src={pago.comprobanteUrl} alt="Comprobante de pago" className="max-h-64 w-full object-contain bg-kbbg" />
         </a>
       )}
 
@@ -103,14 +103,14 @@ function TarjetaPago({
           <button
             onClick={confirmar}
             disabled={procesando}
-            className="rounded-lg bg-brand-amber px-4 py-2 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
+            className="kb-btn kb-btn--primary !h-11 !px-5 !text-sm"
           >
             {procesando ? "Confirmando..." : "Confirmar pago"}
           </button>
           <button
             onClick={() => setRechazando(true)}
             disabled={procesando}
-            className="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+            className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-kberror disabled:opacity-50"
           >
             Rechazar
           </button>
@@ -122,19 +122,19 @@ function TarjetaPago({
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             placeholder="Motivo (opcional) — ej. no coincide con el monto"
-            className="w-full rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/35 focus:outline-none focus:ring-2 focus:ring-brand-medium"
+            className="w-full kb-input !h-11 !text-sm"
           />
           <div className="flex flex-wrap gap-2">
             <button
               onClick={rechazar}
               disabled={procesando}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+              className="kb-btn !h-9 !px-3 !text-xs bg-kberror text-white disabled:opacity-50"
             >
               {procesando ? "Rechazando..." : "Confirmar rechazo"}
             </button>
             <button
               onClick={() => setRechazando(false)}
-              className="rounded-lg border border-brand-light px-4 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40"
+              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
             >
               Cancelar
             </button>
@@ -148,21 +148,21 @@ function TarjetaPago({
 function FilaHistorial({ pago }: { pago: PagoManualHistorialItem }) {
   const aprobado = pago.estado === "aprobado";
   return (
-    <div className="flex items-start justify-between gap-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+    <div className="flex items-start justify-between gap-4 kb-card kb-on-white p-4">
       <div className="min-w-0">
         <p className="break-words font-semibold text-brand-dark">{pago.compradorNombre}</p>
-        <p className="text-xs text-brand-dark/60">
+        <p className="text-xs text-muted-2">
           {ETIQUETAS_PROVEEDOR[pago.proveedor] ?? pago.proveedor} · ${pago.monto.toFixed(2)}
         </p>
-        <p className="text-xs text-brand-dark/40">
+        <p className="text-xs text-muted-3">
           {formatearFecha(pago.resueltoEn)}
           {pago.confirmadoPorNombre && ` · por ${pago.confirmadoPorNombre}`}
         </p>
         {pago.referenciaPago && (
-          <p className="mt-1 break-words text-xs text-brand-dark/60">Referencia: {pago.referenciaPago}</p>
+          <p className="mt-1 break-words text-xs text-muted-2">Referencia: {pago.referenciaPago}</p>
         )}
         {!aprobado && pago.motivoRechazo && (
-          <p className="mt-1 text-xs text-red-600">Motivo: {pago.motivoRechazo}</p>
+          <p className="mt-1 text-xs text-kberror">Motivo: {pago.motivoRechazo}</p>
         )}
         {pago.comprobanteUrl && (
           <a
@@ -176,8 +176,8 @@ function FilaHistorial({ pago }: { pago: PagoManualHistorialItem }) {
         )}
       </div>
       <span
-        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-          aprobado ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+        className={`shrink-0 kb-status ${
+          aprobado ? "kb-status--ok" : "kb-status--error"
         }`}
       >
         {aprobado ? "Confirmado" : "Rechazado"}
@@ -258,21 +258,21 @@ export default function PagosPendientesPage() {
     <div className="mx-auto w-full max-w-2xl">
       <Toast mensaje={mensajeExito} onCerrar={() => setMensajeExito(null)} />
 
-      <h1 className="font-display text-2xl font-bold text-brand-dark">Pagos pendientes</h1>
-      <p className="mt-1 text-sm text-brand-dark/70">
+      <h1 className="text-2xl font-bold text-brand-dark">Pagos pendientes</h1>
+      <p className="mt-1 text-sm text-muted-2">
         Boletos pagados por transferencia, efectivo, DeUna o PayPhone, esperando tu confirmación.
       </p>
 
       {error && (
-        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-100">
+        <div className="mt-4 kb-alert kb-alert--error">
           {error}
         </div>
       )}
 
-      {pagos === null && !error && <p className="mt-6 text-sm text-brand-dark/50">Cargando...</p>}
+      {pagos === null && !error && <p className="mt-6 text-sm text-muted-2">Cargando...</p>}
 
       {pagos !== null && pagos.length === 0 && (
-        <p className="mt-8 text-center text-sm text-brand-dark/50">
+        <p className="mt-8 text-center text-sm text-muted-2">
           No hay pagos pendientes de confirmar por ahora.
         </p>
       )}
@@ -292,26 +292,26 @@ export default function PagosPendientesPage() {
       </div>
 
       <div className="mt-10">
-        <h2 className="font-display text-lg font-bold text-brand-dark">Historial</h2>
-        <p className="mt-1 text-sm text-brand-dark/60">
+        <h2 className="text-lg font-bold text-brand-dark">Historial</h2>
+        <p className="mt-1 text-sm text-muted-2">
           Los pagos manuales que ya confirmaste o rechazaste.
         </p>
 
         <form
           onSubmit={filtrar}
-          className="mt-4 grid grid-cols-1 gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:grid-cols-2"
+          className="mt-4 grid grid-cols-1 gap-4 kb-card kb-on-white p-5 sm:grid-cols-2"
         >
           <div>
-            <label htmlFor="pago-filtro-estado" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Resultado</label>
-            <select id="pago-filtro-estado" value={estadoFiltro} onChange={(e) => setEstadoFiltro(e.target.value)} className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium">
+            <label htmlFor="pago-filtro-estado" className="kb-label">Resultado</label>
+            <select id="pago-filtro-estado" value={estadoFiltro} onChange={(e) => setEstadoFiltro(e.target.value)} className="w-full kb-input !h-11 !text-sm">
               <option value="">Todos</option>
               <option value="aprobado">Confirmados</option>
               <option value="rechazado">Rechazados</option>
             </select>
           </div>
           <div>
-            <label htmlFor="pago-filtro-proveedor" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Método de pago</label>
-            <select id="pago-filtro-proveedor" value={proveedorFiltro} onChange={(e) => setProveedorFiltro(e.target.value)} className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium">
+            <label htmlFor="pago-filtro-proveedor" className="kb-label">Método de pago</label>
+            <select id="pago-filtro-proveedor" value={proveedorFiltro} onChange={(e) => setProveedorFiltro(e.target.value)} className="w-full kb-input !h-11 !text-sm">
               <option value="">Todos</option>
               {Object.entries(ETIQUETAS_PROVEEDOR).map(([valor, etiqueta]) => (
                 <option key={valor} value={valor}>
@@ -321,37 +321,37 @@ export default function PagosPendientesPage() {
             </select>
           </div>
           <div>
-            <label htmlFor="pago-filtro-desde" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Desde</label>
-            <input id="pago-filtro-desde" type="date" value={desdeFiltro} onChange={(e) => setDesdeFiltro(e.target.value)} className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium" />
+            <label htmlFor="pago-filtro-desde" className="kb-label">Desde</label>
+            <input id="pago-filtro-desde" type="date" value={desdeFiltro} onChange={(e) => setDesdeFiltro(e.target.value)} className="w-full kb-input !h-11 !text-sm" />
           </div>
           <div>
-            <label htmlFor="pago-filtro-hasta" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Hasta</label>
-            <input id="pago-filtro-hasta" type="date" value={hastaFiltro} onChange={(e) => setHastaFiltro(e.target.value)} className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium" />
+            <label htmlFor="pago-filtro-hasta" className="kb-label">Hasta</label>
+            <input id="pago-filtro-hasta" type="date" value={hastaFiltro} onChange={(e) => setHastaFiltro(e.target.value)} className="w-full kb-input !h-11 !text-sm" />
           </div>
           <div className="sm:col-span-2">
-            <label htmlFor="pago-filtro-busqueda" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-dark/70">Buscar</label>
+            <label htmlFor="pago-filtro-busqueda" className="kb-label">Buscar</label>
             <input
               id="pago-filtro-busqueda"
               value={busquedaFiltro}
               onChange={(e) => setBusquedaFiltro(e.target.value)}
               placeholder="Nombre del comprador o referencia"
-              className="w-full rounded-lg border border-brand-light bg-white px-3 py-2 text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-medium"
+              className="w-full kb-input !h-11 !text-sm"
             />
           </div>
           <div className="flex gap-2 sm:col-span-2">
-            <button type="submit" className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark sm:flex-none">
+            <button type="submit" className="flex-1 kb-btn kb-btn--dark !h-10 !px-4 !text-sm sm:flex-none">
               Filtrar
             </button>
-            <button type="button" onClick={limpiarFiltros} className="rounded-lg border border-brand-light px-3 py-2 text-sm text-brand-dark/70 hover:bg-brand-light/40">
+            <button type="button" onClick={limpiarFiltros} className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm">
               Limpiar
             </button>
           </div>
         </form>
 
-        {historial === null && <p className="mt-4 text-sm text-brand-dark/50">Cargando...</p>}
+        {historial === null && <p className="mt-4 text-sm text-muted-2">Cargando...</p>}
 
         {historial !== null && historial.filas.length === 0 && !cargandoHistorial && (
-          <p className="mt-6 text-center text-sm text-brand-dark/50">
+          <p className="mt-6 text-center text-sm text-muted-2">
             {aplicados.estado || aplicados.proveedor || aplicados.busqueda || aplicados.desde || aplicados.hasta
               ? "No hay pagos que coincidan con estos filtros."
               : "Todavía no hay pagos manuales resueltos."}
@@ -365,7 +365,7 @@ export default function PagosPendientesPage() {
         </div>
 
         {historial !== null && historial.total > 0 && (
-          <div className="mt-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm text-brand-dark/70 shadow-sm ring-1 ring-black/5">
+          <div className="mt-4 flex items-center justify-between kb-card kb-on-white px-4 py-3 text-sm text-muted-2">
             <span>
               {historial.total} pago(s) · Página {pagina} de {Math.max(1, Math.ceil(historial.total / LIMITE_PAGINA))}
             </span>
@@ -373,14 +373,14 @@ export default function PagosPendientesPage() {
               <button
                 onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 disabled={pagina <= 1 || cargandoHistorial}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setPagina((p) => Math.min(Math.max(1, Math.ceil(historial.total / LIMITE_PAGINA)), p + 1))}
                 disabled={pagina >= Math.max(1, Math.ceil(historial.total / LIMITE_PAGINA)) || cargandoHistorial}
-                className="rounded-lg border border-brand-light px-3 py-1.5 font-semibold disabled:opacity-40"
+                className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
               >
                 Siguiente
               </button>
