@@ -110,3 +110,66 @@ input[type="range"] {
 .kb-dark input[type="radio"] {
   accent-color: #FDD514;
 }
+
+/* ---------- Portada nueva (oct-2026): títulos de sección ---------- */
+/* Etiqueta pequeña con la barrita amarilla delante. */
+.kb-eyebrow-barra {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6B7080;
+}
+.kb-eyebrow-barra::before {
+  content: "";
+  width: 18px;
+  height: 3px;
+  border-radius: 3px;
+  background: #FDD514;
+}
+/* Palabra clave de un título, subrayada en amarillo (como marcador). */
+.kb-marca {
+  font-style: normal;
+  background: linear-gradient(transparent 62%, #FDD514 62%, #FDD514 92%, transparent 92%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+html {
+  scroll-behavior: smooth;
+}
+
+/* ---------- Mapa de salidas (sección Terminal) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .mapa-salidas .ruta {
+    stroke-dasharray: 6 7;
+    animation: mapa-flujo 1.6s linear infinite;
+  }
+  .mapa-salidas .pulso {
+    animation: mapa-pulso 2.4s ease-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+}
+@keyframes mapa-flujo {
+  to {
+    stroke-dashoffset: -26;
+  }
+}
+@keyframes mapa-pulso {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}

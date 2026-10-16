@@ -1,54 +1,129 @@
-import { listarTerminalesAliadas } from "@/lib/api";
+import {
+  listarRutasDisponibles,
+  listarTerminalesAliadas,
+  obtenerEstadisticasPublicas,
+} from "@/lib/api";
+import { claveCiudad, REFERENCIA, rutasReales, terminalesReales } from "@/lib/portada-datos";
+import { hayMapaSalidas, MapaSalidas } from "./MapaSalidas";
 
 /**
- * Terminales aliadas -- Fase 2 de la sesión de frontend (16-ago-2026).
- * Componente de servidor, mismo patrón real que RutasDisponibles.tsx.
+ * Terminal aliada -- portada nueva (oct-2026): mapa de salidas, nombre de la terminal, tres cifras y
+ * el botón "Cómo llegar". Machala va primero (terminal estratégica, instrucción del director,
+ * DOCUMENTO_MAESTRO.md sección 5.8), buscada dentro de la lista REAL del API sin distinguir
+ * mayúsculas.
  *
- * Machala destacada como la primera/estratégica -- instrucción
- * explícita del director (sesión de exploración de diseño,
- * DOCUMENTO_MAESTRO.md sección 5.8). No está hardcodeada: se busca
- * dentro de la lista REAL que devuelve el backend (por nombre o
- * ciudad, sin distinguir mayúsculas) y se ordena primero si existe --
- * si Machala todavía no está aliada en producción, esta sección
- * simplemente muestra el resto sin ninguna destacada, sin romperse.
+ * Datos: manda el API. Los registros de prueba no se muestran. Mientras no haya una terminal real,
+ * se muestra la terminal de referencia (Terminal Terrestre de Machala, ver lib/portada-datos.ts);
+ * en cuanto el API devuelva una terminal real, esta la reemplaza junto con sus rutas y cifras.
  */
 export async function TerminalesAliadas() {
-  const terminales = await listarTerminalesAliadas();
-  if (terminales.length === 0) return null;
+  const [listaTerminales, listaRutas, estadisticas] = await Promise.all([
+    listarTerminalesAliadas(),
+    listarRutasDisponibles(),
+    obtenerEstadisticasPublicas(),
+  ]);
 
-  const ordenadas = [...terminales].sort((a, b) => {
-    const aEsMachala = /machala/i.test(a.ciudad) || /machala/i.test(a.nombre);
-    const bEsMachala = /machala/i.test(b.ciudad) || /machala/i.test(b.nombre);
-    if (aEsMachala && !bEsMachala) return -1;
-    if (bEsMachala && !aEsMachala) return 1;
-    return 0;
+  const terminales = terminalesReales(listaTerminales).sort((a, b) => {
+    const aM = /machala/i.test(a.ciudad) || /machala/i.test(a.nombre);
+    const bM = /machala/i.test(b.ciudad) || /machala/i.test(b.nombre);
+    return aM === bM ? 0 : aM ? -1 : 1;
   });
+  const modoReferencia = terminales.length === 0;
+
+  const principal = modoReferencia
+    ? { nombre: REFERENCIA.terminal.nombre, ciudad: REFERENCIA.terminal.ciudad }
+    : { nombre: terminales[0].nombre, ciudad: terminales[0].ciudad };
+  const direccion = modoReferencia ? REFERENCIA.terminal.direccion : null;
+
+  const destinos = modoReferencia
+    ? REFERENCIA.destinos.map((d) => d.ciudad)
+    : rutasReales(listaRutas)
+        .filter((r) => claveCiudad(r.origenCiudad) === claveCiudad(principal.ciudad))
+        .map((r) => r.destinoCiudad);
+
+  const cifras = modoReferencia
+    ? [
+        { valor: String(REFERENCIA.cifras.cooperativas), texto: "cooperativas" },
+        { valor: String(REFERENCIA.cifras.regiones), texto: `regiones: ${REFERENCIA.cifras.regionesTexto}` },
+        { valor: "24/7", texto: "compras en línea" },
+      ]
+    : [
+        ...(estadisticas
+          ? [
+              {
+                valor: String(estadisticas.cooperativasActivas),
+                texto: estadisticas.cooperativasActivas === 1 ? "cooperativa" : "cooperativas",
+              },
+              {
+                valor: String(estadisticas.rutasDisponibles),
+                texto: estadisticas.rutasDisponibles === 1 ? "ruta disponible" : "rutas disponibles",
+              },
+            ]
+          : []),
+        { valor: "24/7", texto: "compras en línea" },
+      ];
+
+  const hayMapa = hayMapaSalidas(principal.ciudad, destinos);
+  const otras = terminales.slice(1);
 
   return (
-    <section className="mt-[30px] bg-ink py-6 text-white md:mt-16 md:py-10">
-      <div className="mx-auto max-w-[1280px] px-5 md:px-16">
-        <span className="kb-eyebrow !text-kbyellow">Terminales aliadas</span>
-        <h2 className="mb-3.5 text-[21px] font-semibold md:mb-5 md:text-2xl">Sales desde estas terminales</h2>
-        <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] md:flex-wrap md:gap-2.5 md:overflow-visible [&::-webkit-scrollbar]:hidden">
-          {ordenadas.map((terminal) => {
-            const destacada = /machala/i.test(terminal.ciudad) || /machala/i.test(terminal.nombre);
-            return (
-              <span
-                key={terminal.id}
-                className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-[9px] text-[13px] font-medium md:px-[18px] md:py-[11px] md:text-sm ${
-                  destacada ? "bg-kbyellow text-ink" : "bg-ink-2 shadow-[inset_0_0_0_1px_#262A35]"
-                }`}
-              >
-                {destacada && (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M12 21s7-6 7-11a7 7 0 00-14 0c0 5 7 11 7 11z" />
-                    <circle cx="12" cy="10" r="2.5" />
-                  </svg>
-                )}
-                {terminal.nombre}
-              </span>
-            );
-          })}
+    <section id="terminal" className="mt-[30px] scroll-mt-20 overflow-hidden bg-ink py-14 text-white md:mt-16 md:py-[104px]">
+      <div className={`mx-auto grid max-w-[1280px] items-center gap-8 px-5 md:px-16 ${hayMapa ? "md:grid-cols-2 md:gap-[72px]" : ""}`}>
+        {hayMapa && (
+          <div
+            role="img"
+            aria-label={`Mapa de salidas desde ${principal.ciudad} hacia ${destinos.join(", ")}`}
+            className="relative aspect-square w-full max-w-[560px] overflow-hidden rounded-[28px] bg-[radial-gradient(120%_90%_at_30%_70%,#1d212b_0%,#171A22_55%,#11141a_100%)] shadow-[inset_0_0_0_1px_#262A35]"
+          >
+            <MapaSalidas origen={principal.ciudad} destinos={destinos} />
+          </div>
+        )}
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full bg-kbyellow px-3 py-1.5 text-xs font-bold text-ink">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12l5 5 9-10" />
+            </svg>
+            Terminal aliada
+          </span>
+          <h2 className="mb-2.5 mt-3.5 text-[28px] font-bold leading-[1.08] tracking-[-0.025em] md:text-[46px]">{principal.nombre}</h2>
+          <p className="max-w-[46ch] text-ondark">
+            Compra en línea y ve directo al andén. Tu boleto ya está en tu celular, sin pasar por la taquilla.
+          </p>
+
+          <div className="my-6 grid grid-cols-3 gap-2.5">
+            {cifras.map((c) => (
+              <div key={c.texto} className="rounded-[18px] bg-ink-2 px-3 py-3.5 shadow-[inset_0_0_0_1px_#262A35] md:px-4 md:py-[18px]">
+                <b className="block text-2xl font-bold leading-[1.1] text-kbyellow md:text-[28px]">{c.valor}</b>
+                <span className="text-xs text-ondark">{c.texto}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${principal.nombre} ${principal.ciudad}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-[46px] items-center gap-2 rounded-tab bg-white px-[18px] text-sm font-semibold text-ink"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" />
+                <circle cx="12" cy="9.5" r="2.5" />
+              </svg>
+              Cómo llegar
+            </a>
+            {direccion && <span className="text-sm text-ondark">{direccion}</span>}
+          </div>
+
+          {otras.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-2">
+              {otras.map((t) => (
+                <span key={t.id} className="rounded-full bg-ink-2 px-3.5 py-[9px] text-[13px] font-medium shadow-[inset_0_0_0_1px_#262A35]">
+                  {t.nombre}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

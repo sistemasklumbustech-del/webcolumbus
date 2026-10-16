@@ -1,239 +1,150 @@
-"use client";
-
-import { useEffect, useRef } from "react";
 import Image from "next/image";
+import { listarRutasDisponibles, type RutaDisponible } from "@/lib/api";
+import { claveCiudad, REFERENCIA, rutasReales } from "@/lib/portada-datos";
+import { IlustracionDestino, type ClaveIlustracion } from "./IlustracionDestino";
 import { PublicidadNativa } from "./PublicidadNativa";
 
 /**
- * Destinos turísticos populares -- fotos reales proporcionadas por el
- * director (16-ago-2026), reemplazan las 4 ilustraciones dibujadas de
- * la Fase 1/2 (Mindo y Galápagos salen -- no son parte de la
- * cobertura real de rutas de Columbus). 8 ciudades/destinos reales:
- * las 6 ciudades donde ya opera o planea operar Columbus (Ibarra,
- * Machala, Esmeraldas, Guayaquil, Quito) más 2 destinos turísticos
- * de playa (Salinas, Montañita, Baños).
+ * Destinos populares -- portada nueva (oct-2026): en celular, tarjetas que se deslizan de lado;
+ * en PC, un mosaico con una tarjeta grande, dos anchas y una tarjeta amarilla de
+ * "¿No ves tu destino?".
  *
- * Rediseño real (20-ago-2026) -- orden explícita del director,
- * referencia real compartida (tarjetas de oferta de EaseMyTrip):
- * insignia de marca superpuesta en la foto, nombre superpuesto con
- * degradado, y una descripción corta debajo, en un CARRUSEL horizontal
- * con flechas de navegación -- igual formato que la referencia, para
- * poder agregar más destinos después sin tener que recalcular
- * columnas de un grid. Reutiliza el mismo patrón real de scroll
- * horizontal que ya existe en FranjaBanners.tsx (overflow-x-auto,
- * sin librería externa) -- se le agrega scroll-snap y botones de
- * flecha, que FranjaBanners no tenía.
+ * Fotos reales donde las hay (Quito, Guayaquil); para los destinos que todavía no tienen foto
+ * (Cuenca, Loja, Huaquillas, Zaruma) se usa una ilustración de la misma paleta, con el mismo
+ * degradado y el mismo tratamiento de texto, para que el mosaico se vea parejo. Cuando llegue la
+ * foto de uno de esos destinos basta con agregar `foto` en su entrada.
  *
- * La descripción de cada ciudad es un borrador genérico investigado
- * con fuentes reales (Goraymi, Wikipedia, ministerios de turismo,
- * guías turísticas) -- pendiente de que el director confirme o
- * reemplace cada una por su propio texto; no son definitivas.
+ * El "desde $X" sale de las rutas reales cuando el destino coincide. Sin rutas reales en el API se
+ * muestran los precios de referencia (ver lib/portada-datos.ts) con su aviso; apenas el API tenga
+ * rutas reales, estas reemplazan a las de referencia.
  *
- * Fase 3 (16-ago-2026) -- la publicidad nativa se mezcla aquí mismo,
- * después de la 4ª tarjeta (nunca primera, mismo criterio real de
- * cualquier feed de contenido patrocinado) -- decisión explícita del
- * director. Si no hay ninguna campaña activa, PublicidadNativa no
- * renderiza nada, así que el carrusel no queda con un hueco.
+ * La publicidad nativa conserva su lugar: una tarjeta más, solo si hay una campaña activa.
  */
-const DESTINOS = [
-  {
-    nombre: "Quito",
-    foto: "/img/destinos/quito.jpg",
-    descripcion: "Capital histórica declarada Patrimonio Cultural de la Humanidad por la UNESCO.",
-  },
-  {
-    nombre: "Guayaquil",
-    foto: "/img/destinos/guayaquil.jpg",
-    descripcion: "La \"Perla del Pacífico\" -- principal puerto y capital económica del país.",
-  },
-  {
-    nombre: "Ibarra",
-    foto: "/img/destinos/ibarra.jpg",
-    descripcion: "La \"Ciudad Blanca\", famosa por su arquitectura colonial y su clima veraniego.",
-  },
-  {
-    nombre: "Machala",
-    foto: "/img/destinos/machala.jpg",
-    descripcion: "Conocida como la Capital Bananera del Mundo, en la costa sur del país.",
-  },
-  {
-    nombre: "Esmeraldas",
-    foto: "/img/destinos/esmeraldas.jpg",
-    descripcion: "La \"Provincia Verde\" -- playas, manglares y cultura afroecuatoriana.",
-  },
-  {
-    nombre: "Baños de Agua Santa",
-    foto: "/img/destinos/banos.jpg",
-    descripcion: "La capital de la aventura de Ecuador, entre cascadas y el volcán Tungurahua.",
-  },
-  {
-    nombre: "Montañita",
-    foto: "/img/destinos/montanita.jpg",
-    descripcion: "El destino de surf más popular del país, con un ambiente bohemio único.",
-  },
-  {
-    nombre: "Salinas",
-    foto: "/img/destinos/salinas.jpg",
-    descripcion: "El balneario más importante de Ecuador, con 15 km de playa y sol todo el año.",
-  },
+interface Tile {
+  ciudad: string;
+  ilustracion: ClaveIlustracion;
+  foto?: string;
+  zona: string;
+  etiqueta?: string;
+  forma: "grande" | "ancha" | "normal";
+}
+
+const TILES: Tile[] = [
+  { ciudad: "Quito", ilustracion: "quito", foto: "/img/destinos/quito.jpg", zona: "Sierra · Pichincha", forma: "grande" },
+  { ciudad: "Cuenca", ilustracion: "cuenca", zona: "Sierra · Azuay", forma: "normal" },
+  { ciudad: "Loja", ilustracion: "loja", zona: "Sierra · Loja", forma: "normal" },
+  { ciudad: "Huaquillas", ilustracion: "huaquillas", zona: "Costa · frontera", etiqueta: "Frontera con Perú", forma: "normal" },
+  { ciudad: "Zaruma", ilustracion: "zaruma", zona: "Sierra · El Oro", forma: "normal" },
+  { ciudad: "Guayaquil", ilustracion: "guayaquil", foto: "/img/destinos/guayaquil.jpg", zona: "Costa · Guayas", forma: "ancha" },
 ];
 
-interface TarjetaDestinoProps {
-  nombre: string;
-  foto: string;
-  descripcion: string;
+const CLASE_FORMA: Record<Tile["forma"], string> = {
+  grande: "md:col-span-2 md:row-span-2",
+  ancha: "md:col-span-2",
+  normal: "",
+};
+
+/** Precio más bajo real por ciudad de destino. */
+function preciosReales(rutas: RutaDisponible[]): Map<string, number> {
+  const mapa = new Map<string, number>();
+  for (const r of rutas) {
+    const k = claveCiudad(r.destinoCiudad);
+    const p = Number(r.precioReferencia);
+    if (!Number.isFinite(p)) continue;
+    if (!mapa.has(k) || p < (mapa.get(k) as number)) mapa.set(k, p);
+  }
+  return mapa;
 }
 
-/**
- * Proporciones medidas con precisión real de la referencia (captura
- * de easymytrip.com, 20-ago-2026): tarjeta 385x278px reales, foto
- * ocupa el 64% superior de la altura (178/278), contenido blanco el
- * 36% inferior (100/278) -- relación ancho:alto total ≈1.38:1. El
- * `aspect-[385/178]` en la foto mantiene esa proporción exacta.
- *
- * Ancho fijo real `w-[300px]` -- valor elegido a propósito (20-ago-2026,
- * 2º ajuste, tras verificación del director): con `w-80` (320px) las
- * 3 tarjetas + espacios coincidían EXACTO con el ancho del
- * contenedor (992px = 3×320 + 2×16), dejando cero espacio para ver
- * un pedacito de la siguiente tarjeta -- lo que sí se ve en la
- * referencia real, a ambos lados. `300px` no es divisor exacto de
- * ningún ancho de contenedor típico, así que siempre sobra espacio
- * real para el "peek" de la tarjeta siguiente, sin importar el
- * viewport.
- */
-function TarjetaDestino({ nombre, foto, descripcion }: TarjetaDestinoProps) {
+export async function DestinosPopulares() {
+  const rutas = rutasReales(await listarRutasDisponibles());
+  const modoReferencia = rutas.length === 0;
+  const reales = preciosReales(rutas);
+
   return (
-    <div className="w-[260px] shrink-0 snap-start overflow-hidden rounded-[22px] bg-white shadow-card transition hover:-translate-y-0.5 md:w-[276px] md:rounded-card">
-      <div className="relative h-[150px] w-full md:h-[180px]">
-        <Image src={foto} alt={nombre} fill sizes="276px" className="object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
-        <p className="absolute bottom-3 left-3.5 right-3.5 text-xl font-semibold leading-tight text-white md:text-2xl">
-          {nombre}
+    <section id="destinos" className="mx-auto max-w-[1280px] scroll-mt-20 px-5 pt-[30px] md:px-16 md:pt-14">
+      <div className="mb-3.5 md:mb-6">
+        <span className="kb-eyebrow-barra">Destinos populares</span>
+        <h2 className="text-[21px] font-semibold md:text-2xl">
+          ¿A <em className="kb-marca">dónde</em> quieres ir?
+        </h2>
+        <p className="mt-1.5 max-w-[52ch] text-[13px] text-muted-2 md:text-sm">
+          {modoReferencia
+            ? `Precios de referencia por persona, solo ida, desde ${REFERENCIA.terminal.nombre}.`
+            : "Precio más bajo por persona, solo ida."}
         </p>
       </div>
-      <p className="px-3.5 pb-3.5 pt-3 text-xs text-muted-2 md:px-4 md:pb-[18px] md:pt-3.5 md:text-[13px]">{descripcion}</p>
-    </div>
-  );
-}
 
-/** Flecha de navegación del carrusel -- mismo criterio real de ícono
- * SVG propio del proyecto (nunca un ícono de librería externa nueva
- * solo para esto). Oculta en móvil (`hidden sm:flex`), donde el
- * swipe con el dedo ya es el patrón natural -- igual criterio que
- * cualquier carrusel real (Booking, Airbnb: las flechas son un
- * refuerzo para mouse/trackpad, no el único método de navegación). */
-function FlechaCarrusel({ direccion, onClick }: { direccion: "izquierda" | "derecha"; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={direccion === "izquierda" ? "Destinos anteriores" : "Más destinos"}
-      className="kb-btn-round"
-    >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        {direccion === "izquierda" ? <path d="M15 5l-7 7 7 7" /> : <path d="M9 5l7 7-7 7" />}
-      </svg>
-    </button>
-  );
-}
+      <div className="-mx-5 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-5 pb-2.5 [-ms-overflow-style:none] [scrollbar-width:none] md:mx-0 md:grid md:snap-none md:grid-cols-4 md:auto-rows-[240px] md:gap-[18px] md:overflow-visible md:px-0 md:pb-0 [&::-webkit-scrollbar]:hidden">
+        {TILES.map((t, i) => {
+          const ref = REFERENCIA.destinos.find((d) => claveCiudad(d.ciudad) === claveCiudad(t.ciudad));
+          const precio = modoReferencia ? ref?.precio : reales.get(claveCiudad(t.ciudad));
+          const meta = modoReferencia && ref ? `${ref.duracion} · ${ref.salidas.charAt(0).toLowerCase()}${ref.salidas.slice(1)}` : t.zona;
+          return (
+            <a
+              key={t.ciudad}
+              href="#buscar"
+              className={`group relative isolate block aspect-[4/5] w-[80%] shrink-0 snap-start overflow-hidden rounded-[28px] bg-ink-2 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,.06)] md:aspect-auto md:w-auto md:rounded-card ${CLASE_FORMA[t.forma]}`}
+            >
+              {t.foto ? (
+                <Image
+                  src={t.foto}
+                  alt={`Vista de ${t.ciudad}`}
+                  fill
+                  sizes={t.forma === "normal" ? "(min-width: 768px) 300px, 80vw" : "(min-width: 768px) 620px, 80vw"}
+                  className="-z-10 object-cover transition-transform duration-[800ms] ease-out group-hover:scale-105"
+                />
+              ) : (
+                <div className="absolute inset-0 -z-10">
+                  <IlustracionDestino clave={t.ilustracion} indice={i} />
+                </div>
+              )}
+              {/* Mismo degradado en fotos e ilustraciones: así el mosaico se ve parejo. */}
+              <div className="absolute inset-0 -z-[5] bg-[linear-gradient(180deg,rgba(11,13,18,0)_42%,rgba(11,13,18,.88)_100%)]" />
+              {t.etiqueta && (
+                <span className="absolute left-4 top-4 rounded-full bg-ink/55 px-[11px] py-[5px] text-[11px] font-semibold backdrop-blur-md">
+                  {t.etiqueta}
+                </span>
+              )}
+              <div className="absolute inset-x-5 bottom-5 flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className={`font-bold leading-none tracking-[-0.02em] ${t.forma === "grande" ? "text-[30px] md:text-[46px]" : "text-[30px]"}`}>
+                    {t.ciudad}
+                  </h3>
+                  <span className="mt-2 block text-[13px] text-ondark">{meta}</span>
+                </div>
+                {precio !== undefined && (
+                  <div className="shrink-0 rounded-ctrl bg-white px-3 py-2 text-right leading-[1.1] text-ink">
+                    <small className="block text-[10.5px] font-medium text-muted-2">desde</small>
+                    <b className="text-[19px] font-bold tabular-nums">${precio.toFixed(2)}</b>
+                  </div>
+                )}
+              </div>
+            </a>
+          );
+        })}
 
-export function DestinosPopulares() {
-  const carruselRef = useRef<HTMLDivElement>(null);
-  const inicioClonRef = useRef<HTMLDivElement>(null);
-  const anchoVueltaRef = useRef(0);
-  const ANCHO_TARJETA = 276;
-  const ESPACIO = 16; // gap-4
-  const PASO = ANCHO_TARJETA + ESPACIO;
-
-  /**
-   * Carrusel continuo real (20-ago-2026, 3er ajuste, tras dos rondas
-   * de corrección del director): el intento anterior ("saltar al
-   * inicio con scrollTo" al llegar al final) se sentía como que el
-   * carrusel se devolvía -- un salto visible y brusco, justo lo que
-   * el director señaló como desordenado. Un carrusel infinito real no
-   * "vuelve" -- sigue avanzando siempre hacia adelante.
-   *
-   * Técnica real (el mismo truco que usan Swiper/Embla por dentro):
-   * la secuencia de destinos se duplica una vez más al final (sin
-   * duplicar el anuncio, para no inflar impresiones/clics reales).
-   * Cuando el scroll cruza el punto exacto donde empieza esa copia
-   * (medido con `inicioClonRef.current.offsetLeft`, no un número fijo
-   * -- así sigue siendo correcto si cambia la cantidad de destinos),
-   * se resta ese mismo ancho al `scrollLeft` de forma INSTANTÁNEA (sin
-   * `behavior: smooth`) -- como el contenido clonado es idéntico
-   * pixel por pixel al original en ese punto, el ojo no percibe
-   * ningún salto: se ve como si el carrusel jamás terminara.
-   *
-   * El desplazamiento por clic también cambió: antes movía un bloque
-   * completo (85% del ancho visible, "de a 3"). Ahora mueve
-   * exactamente el ancho de UNA tarjeta + el espacio entre tarjetas
-   * (`PASO`) -- de a una, como pidió el director, igual que la
-   * referencia real.
-   */
-  useEffect(() => {
-    if (inicioClonRef.current) {
-      anchoVueltaRef.current = inicioClonRef.current.offsetLeft;
-    }
-  }, []);
-
-  useEffect(() => {
-    const el = carruselRef.current;
-    if (!el) return;
-    function alHacerScroll() {
-      const contenedor = carruselRef.current;
-      const anchoVuelta = anchoVueltaRef.current;
-      if (!contenedor || !anchoVuelta) return;
-      if (contenedor.scrollLeft >= anchoVuelta) {
-        contenedor.scrollLeft -= anchoVuelta;
-      }
-    }
-    el.addEventListener("scroll", alHacerScroll, { passive: true });
-    return () => el.removeEventListener("scroll", alHacerScroll);
-  }, []);
-
-  function desplazar(direccion: "izquierda" | "derecha") {
-    const el = carruselRef.current;
-    if (!el) return;
-    el.scrollBy({ left: direccion === "izquierda" ? -PASO : PASO, behavior: "smooth" });
-  }
-
-  return (
-    <section className="mx-auto max-w-[1280px] px-5 pt-[30px] md:px-16 md:pt-14">
-      <div className="mb-3.5 flex items-end justify-between md:mb-[18px]">
-        <div>
-          <span className="kb-eyebrow">Destinos populares</span>
-          <h2 className="text-[21px] font-semibold md:text-2xl">¿A dónde quieres ir?</h2>
-        </div>
-        {/* Flechas: refuerzo para mouse/trackpad; en celular el swipe ya es el patrón natural. */}
-        <div className="hidden gap-2.5 md:flex">
-          <FlechaCarrusel direccion="izquierda" onClick={() => desplazar("izquierda")} />
-          <FlechaCarrusel direccion="derecha" onClick={() => desplazar("derecha")} />
-        </div>
-      </div>
-      <div className="relative">
-        <div
-          ref={carruselRef}
-          className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] md:snap-none md:gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        <a
+          href="#rutas"
+          className="group flex aspect-[4/5] w-[80%] shrink-0 snap-start flex-col justify-between rounded-[28px] bg-kbyellow p-[22px] text-ink md:col-span-2 md:aspect-auto md:w-auto md:rounded-card"
         >
-          {DESTINOS.slice(0, 4).map((destino) => (
-            <TarjetaDestino key={destino.nombre} {...destino} />
-          ))}
+          <div>
+            <h3 className="text-[26px] font-bold leading-[1.1]">¿No ves tu destino?</h3>
+            <p className="mt-2 text-sm text-[#4A4410]">
+              {modoReferencia
+                ? "Ambato, Riobamba, Manta, Puyo, Tena y más."
+                : "Mira todas las rutas disponibles y sus precios."}
+            </p>
+          </div>
+          <span className="grid h-[52px] w-[52px] self-end place-items-center rounded-full bg-ink transition-transform duration-300 group-hover:translate-x-1.5">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FDD514" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </span>
+        </a>
 
+        <div className="w-[80%] shrink-0 snap-start empty:hidden md:w-auto">
           <PublicidadNativa />
-
-          {DESTINOS.slice(4).map((destino) => (
-            <TarjetaDestino key={destino.nombre} {...destino} />
-          ))}
-
-          {/* Copia real de la secuencia completa, para el salto
-             imperceptible del carrusel continuo -- ver comentario
-             de `desplazar`/`alHacerScroll` arriba. `inicioClonRef`
-             marca dónde empieza esta copia (primer elemento). */}
-          {DESTINOS.map((destino, i) => (
-            <div key={`${destino.nombre}-clon`} ref={i === 0 ? inicioClonRef : undefined}>
-              <TarjetaDestino {...destino} />
-            </div>
-          ))}
         </div>
       </div>
     </section>
