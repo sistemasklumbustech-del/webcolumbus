@@ -1,4 +1,6 @@
 import { listarRutasDisponibles, obtenerEstadisticasPublicas } from "@/lib/api";
+import { REFERENCIA, rutasReales } from "@/lib/portada-datos";
+import { TablaRutasReferencia } from "./TablaRutasReferencia";
 
 /**
  * Fase 7-portada (07-ago-2026) -- llena la portada con contenido real,
@@ -8,24 +10,43 @@ import { listarRutasDisponibles, obtenerEstadisticasPublicas } from "@/lib/api";
  * reales seria inventar informacion. Prueba social con el conteo real
  * de cooperativas activas y rutas, sin ningun numero fabricado.
  *
+ * Portada nueva (oct-2026): manda el API. Los registros de prueba no se muestran; mientras no haya
+ * rutas reales se muestra la tabla de referencia de la terminal (ver lib/portada-datos.ts) y,
+ * apenas el API devuelva rutas reales, estas la reemplazan.
+ *
  * Server component (async, sin "use client") -- se resuelve en el
  * servidor antes de enviar el HTML, mismo patron que el resto de la
  * portada.
  */
 export async function RutasDisponibles() {
-  const [rutas, estadisticas] = await Promise.all([
-    listarRutasDisponibles(),
-    obtenerEstadisticasPublicas(),
-  ]);
+  const [todas, estadisticas] = await Promise.all([listarRutasDisponibles(), obtenerEstadisticasPublicas()]);
+  const rutas = rutasReales(todas);
 
   if (rutas.length === 0) {
-    return null;
+    return (
+      <section id="rutas" className="mx-auto max-w-[1280px] scroll-mt-20 px-5 pt-[30px] md:px-16 md:pt-14">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <span className="kb-eyebrow-barra">Horarios y precios</span>
+            <h2 className="text-[27px] font-bold leading-[1.1] tracking-[-0.025em] md:text-[40px]">
+              Rutas desde <em className="kb-marca">{REFERENCIA.terminal.ciudad}</em>
+            </h2>
+          </div>
+          <p className="max-w-[44ch] text-sm text-muted-2">
+            Valores de referencia. Elige una ruta y te mostramos todas las salidas del día.
+          </p>
+        </div>
+        <TablaRutasReferencia />
+      </section>
+    );
   }
 
   return (
-    <section className="mx-auto max-w-[1280px] px-5 pt-[30px] md:px-16 md:pt-14">
+    <section id="rutas" className="mx-auto max-w-[1280px] scroll-mt-20 px-5 pt-[30px] md:px-16 md:pt-14">
       <div className="mb-3.5 flex items-baseline justify-between gap-2.5 md:mb-[18px]">
-        <h2 className="text-[21px] font-semibold md:text-2xl">Rutas disponibles</h2>
+        <h2 className="text-[21px] font-semibold md:text-2xl">
+          Rutas <em className="kb-marca">disponibles</em>
+        </h2>
         {estadisticas && (
           <p className="text-xs text-muted-2 md:text-sm">
             {estadisticas.cooperativasActivas} cooperativa{estadisticas.cooperativasActivas === 1 ? "" : "s"} ·{" "}

@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { BuscadorForm } from "./BuscadorForm";
 import { LogoKlumbus } from "./LogoKlumbus";
 import { obtenerToken, decodificarToken, tokenExpirado, type PayloadToken } from "@/lib/auth";
+import { listarTerminalesAliadas } from "@/lib/api";
+import { REFERENCIA, terminalesReales } from "@/lib/portada-datos";
+import { BotonBuscarFlotante } from "./BotonBuscarFlotante";
 
 // Mismo mapeo real que ya usa HeaderPublico -- corrige un bug real
 // del director (18-ago-2026): el arreglo anterior mandaba a "Mi
@@ -27,11 +29,53 @@ const RUTA_POR_ROL: Record<PayloadToken["rol"], string> = {
  * dos fotos reales con su cambio automático y toda la lógica (sesión,
  * menú móvil y buscador).
  */
-const FOTOS = ["/img/hero-1.jpg", "/img/hero-2.jpg"];
+const FOTOS = [
+  {
+    vertical: "/img/hero-tarde-v.webp",
+    horizontal: "/img/hero-tarde-h.webp",
+    alt: "Bus de dos pisos de Klumbus en la terminal al atardecer",
+  },
+  {
+    vertical: "/img/hero-noche-v.webp",
+    horizontal: "/img/hero-noche-h.webp",
+    alt: "Bus de Klumbus de frente, de noche, en el andén",
+  },
+];
+
+const LINEA_CONFIANZA = [
+  {
+    texto: "Pago seguro",
+    icono: (
+      <>
+        <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+        <path d="M9 12l2 2 4-4" />
+      </>
+    ),
+  },
+  {
+    texto: "Boleto QR al instante",
+    icono: (
+      <>
+        <rect x="4" y="4" width="6" height="6" rx="1" />
+        <rect x="14" y="4" width="6" height="6" rx="1" />
+        <rect x="4" y="14" width="6" height="6" rx="1" />
+        <path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h1M18 14h2" />
+      </>
+    ),
+  },
+  {
+    texto: "Eliges tu asiento",
+    icono: <path d="M6 4h12a2 2 0 0 1 2 2v9H4V6a2 2 0 0 1 2-2zM4 11h16M7 19v-4M17 19v-4" />,
+  },
+] as const;
 
 export function Hero() {
   const [indiceActivo, setIndiceActivo] = useState(0);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  // El encabezado queda fijo arriba y se vuelve de vidrio oscuro al bajar la página.
+  const [conFondo, setConFondo] = useState(false);
+  // Nombre real de la terminal aliada (Machala primero), para la insignia del hero.
+  const [terminal, setTerminal] = useState<string | null>(null);
   // Bug real encontrado por el director (17-ago-2026): el Hero nunca
   // revisaba la sesion -- mostraba "Iniciar sesion" fijo incluso ya
   // conectado. Mismo patron real que ya usa HeaderPublico.
@@ -45,10 +89,31 @@ export function Hero() {
   }, []);
 
   useEffect(() => {
+    // Con "reducir movimiento" activado la foto no cambia sola.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const temporizador = setInterval(() => {
       setIndiceActivo((i) => (i + 1) % FOTOS.length);
-    }, 5000);
+    }, 6000);
     return () => clearInterval(temporizador);
+  }, []);
+
+  useEffect(() => {
+    function alDesplazar() {
+      setConFondo(window.scrollY > 24);
+    }
+    alDesplazar();
+    window.addEventListener("scroll", alDesplazar, { passive: true });
+    return () => window.removeEventListener("scroll", alDesplazar);
+  }, []);
+
+  useEffect(() => {
+    // Nombre real de la terminal aliada (Machala primero); si el API aún no tiene una real
+    // (sin contar las de prueba), se usa la terminal de referencia de la portada.
+    listarTerminalesAliadas().then((lista) => {
+      const reales = terminalesReales(lista);
+      const machala = reales.find((t) => /machala/i.test(t.ciudad) || /machala/i.test(t.nombre));
+      setTerminal((machala ?? reales[0])?.nombre ?? REFERENCIA.terminal.nombre);
+    });
   }, []);
 
   const hrefCuenta = payload ? RUTA_POR_ROL[payload.rol] : "/ingresar";
@@ -56,26 +121,29 @@ export function Hero() {
 
   return (
     <section>
-      <div className="relative h-[560px] overflow-hidden bg-ink text-white md:bg-[radial-gradient(90%_120%_at_80%_30%,#1D212B_0%,#0B0D12_60%)]">
+      <div className="relative h-[560px] overflow-hidden md:h-[650px] bg-ink text-white md:bg-[radial-gradient(90%_120%_at_80%_30%,#1D212B_0%,#0B0D12_60%)]">
         <div className="relative mx-auto h-full max-w-[1280px]">
           {/* Foto: a sangre en celular, enmarcada a la derecha en PC. */}
-          <div className="absolute inset-0 overflow-hidden md:inset-auto md:right-16 md:top-[120px] md:h-[400px] md:w-[36%] xl:w-[540px] md:rounded-[32px] md:shadow-[0_30px_60px_rgba(0,0,0,.45)]">
+          <div className="absolute inset-0 overflow-hidden md:inset-auto md:right-16 md:top-[120px] md:h-[420px] md:w-[36%] xl:w-[560px] md:rounded-[32px] md:shadow-[0_30px_60px_rgba(0,0,0,.45)]">
             {FOTOS.map((foto, i) => (
               <div
-                key={foto}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
+                key={foto.vertical}
+                className={`absolute inset-0 transition-opacity duration-[1200ms] ${
                   i === indiceActivo ? "opacity-100" : "opacity-0"
                 }`}
                 aria-hidden={i !== indiceActivo}
               >
-                <Image
-                  src={foto}
-                  alt=""
-                  fill
-                  priority={i === 0}
-                  sizes="(min-width: 1280px) 540px, (min-width: 768px) 36vw, 100vw"
-                  className="object-cover object-[50%_35%] md:object-[50%_40%]"
-                />
+                {/* Celular: foto vertical; PC: horizontal. Solo se descarga una de las dos. */}
+                <picture>
+                  <source media="(min-width: 768px)" srcSet={foto.horizontal} />
+                  <img
+                    src={foto.vertical}
+                    alt={foto.alt}
+                    fetchPriority={i === 0 ? "high" : "auto"}
+                    loading={i === 0 ? "eager" : "lazy"}
+                    className="h-full w-full object-cover object-[50%_0%] md:object-center"
+                  />
+                </picture>
               </div>
             ))}
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,13,18,.8)_0%,rgba(11,13,18,.15)_30%,rgba(11,13,18,.35)_55%,#0B0D12_92%)] md:hidden" />
@@ -86,7 +154,7 @@ export function Hero() {
             <div className="absolute right-5 top-[76px] z-10 flex gap-1.5 md:bottom-4 md:right-4 md:top-auto">
               {FOTOS.map((foto, i) => (
                 <span
-                  key={foto}
+                  key={foto.vertical}
                   className={`h-[3px] w-6 rounded-full transition-colors ${
                     i === indiceActivo ? "bg-kbyellow" : "bg-white/35"
                   }`}
@@ -95,9 +163,20 @@ export function Hero() {
             </div>
           </div>
 
-          <header className="absolute inset-x-0 top-0 z-20 flex h-16 items-center justify-between px-5 md:h-[76px] md:px-16">
+          <header
+            className={`fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
+              conFondo ? "bg-ink/90 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]" : "bg-transparent"
+            }`}
+          >
+            <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-5 md:h-[76px] md:px-16">
             <LogoKlumbus className="h-6 md:h-8" />
             <nav className="flex items-center gap-2 md:gap-[34px]">
+              <a href="#destinos" className="hidden text-sm font-medium text-ondark hover:text-white md:block">
+                Destinos
+              </a>
+              <a href="#como" className="hidden text-sm font-medium text-ondark hover:text-white md:block">
+                Cómo funciona
+              </a>
               <a href="/rutas" className="hidden text-sm font-medium text-ondark hover:text-white md:block">
                 Rutas
               </a>
@@ -137,10 +216,17 @@ export function Hero() {
                 )}
               </button>
             </nav>
+            </div>
           </header>
 
           {menuAbierto && (
-            <nav className="absolute left-5 right-5 top-[68px] z-30 flex flex-col gap-1 rounded-card bg-ink-2 p-3 shadow-float md:hidden">
+            <nav className="fixed left-5 right-5 top-[68px] z-50 flex flex-col gap-1 rounded-card bg-ink-2 p-3 shadow-float md:hidden">
+              <a href="#destinos" onClick={() => setMenuAbierto(false)} className="rounded-xl px-3 py-3 text-sm font-medium text-ondark hover:bg-ink-3 hover:text-white">
+                Destinos
+              </a>
+              <a href="#como" onClick={() => setMenuAbierto(false)} className="rounded-xl px-3 py-3 text-sm font-medium text-ondark hover:bg-ink-3 hover:text-white">
+                Cómo funciona
+              </a>
               <a href="/rutas" className="rounded-xl px-3 py-3 text-sm font-medium text-ondark hover:bg-ink-3 hover:text-white">
                 Rutas
               </a>
@@ -154,12 +240,20 @@ export function Hero() {
           )}
 
           <div className="absolute bottom-[120px] left-5 right-5 z-10 flex flex-col gap-2.5 md:bottom-auto md:left-16 md:right-auto md:top-[156px] md:max-w-[40%] md:gap-[18px] xl:max-w-[640px]">
-            <span className="hidden items-center gap-2 self-start rounded-full bg-kbyellow/15 px-3.5 py-1.5 text-[13px] font-semibold text-kbyellow md:inline-flex">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M5 12l5 5L20 7" />
-              </svg>
-              Cooperativas oficiales de Ecuador
-            </span>
+            <div className="hidden flex-wrap items-center gap-2 md:flex">
+              <span className="inline-flex items-center gap-2 rounded-full bg-kbyellow/15 px-3.5 py-1.5 text-[13px] font-semibold text-kbyellow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12l5 5L20 7" />
+                </svg>
+                Cooperativas oficiales de Ecuador
+              </span>
+              {terminal && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-[13px] font-semibold text-white">
+                  <span className="h-[7px] w-[7px] rounded-full bg-kbyellow shadow-[0_0_0_4px_rgba(253,213,20,.25)]" aria-hidden="true" />
+                  Terminal aliada · {terminal}
+                </span>
+              )}
+            </div>
             <h1 className="text-[32px] font-semibold leading-[1.12] tracking-[-0.02em] md:text-[34px] md:leading-[1.1] lg:text-[38px] xl:text-[54px] xl:leading-[1.08]">
               Tu pasaje de bus, <span className="text-kbyellow">sin filas ni papeleo</span>
             </h1>
@@ -167,14 +261,25 @@ export function Hero() {
               Compara horarios y precios de todas las cooperativas de una ruta, elige tu asiento y recibe tu boleto
               digital con QR al instante.
             </p>
+            <ul className="mt-2 hidden flex-wrap gap-x-[22px] gap-y-2.5 text-sm text-ondark md:flex">
+              {LINEA_CONFIANZA.map((t) => (
+                <li key={t.texto} className="inline-flex items-center gap-2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FDD514" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    {t.icono}
+                  </svg>
+                  {t.texto}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
 
       {/* El buscador se monta sobre el borde inferior del hero (tarjeta blanca flotante). */}
-      <div className="relative z-10 mx-auto -mt-24 max-w-[1280px] px-4 md:-mt-[110px] md:px-16">
+      <div id="buscar" className="relative z-10 mx-auto -mt-24 max-w-[1280px] scroll-mt-24 px-4 md:-mt-[110px] md:px-16">
         <BuscadorForm />
       </div>
+      <BotonBuscarFlotante objetivoId="buscar" />
     </section>
   );
 }
