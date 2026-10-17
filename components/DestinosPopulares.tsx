@@ -9,10 +9,9 @@ import { PublicidadNativa } from "./PublicidadNativa";
  * en PC, un mosaico con una tarjeta grande, dos anchas y una tarjeta amarilla de
  * "¿No ves tu destino?".
  *
- * Fotos reales donde las hay (Quito, Guayaquil); para los destinos que todavía no tienen foto
- * (Cuenca, Loja, Huaquillas, Zaruma) se usa una ilustración de la misma paleta, con el mismo
- * degradado y el mismo tratamiento de texto, para que el mosaico se vea parejo. Cuando llegue la
- * foto de uno de esos destinos basta con agregar `foto` en su entrada.
+ * Solo fotos reales (las de public/img/destinos). Un destino sin foto todavía puede entrar con una
+ * ilustración de la misma paleta (`ilustracion`, ver IlustracionDestino): se dibuja con el mismo
+ * degradado y el mismo tratamiento de texto. Para sumar un destino, agrega su foto y su entrada.
  *
  * El "desde $X" sale de las rutas reales cuando el destino coincide. Sin rutas reales en el API se
  * muestran los precios de referencia (ver lib/portada-datos.ts) con su aviso; apenas el API tenga
@@ -22,7 +21,7 @@ import { PublicidadNativa } from "./PublicidadNativa";
  */
 interface Tile {
   ciudad: string;
-  ilustracion: ClaveIlustracion;
+  ilustracion?: ClaveIlustracion;
   foto?: string;
   zona: string;
   etiqueta?: string;
@@ -30,12 +29,12 @@ interface Tile {
 }
 
 const TILES: Tile[] = [
-  { ciudad: "Quito", ilustracion: "quito", foto: "/img/destinos/quito.jpg", zona: "Sierra · Pichincha", forma: "grande" },
-  { ciudad: "Cuenca", ilustracion: "cuenca", zona: "Sierra · Azuay", forma: "normal" },
-  { ciudad: "Loja", ilustracion: "loja", zona: "Sierra · Loja", forma: "normal" },
-  { ciudad: "Huaquillas", ilustracion: "huaquillas", zona: "Costa · frontera", etiqueta: "Frontera con Perú", forma: "normal" },
-  { ciudad: "Zaruma", ilustracion: "zaruma", zona: "Sierra · El Oro", forma: "normal" },
-  { ciudad: "Guayaquil", ilustracion: "guayaquil", foto: "/img/destinos/guayaquil.jpg", zona: "Costa · Guayas", forma: "ancha" },
+  { ciudad: "Quito", foto: "/img/destinos/quito.jpg", zona: "Sierra · Pichincha", forma: "grande" },
+  { ciudad: "Baños", foto: "/img/destinos/banos.jpg", zona: "Sierra · Tungurahua", forma: "normal" },
+  { ciudad: "Salinas", foto: "/img/destinos/salinas.jpg", zona: "Costa · Santa Elena", forma: "normal" },
+  { ciudad: "Montañita", foto: "/img/destinos/montanita.jpg", zona: "Costa · Santa Elena", forma: "normal" },
+  { ciudad: "Ibarra", foto: "/img/destinos/ibarra.jpg", zona: "Sierra · Imbabura", forma: "normal" },
+  { ciudad: "Guayaquil", foto: "/img/destinos/guayaquil.jpg", zona: "Costa · Guayas", forma: "ancha" },
 ];
 
 const CLASE_FORMA: Record<Tile["forma"], string> = {
@@ -94,11 +93,11 @@ export async function DestinosPopulares() {
                   sizes={t.forma === "normal" ? "(min-width: 768px) 300px, 80vw" : "(min-width: 768px) 620px, 80vw"}
                   className="-z-10 object-cover transition-transform duration-[800ms] ease-out group-hover:scale-105"
                 />
-              ) : (
+              ) : t.ilustracion ? (
                 <div className="absolute inset-0 -z-10">
                   <IlustracionDestino clave={t.ilustracion} indice={i} />
                 </div>
-              )}
+              ) : null}
               {/* Mismo degradado en fotos e ilustraciones: así el mosaico se ve parejo. */}
               <div className="absolute inset-0 -z-[5] bg-[linear-gradient(180deg,rgba(11,13,18,0)_42%,rgba(11,13,18,.88)_100%)]" />
               {t.etiqueta && (

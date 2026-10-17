@@ -93,7 +93,7 @@ export function Footer() {
 
   return (
     <footer className={`kb-footer ${esPortada ? "mt-0 pb-20 md:pb-0" : "mt-8 md:mt-[72px]"}`}>
-      <div className="mx-auto grid max-w-[1280px] gap-2 px-5 pb-[34px] pt-9 md:grid-cols-[1.6fr_1fr_1fr_1fr] md:gap-8 md:px-16 md:pb-12 md:pt-12">
+      <div className="mx-auto grid max-w-[1280px] gap-2 px-5 pb-[34px] pt-9 md:grid-cols-[1.6fr_1fr_1fr_auto] md:gap-8 md:px-16 md:pb-12 md:pt-12">
         <div className="pb-4 md:pb-0">
           <LogoKlumbus className="mb-3 h-[26px] md:h-[30px]" />
           <p className="max-w-[34ch] text-[13px] md:text-sm">
@@ -132,10 +132,10 @@ export function Footer() {
         </Columna>
 
         <Columna abierta={abiertas.has("ayuda")} alAlternar={alternar} id="ayuda" titulo="Ayuda">
-          <ul className="space-y-2 text-[13px] [overflow-wrap:anywhere] md:text-sm">
+          <ul className="space-y-2 text-[13px] md:text-sm">
             {contacto.correo && (
               <li>
-                <a href={`mailto:${contacto.correo}`} className="hover:text-white">
+                <a href={`mailto:${contacto.correo}`} className="whitespace-nowrap hover:text-white">
                   {contacto.correo}
                 </a>
               </li>
