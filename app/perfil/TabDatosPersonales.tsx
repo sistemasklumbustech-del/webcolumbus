@@ -147,7 +147,9 @@ export function TabDatosPersonales({
   }
 
   return (
-    <>
+    // En pantalla ancha (1280 px o más) las tarjetas fluyen en dos columnas sin huecos entre ellas;
+    // en celular y tablet van una debajo de otra, en el mismo orden.
+    <div className="grid gap-4 xl:block xl:columns-2 xl:gap-4">
       {/* Tarjeta de identidad -- movida a la cabecera de page.tsx
           (15-ago-2026, hallazgo real del director): estaba duplicada
           con el resto de "Mi cuenta", y solo aparecía en esta pestaña
@@ -157,7 +159,7 @@ export function TabDatosPersonales({
           propósito: protege boletos ya comprados a tu nombre. */}
       <form
         onSubmit={guardarIdentidad}
-        className="mt-6 space-y-4 kb-card kb-on-white p-6"
+        className="space-y-4 kb-card kb-on-white p-6 xl:mb-4 xl:break-inside-avoid"
       >
         <div>
           <h2 className="text-base font-bold text-brand-dark">Identidad</h2>
@@ -211,7 +213,7 @@ id="perfil-cedula"
       {/* Datos editables */}
       <form
         onSubmit={guardarPerfil}
-        className="mt-6 space-y-4 kb-card kb-on-white p-6"
+        className="space-y-4 kb-card kb-on-white p-6 xl:mb-4 xl:break-inside-avoid"
       >
         <h2 className="text-base font-bold text-brand-dark">Mis datos</h2>
         <div>
@@ -285,7 +287,7 @@ id="perfil-foto"
       {/* Cambiar contraseña */}
       <form
         onSubmit={guardarPassword}
-        className="mt-6 space-y-4 kb-card kb-on-white p-6"
+        className="space-y-4 kb-card kb-on-white p-6 xl:mb-4 xl:break-inside-avoid"
       >
         <h2 className="text-base font-bold text-brand-dark">Cambiar contraseña</h2>
         <div>
@@ -313,7 +315,7 @@ id="perfil-foto"
       {/* Cambiar correo — hallazgo real del usuario (29-jul-2026): si pierdes acceso a tu correo, quedarías fuera de tu cuenta sin esto. */}
       <form
         onSubmit={solicitarCambio}
-        className="mt-6 space-y-4 kb-card kb-on-white p-6"
+        className="space-y-4 kb-card kb-on-white p-6 xl:mb-4 xl:break-inside-avoid"
       >
         <h2 className="text-base font-bold text-brand-dark">Cambiar correo</h2>
         <p className="text-xs text-muted-2">
@@ -360,10 +362,10 @@ id="perfil-correo-nuevo"
 
       <button
         onClick={cerrarSesion}
-        className="mt-6 kb-btn kb-btn--outline w-full"
+        className="kb-btn kb-btn--outline w-full xl:[column-span:all]"
       >
         Cerrar sesión
       </button>
-    </>
+    </div>
   );
 }
