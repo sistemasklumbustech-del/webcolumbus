@@ -58,19 +58,28 @@ export function FiltrosBusqueda({ variante = "dropdown" }: { variante?: "dropdow
   const [precioMax, setPrecioMax] = useState<string>(searchParams.get("precioMax") ?? "");
   const [abierto, setAbierto] = useState(false);
 
+  // En PC (panel) los filtros se aplican apenas se tocan, como en FlixBus o redBus; en celular se
+  // eligen dentro del desplegable y se aplican con el botón. La lógica de filtrado es la misma.
+  const alInstante = variante === "panel";
+
   function alternarAmenidad(valor: Amenidad) {
-    setAmenidades((actuales) =>
-      actuales.includes(valor) ? actuales.filter((a) => a !== valor) : [...actuales, valor],
-    );
+    const nuevas = amenidades.includes(valor) ? amenidades.filter((a) => a !== valor) : [...amenidades, valor];
+    setAmenidades(nuevas);
+    if (alInstante) aplicar({ amenidades: nuevas });
   }
 
   function alternarFranja(valor: string) {
-    setFranjaHorario((actual) => (actual === valor ? null : valor));
+    const nueva = franjaHorario === valor ? null : valor;
+    setFranjaHorario(nueva);
+    if (alInstante) aplicar({ franjaHorario: nueva });
   }
 
-  function aplicar() {
+  function aplicar(
+    cambios: Partial<{ franjaHorario: string | null; amenidades: Amenidad[]; precioMin: string; precioMax: string }> = {},
+  ) {
+    const v = { franjaHorario, amenidades, precioMin, precioMax, ...cambios };
     const params = new URLSearchParams(searchParams.toString());
-    const franja = FRANJAS_HORARIO.find((f) => f.valor === franjaHorario);
+    const franja = FRANJAS_HORARIO.find((f) => f.valor === v.franjaHorario);
     if (franja) {
       params.set("horaDesde", franja.horaDesde);
       params.set("horaHasta", franja.horaHasta);
@@ -78,18 +87,18 @@ export function FiltrosBusqueda({ variante = "dropdown" }: { variante?: "dropdow
       params.delete("horaDesde");
       params.delete("horaHasta");
     }
-    if (amenidades.length > 0) {
-      params.set("amenidades", amenidades.join(","));
+    if (v.amenidades.length > 0) {
+      params.set("amenidades", v.amenidades.join(","));
     } else {
       params.delete("amenidades");
     }
-    if (precioMin.trim()) {
-      params.set("precioMin", precioMin.trim());
+    if (v.precioMin.trim()) {
+      params.set("precioMin", v.precioMin.trim());
     } else {
       params.delete("precioMin");
     }
-    if (precioMax.trim()) {
-      params.set("precioMax", precioMax.trim());
+    if (v.precioMax.trim()) {
+      params.set("precioMax", v.precioMax.trim());
     } else {
       params.delete("precioMax");
     }
@@ -132,6 +141,9 @@ export function FiltrosBusqueda({ variante = "dropdown" }: { variante?: "dropdow
             placeholder="Mín."
             value={precioMin}
             onChange={(e) => setPrecioMin(e.target.value)}
+            onBlur={() => alInstante && aplicar()}
+            onKeyDown={(e) => e.key === "Enter" && alInstante && aplicar()}
+            aria-label="Precio mínimo"
             className={claseCampo}
           />
           <span className="text-muted-3">—</span>
@@ -142,6 +154,9 @@ export function FiltrosBusqueda({ variante = "dropdown" }: { variante?: "dropdow
             placeholder="Máx."
             value={precioMax}
             onChange={(e) => setPrecioMax(e.target.value)}
+            onBlur={() => alInstante && aplicar()}
+            onKeyDown={(e) => e.key === "Enter" && alInstante && aplicar()}
+            aria-label="Precio máximo"
             className={claseCampo}
           />
         </div>
@@ -190,11 +205,13 @@ export function FiltrosBusqueda({ variante = "dropdown" }: { variante?: "dropdow
         </div>
       </div>
 
-      <button type="button" onClick={aplicar} className="kb-btn kb-btn--dark w-full">
-        Aplicar filtros
-      </button>
+      {!alInstante && (
+        <button type="button" onClick={() => aplicar()} className="kb-btn kb-btn--dark w-full">
+          Aplicar filtros
+        </button>
+      )}
       {hayFiltrosActivos && (
-        <button type="button" onClick={limpiar} className="-mt-2 text-center text-[13px] font-medium text-muted-2 hover:text-ink">
+        <button type="button" onClick={limpiar} className="text-center text-[13px] font-medium text-muted-2 hover:text-ink">
           Limpiar filtros
         </button>
       )}

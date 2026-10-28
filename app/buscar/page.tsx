@@ -11,15 +11,18 @@ import { OrdenarPor } from "./OrdenarPor";
 import { FiltroCooperativaPills } from "./FiltroCooperativaPills";
 import { TarjetaCooperativaAgrupada } from "./TarjetaCooperativaAgrupada";
 import { SinResultadosAlternativas } from "./SinResultadosAlternativas";
+import { TiraFechas } from "./TiraFechas";
 import { construirQuery } from "@/lib/buscar-url";
 import { FRANJAS_HORARIO } from "@/lib/franjas-horario";
+import { estimarTrayecto } from "@/lib/trayecto";
 
+const DIAS_CORTOS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+/** "2026-10-29" -> "Jue 29 oct" (formato corto del encabezado, igual que el buscador). */
 function formatearFecha(fecha: string): string {
-  return new Date(`${fecha}T00:00:00`).toLocaleDateString("es-EC", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  const [a, m, d] = fecha.split("-").map(Number);
+  return `${DIAS_CORTOS[new Date(Date.UTC(a, m - 1, d)).getUTCDay()]} ${d} ${MESES_CORTOS[m - 1]}`;
 }
 
 export default async function ResultadosBusquedaPage({
@@ -69,6 +72,10 @@ export default async function ResultadosBusquedaPage({
   // falla, el resultado es null -- la franja de beneficio real
   // simplemente no se muestra, sin romper toda la página.
   const promesaBeneficios = obtenerBeneficiosReferidos();
+  // Precios por día para la tira de fechas (en paralelo; si falla, la tira muestra "—").
+  const promesaFechas = esTramoVuelta
+    ? Promise.resolve(null)
+    : buscarAlternativas({ origenId, destinoId, fecha, pasajeros: Number(pasajeros ?? 1), completo: true });
 
   let resultadosIda: ResultadoViaje[] = [];
   let resultadosVuelta: ResultadoViaje[] = [];
@@ -162,6 +169,8 @@ export default async function ResultadosBusquedaPage({
   const franjaElegida = FRANJAS_HORARIO.find((f) => f.horaDesde === horaDesde && f.horaHasta === horaHasta);
 
   const beneficiosReferidos = await promesaBeneficios;
+  const fechasConPrecio = await promesaFechas;
+  const preciosPorDia = new Map<string, number>((fechasConPrecio?.fechasCercanas ?? []).map((f) => [f.fecha, Number(f.precioDesde)]));
 
   // Sin viajes en el tramo de ida (y sin haber fallado la búsqueda):
   // se piden las alternativas reales -- otras fechas, otros destinos
@@ -207,8 +216,11 @@ export default async function ResultadosBusquedaPage({
   function ordenar(lista: ResultadoViaje[]): ResultadoViaje[] {
     const copia = [...lista];
     switch (ordenarPor) {
-      case "precio_desc":
-        return copia.sort((a, b) => Number(b.precioBase) - Number(a.precioBase));
+      case "duracion": {
+        // "Más rápido": duración del viaje (misma estimación que muestra la tarjeta); sin dato, al final.
+        const minutos = (r: ResultadoViaje) => estimarTrayecto(r)?.minutos ?? Number.POSITIVE_INFINITY;
+        return copia.sort((a, b) => minutos(a) - minutos(b) || Number(a.precioBase) - Number(b.precioBase));
+      }
       case "salida_temprano":
         return copia.sort(
           (a, b) => new Date(a.horaSalidaProgramada).getTime() - new Date(b.horaSalidaProgramada).getTime(),
@@ -423,6 +435,19 @@ export default async function ResultadosBusquedaPage({
         </div>
       </div>
 
+      {!mostrandoVuelta && (
+        <TiraFechas
+          fecha={fecha}
+          precios={preciosPorDia}
+          hrefFecha={(f) =>
+            hrefBuscar({
+              fecha: f,
+              ...(fechaVuelta && fechaVuelta < f ? { fechaVuelta: f } : {}),
+            })
+          }
+        />
+      )}
+
       <div className="mx-auto max-w-[1280px] px-5 py-5 md:px-16 md:py-6">
 
         <div className="lg:grid lg:grid-cols-[250px_1fr] lg:items-start lg:gap-6 xl:grid-cols-[290px_1fr]">
@@ -440,10 +465,9 @@ export default async function ResultadosBusquedaPage({
           <div className={mostrandoVuelta ? "lg:col-span-2" : ""}>
             <div className="mb-3.5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <p className="text-sm text-muted-2">
-                {grupos.length} cooperativa{grupos.length !== 1 ? "s" : ""} disponible
-                {grupos.length !== 1 ? "s" : ""} para esta ruta
+                {resultadosAMostrar.length} {resultadosAMostrar.length === 1 ? "salida disponible" : "salidas disponibles"}
               </p>
-              {grupos.length > 1 && <OrdenarPor />}
+              {grupos.length > 0 && <OrdenarPor />}
             </div>
 
             {!mostrandoVuelta && <FiltroCooperativaPills cooperativas={cooperativasUnicas} />}
@@ -568,9 +592,10 @@ export default async function ResultadosBusquedaPage({
                   viajes={grupo}
                   hrefsPorViaje={hrefsPorViaje}
                   esMejorPrecio={
-                    precioMinimo !== null && grupo.some((r) => Number(r.precioBase) === precioMinimo)
+                    grupos.length > 1 && precioMinimo !== null && grupo.some((r) => Number(r.precioBase) === precioMinimo)
                   }
                   esTopCalificado={
+                    grupos.length > 1 &&
                     calificacionMaxima !== null &&
                     grupo[0].cooperativaCalificacionPromedio === calificacionMaxima
                   }

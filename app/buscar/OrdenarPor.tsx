@@ -14,15 +14,16 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
  */
 const OPCIONES = [
   { valor: "precio_asc", etiqueta: "Más barato" },
-  { valor: "precio_desc", etiqueta: "Precio: mayor primero" },
   { valor: "salida_temprano", etiqueta: "Más temprano" },
+  { valor: "duracion", etiqueta: "Más rápido" },
 ] as const;
 
 export function OrdenarPor() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const valorActual = searchParams.get("ordenarPor") ?? "precio_asc";
+  const pedido = searchParams.get("ordenarPor");
+  const valorActual = OPCIONES.some((o) => o.valor === pedido) ? pedido : "precio_asc";
 
   function cambiar(valor: string) {
     const params = new URLSearchParams(searchParams.toString());
