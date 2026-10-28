@@ -5,7 +5,7 @@
  */
 export function AppProximamente() {
   return (
-    <section aria-label="Aplicación móvil" className="bg-ink px-5 pb-0 pt-11 text-white md:px-16">
+    <section aria-label="Aplicación móvil" className="bg-ink px-5 pb-0 pt-10 text-white md:px-16 md:pt-12">
       <div className="relative mx-auto grid max-w-[1280px] gap-[18px] overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#171A22,#11141a)] p-[26px_22px] shadow-[inset_0_0_0_1px_#262A35] md:grid-cols-[1fr_auto] md:items-center md:px-[34px] md:py-[30px]">
         <span aria-hidden="true" className="pointer-events-none absolute -right-[60px] -top-[60px] h-[220px] w-[220px] rounded-full bg-[radial-gradient(circle,rgba(253,213,20,.22),transparent_70%)]" />
         <div className="relative">

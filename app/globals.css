@@ -158,6 +158,16 @@ html {
     transform-box: fill-box;
   }
 }
+@media (prefers-reduced-motion: reduce) {
+  .mapa-salidas .mapa-bus {
+    display: none;
+  }
+}
+/* Mapa fuera de pantalla, con "reducir movimiento" o con ahorro de datos: todo quieto. */
+.mapa-salidas.mapa-quieto .ruta,
+.mapa-salidas.mapa-quieto .pulso {
+  animation-play-state: paused;
+}
 @keyframes mapa-flujo {
   to {
     stroke-dashoffset: -26;

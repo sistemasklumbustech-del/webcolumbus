@@ -42,33 +42,6 @@ const FOTOS = [
   },
 ];
 
-const LINEA_CONFIANZA = [
-  {
-    texto: "Pago seguro",
-    icono: (
-      <>
-        <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
-        <path d="M9 12l2 2 4-4" />
-      </>
-    ),
-  },
-  {
-    texto: "Boleto QR al instante",
-    icono: (
-      <>
-        <rect x="4" y="4" width="6" height="6" rx="1" />
-        <rect x="14" y="4" width="6" height="6" rx="1" />
-        <rect x="4" y="14" width="6" height="6" rx="1" />
-        <path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h1M18 14h2" />
-      </>
-    ),
-  },
-  {
-    texto: "Eliges tu asiento",
-    icono: <path d="M6 4h12a2 2 0 0 1 2 2v9H4V6a2 2 0 0 1 2-2zM4 11h16M7 19v-4M17 19v-4" />,
-  },
-] as const;
-
 export function Hero() {
   const [indiceActivo, setIndiceActivo] = useState(0);
   const [menuAbierto, setMenuAbierto] = useState(false);
@@ -121,10 +94,10 @@ export function Hero() {
 
   return (
     <section>
-      <div className="relative h-[560px] overflow-hidden md:h-[650px] bg-ink text-white md:bg-[radial-gradient(90%_120%_at_80%_30%,#1D212B_0%,#0B0D12_60%)]">
+      <div className="relative h-[500px] overflow-hidden md:h-[500px] bg-ink text-white md:bg-[radial-gradient(90%_120%_at_80%_30%,#1D212B_0%,#0B0D12_60%)]">
         <div className="relative mx-auto h-full max-w-[1280px]">
           {/* Foto: a sangre en celular, enmarcada a la derecha en PC. */}
-          <div className="absolute inset-0 overflow-hidden md:inset-auto md:right-16 md:top-[120px] md:h-[420px] md:w-[36%] xl:w-[560px] md:rounded-[32px] md:shadow-[0_30px_60px_rgba(0,0,0,.45)]">
+          <div className="absolute inset-0 overflow-hidden md:inset-auto md:right-16 md:top-[100px] md:h-[290px] md:w-[36%] xl:w-[560px] md:rounded-[32px] md:shadow-[0_30px_60px_rgba(0,0,0,.45)]">
             {FOTOS.map((foto, i) => (
               <div
                 key={foto.vertical}
@@ -165,7 +138,7 @@ export function Hero() {
 
           <header
             className={`fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
-              conFondo ? "bg-ink/90 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]" : "bg-transparent"
+              conFondo ? "bg-ink shadow-[0_1px_0_#262A35]" : "bg-transparent"
             }`}
           >
             <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-5 md:h-[76px] md:px-16">
@@ -239,7 +212,7 @@ export function Hero() {
             </nav>
           )}
 
-          <div className="absolute bottom-[120px] left-5 right-5 z-10 flex flex-col gap-2.5 md:bottom-auto md:left-16 md:right-auto md:top-[156px] md:max-w-[40%] md:gap-[18px] xl:max-w-[640px]">
+          <div className="absolute bottom-[120px] left-5 right-5 z-10 flex flex-col gap-2.5 md:bottom-auto md:left-16 md:right-auto md:top-[104px] md:max-w-[40%] md:gap-3.5 xl:max-w-[640px]">
             <div className="hidden flex-wrap items-center gap-2 md:flex">
               <span className="inline-flex items-center gap-2 rounded-full bg-kbyellow/15 px-3.5 py-1.5 text-[13px] font-semibold text-kbyellow">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -254,23 +227,13 @@ export function Hero() {
                 </span>
               )}
             </div>
-            <h1 className="text-[32px] font-semibold leading-[1.12] tracking-[-0.02em] md:text-[34px] md:leading-[1.1] lg:text-[38px] xl:text-[54px] xl:leading-[1.08]">
+            <h1 className="text-[32px] font-semibold leading-[1.12] tracking-[-0.02em] md:text-[34px] md:leading-[1.1] lg:text-[38px] xl:text-[42px] xl:leading-[1.08]">
               Tu pasaje de bus, <span className="text-kbyellow">sin filas ni papeleo</span>
             </h1>
-            <p className="text-sm text-ondark md:max-w-[48ch] md:text-[17px]">
+            <p className="text-sm text-ondark md:max-w-[48ch] md:text-base">
               Compara horarios y precios de todas las cooperativas de una ruta, elige tu asiento y recibe tu boleto
               digital con QR al instante.
             </p>
-            <ul className="mt-2 hidden flex-wrap gap-x-[22px] gap-y-2.5 text-sm text-ondark md:flex">
-              {LINEA_CONFIANZA.map((t) => (
-                <li key={t.texto} className="inline-flex items-center gap-2">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FDD514" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    {t.icono}
-                  </svg>
-                  {t.texto}
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </div>
