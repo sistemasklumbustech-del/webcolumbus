@@ -158,6 +158,11 @@ html {
     transform-box: fill-box;
   }
 }
+@media (prefers-reduced-motion: reduce) {
+  .mapa-salidas .mapa-bus {
+    display: none;
+  }
+}
 @keyframes mapa-flujo {
   to {
     stroke-dashoffset: -26;

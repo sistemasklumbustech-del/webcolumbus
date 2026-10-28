@@ -1,129 +1,150 @@
-import { claveCiudad, COORDENADAS_CIUDADES } from "@/lib/portada-datos";
+"use client";
 
-/**
- * Mapa de salidas de una terminal (portada nueva, oct-2026): el punto amarillo es la terminal y
- * las líneas punteadas llegan a cada destino. Las posiciones salen de coordenadas reales (latitud
- * y longitud) de las ciudades, así que el mapa sirve para cualquier terminal y cualquier lista de
- * destinos; una ciudad sin coordenadas conocidas simplemente no se dibuja.
- *
- * `hayMapaSalidas` dice de antemano si habrá algo que dibujar, para que quien lo usa pueda decidir
- * el diseño de la sección sin renderizar el mapa.
- */
+import { useState } from "react";
+import { MAPA_ALTO, MAPA_ANCHO, SILUETAS } from "@/lib/mapa-ecuador";
+import { puntosDelMapa, type DestinoMapa } from "@/lib/mapa-salidas";
+
+export type { DestinoMapa };
+
 interface Props {
   origen: string;
-  destinos: string[];
+  destinos: DestinoMapa[];
 }
 
-const TAM = 400;
 
-function puntosDelMapa(origen: string, destinos: string[]) {
-  const posOrigen = COORDENADAS_CIUDADES[claveCiudad(origen)];
-  if (!posOrigen) return null;
-  const vistos = new Set<string>();
-  const puntos = destinos
-    .map((d) => ({ nombre: d, coord: COORDENADAS_CIUDADES[claveCiudad(d)] }))
-    .filter((p): p is { nombre: string; coord: [number, number] } => {
-      const k = claveCiudad(p.nombre);
-      if (!p.coord || k === claveCiudad(origen) || vistos.has(k)) return false;
-      vistos.add(k);
-      return true;
-    });
-  if (puntos.length === 0) return null;
-  return { posOrigen, puntos };
-}
-
-export function hayMapaSalidas(origen: string, destinos: string[]): boolean {
-  return puntosDelMapa(origen, destinos) !== null;
-}
+/**
+ * Mapa de salidas de una terminal -- versión con mapa real (oct-2026, prueba de rediseño).
+ *
+ * Silueta real de Ecuador continental con Colombia y Perú alrededor (Natural Earth, ver
+ * lib/mapa-ecuador.ts). La terminal late en amarillo; de ella salen rutas curvas y un pequeño bus
+ * recorre cada una. Al pasar el mouse, enfocar o tocar una ciudad, su ruta se ilumina y debajo
+ * aparece la ficha del viaje (duración, salidas y precio "desde", si se conocen) con el botón para
+ * buscar pasajes. Las posiciones salen de coordenadas reales; una ciudad sin coordenadas no se dibuja.
+ *
+ * `hayMapaSalidas` (lib/mapa-salidas.ts) dice de antemano si habrá algo que dibujar.
+ */
+const ETIQUETA_PAIS = { font: "600 10px Poppins, sans-serif", letterSpacing: "0.22em", fill: "#6B7080" } as const;
 
 export function MapaSalidas({ origen, destinos }: Props) {
   const datos = puntosDelMapa(origen, destinos);
+  const [activa, setActiva] = useState<string | null>(datos?.puntos[0]?.clave ?? null);
   if (!datos) return null;
-  const { posOrigen, puntos } = datos;
-
-  // Proyección simple (equirectangular) ajustada al conjunto de puntos, con margen para las etiquetas.
-  const todos = [posOrigen, ...puntos.map((p) => p.coord)];
-  const lats = todos.map((c) => c[0]);
-  const lons = todos.map((c) => c[1]);
-  const latMin = Math.min(...lats);
-  const latMax = Math.max(...lats);
-  const lonMin = Math.min(...lons);
-  const lonMax = Math.max(...lons);
-  const factorLon = Math.cos((((latMin + latMax) / 2) * Math.PI) / 180);
-  const ancho = Math.max((lonMax - lonMin) * factorLon, 0.2);
-  const alto = Math.max(latMax - latMin, 0.2);
-  const margenX = 78;
-  const margenY = 52;
-  const escala = Math.min((TAM - 2 * margenX) / ancho, (TAM - 2 * margenY) / alto);
-  const offX = (TAM - ancho * escala) / 2;
-  const offY = (TAM - alto * escala) / 2;
-  const proyectar = ([lat, lon]: [number, number]): [number, number] => [
-    offX + (lon - lonMin) * factorLon * escala,
-    offY + (latMax - lat) * escala,
-  ];
-
-  const [ox, oy] = proyectar(posOrigen);
+  const { ox, oy, puntos } = datos;
+  const elegido = puntos.find((p) => p.clave === activa) ?? puntos[0];
 
   return (
-    <svg viewBox={`0 0 ${TAM} ${TAM}`} aria-hidden="true" className="h-full w-full">
-      <defs>
-        <pattern id="mapa-puntos" width="20" height="20" patternUnits="userSpaceOnUse">
-          <circle cx="1" cy="1" r="1" fill="#262A35" />
-        </pattern>
-      </defs>
-      <rect width={TAM} height={TAM} fill="url(#mapa-puntos)" />
-      <text
-        x="26"
-        y="200"
-        transform="rotate(-90 26 200)"
-        textAnchor="middle"
-        style={{ font: "500 11px Poppins, sans-serif", fill: "#9AA0AE" }}
-      >
-        Océano Pacífico
-      </text>
+    <div className="flex flex-col">
+      <svg viewBox={`0 0 ${MAPA_ANCHO} ${MAPA_ALTO}`} role="img" aria-label={`Mapa de salidas desde ${origen}`} className="mapa-salidas h-auto w-full">
+        <defs>
+          <radialGradient id="mapa-brillo" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#FDD514" stopOpacity=".16" />
+            <stop offset="100%" stopColor="#FDD514" stopOpacity="0" />
+          </radialGradient>
+        </defs>
 
-      <g className="mapa-salidas">
-        {puntos.map(({ nombre, coord }) => {
-          const [x, y] = proyectar(coord);
-          const cx = (ox + x) / 2 + (y < oy ? 26 : -22);
-          const cy = (oy + y) / 2;
+        {/* Países */}
+        <path d={SILUETAS.colombia} fill="#12151C" stroke="#262A35" strokeWidth="1" />
+        <path d={SILUETAS.peru} fill="#12151C" stroke="#262A35" strokeWidth="1" />
+        <path d={SILUETAS.ecuador} fill="#1D212B" stroke="#4A4F5C" strokeWidth="1.2" strokeLinejoin="round" />
+        <circle cx={ox} cy={oy} r="90" fill="url(#mapa-brillo)" />
+
+        <text x="300" y="34" style={ETIQUETA_PAIS}>COLOMBIA</text>
+        <text x="235" y="190" style={{ ...ETIQUETA_PAIS, fill: "#9AA0AE" }}>ECUADOR</text>
+        <text x="250" y="420" style={ETIQUETA_PAIS}>PERÚ</text>
+        <text x="22" y="150" transform="rotate(-90 22 150)" textAnchor="middle" style={{ ...ETIQUETA_PAIS, letterSpacing: "0.12em" }}>
+          OCÉANO PACÍFICO
+        </text>
+
+        {/* Rutas */}
+        {puntos.map((p, i) => {
+          const on = p.clave === elegido.clave;
           return (
-            <path
-              key={`r-${nombre}`}
-              className="ruta"
-              d={`M${ox.toFixed(1)} ${oy.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}`}
-              fill="none"
-              stroke="#FDD514"
-              strokeWidth="2"
-              strokeLinecap="round"
-              opacity=".85"
-            />
+            <g key={`r-${p.clave}`}>
+              <path
+                id={`ruta-${p.clave}`}
+                d={p.curva}
+                fill="none"
+                stroke="#FDD514"
+                strokeWidth={on ? 2.6 : 1.4}
+                strokeLinecap="round"
+                opacity={on ? 1 : 0.35}
+                className={on ? "ruta" : undefined}
+                style={{ transition: "opacity .25s, stroke-width .25s" }}
+              />
+              <circle r={on ? 4.5 : 3} fill="#FDD514" className="mapa-bus" opacity={on ? 1 : 0.7}>
+                <animateMotion dur={`${3 + (i % 3) * 0.6}s`} begin={`${(i * 0.45).toFixed(2)}s`} repeatCount="indefinite" rotate="auto">
+                  <mpath href={`#ruta-${p.clave}`} />
+                </animateMotion>
+              </circle>
+            </g>
           );
         })}
-        {puntos.map(({ nombre, coord }) => {
-          const [x, y] = proyectar(coord);
-          const derecha = x >= ox;
+
+        {/* Ciudades */}
+        {puntos.map((p) => {
+          const on = p.clave === elegido.clave;
           return (
-            <g key={`p-${nombre}`}>
-              <circle cx={x} cy={y} r="6" fill="#0B0D12" stroke="#fff" strokeWidth="2.5" />
+            <g
+              key={`p-${p.clave}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`Ruta ${origen} a ${p.ciudad}`}
+              aria-pressed={on}
+              onMouseEnter={() => setActiva(p.clave)}
+              onFocus={() => setActiva(p.clave)}
+              onClick={() => setActiva(p.clave)}
+              className="cursor-pointer outline-none"
+            >
+              <circle cx={p.x} cy={p.y} r="16" fill="transparent" />
+              <circle cx={p.x} cy={p.y} r={on ? 7 : 5.5} fill={on ? "#FDD514" : "#0B0D12"} stroke={on ? "#0B0D12" : "#fff"} strokeWidth="2.5" />
               <text
-                x={derecha ? x + 12 : x - 12}
-                y={y + 4}
-                textAnchor={derecha ? "start" : "end"}
-                style={{ font: "600 13px Poppins, sans-serif", fill: "#fff" }}
+                x={p.etiqueta.x}
+                y={p.etiqueta.y}
+                textAnchor={p.etiqueta.ancla}
+                paintOrder="stroke"
+                stroke="#0B0D12"
+                strokeWidth="4"
+                strokeLinejoin="round"
+                style={{ font: `${on ? 700 : 600} 13px Poppins, sans-serif`, fill: on ? "#FDD514" : "#fff" }}
               >
-                {nombre}
+                {p.ciudad}
               </text>
             </g>
           );
         })}
+
+        {/* Terminal de origen */}
         <circle className="pulso" cx={ox} cy={oy} r="12" fill="#FDD514" opacity=".6" />
-        <circle cx={ox} cy={oy} r="11" fill="#FDD514" stroke="#0B0D12" strokeWidth="3" />
-      </g>
-      <rect x={ox - 44} y={oy - 46} width="88" height="26" rx="13" fill="#FDD514" />
-      <text x={ox} y={oy - 29} textAnchor="middle" style={{ font: "700 13px Poppins, sans-serif", fill: "#0B0D12" }}>
-        {origen}
-      </text>
-    </svg>
+        <circle cx={ox} cy={oy} r="9" fill="#FDD514" stroke="#0B0D12" strokeWidth="3" />
+        <rect x={ox - 40} y={oy - 42} width="80" height="24" rx="12" fill="#FDD514" />
+        <text x={ox} y={oy - 26} textAnchor="middle" style={{ font: "700 12px Poppins, sans-serif", fill: "#0B0D12" }}>
+          {origen}
+        </text>
+      </svg>
+
+      {/* Ficha de la ruta elegida */}
+      <div className="mx-3 mb-3 flex items-center justify-between gap-3 rounded-[18px] bg-ink-2 p-3.5 shadow-[inset_0_0_0_1px_#262A35] md:mx-4 md:mb-4 md:p-4">
+        <div className="min-w-0">
+          <span className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-3">Toca una ciudad</span>
+          <b className="block truncate text-base font-semibold text-white">
+            {origen} <span className="text-kbyellow">→</span> {elegido.ciudad}
+          </b>
+          {elegido.detalle && <span className="block truncate text-xs text-ondark">{elegido.detalle}</span>}
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          {elegido.precio !== undefined && (
+            <div className="text-right leading-[1.1]">
+              <small className="block text-[11px] text-ondark">desde</small>
+              <b className="text-lg font-bold tabular-nums text-white">${elegido.precio.toFixed(2)}</b>
+            </div>
+          )}
+          <a href="#buscar" className="grid h-11 w-11 place-items-center rounded-tab bg-kbyellow text-ink" aria-label={`Buscar pasajes de ${origen} a ${elegido.ciudad}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }

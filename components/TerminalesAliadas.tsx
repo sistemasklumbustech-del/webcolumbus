@@ -4,7 +4,8 @@ import {
   obtenerEstadisticasPublicas,
 } from "@/lib/api";
 import { claveCiudad, REFERENCIA, rutasReales, terminalesReales } from "@/lib/portada-datos";
-import { hayMapaSalidas, MapaSalidas } from "./MapaSalidas";
+import { MapaSalidas } from "./MapaSalidas";
+import { hayMapaSalidas, type DestinoMapa } from "@/lib/mapa-salidas";
 
 /**
  * Terminal aliada -- portada nueva (oct-2026): mapa de salidas, nombre de la terminal, tres cifras y
@@ -35,11 +36,26 @@ export async function TerminalesAliadas() {
     : { nombre: terminales[0].nombre, ciudad: terminales[0].ciudad };
   const direccion = modoReferencia ? REFERENCIA.terminal.direccion : null;
 
-  const destinos = modoReferencia
-    ? REFERENCIA.destinos.map((d) => d.ciudad)
-    : rutasReales(listaRutas)
-        .filter((r) => claveCiudad(r.origenCiudad) === claveCiudad(principal.ciudad))
-        .map((r) => r.destinoCiudad);
+  // Destinos del mapa con su precio "desde" (y, con datos de referencia, duración y frecuencia).
+  const destinos: DestinoMapa[] = modoReferencia
+    ? REFERENCIA.destinos.map((d) => ({
+        ciudad: d.ciudad,
+        precio: d.precio,
+        detalle: `${d.duracion} · ${d.salidas.charAt(0).toLowerCase()}${d.salidas.slice(1)}`,
+      }))
+    : Array.from(
+        rutasReales(listaRutas)
+          .filter((r) => claveCiudad(r.origenCiudad) === claveCiudad(principal.ciudad))
+          .reduce((mapa, r) => {
+            const precio = Number(r.precioReferencia);
+            const previo = mapa.get(claveCiudad(r.destinoCiudad));
+            if (!previo || (Number.isFinite(precio) && precio < (previo.precio ?? Infinity))) {
+              mapa.set(claveCiudad(r.destinoCiudad), { ciudad: r.destinoCiudad, precio: Number.isFinite(precio) ? precio : undefined });
+            }
+            return mapa;
+          }, new Map<string, DestinoMapa>())
+          .values(),
+      );
 
   const cifras = modoReferencia
     ? [
@@ -73,7 +89,7 @@ export async function TerminalesAliadas() {
           <div
             role="img"
             aria-label={`Mapa de salidas desde ${principal.ciudad} hacia ${destinos.join(", ")}`}
-            className="relative aspect-square w-full max-w-[560px] md:max-w-[420px] overflow-hidden rounded-[28px] bg-[radial-gradient(120%_90%_at_30%_70%,#1d212b_0%,#171A22_55%,#11141a_100%)] shadow-[inset_0_0_0_1px_#262A35]"
+            className="relative w-full max-w-[560px] md:max-w-[420px] overflow-hidden rounded-[28px] bg-ink shadow-[inset_0_0_0_1px_#262A35]"
           >
             <MapaSalidas origen={principal.ciudad} destinos={destinos} />
           </div>
