@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { borrarToken, decodificarToken, obtenerToken, tokenExpirado, type PayloadToken } from "@/lib/auth";
 
 /**
@@ -30,15 +30,33 @@ const RUTA_CUENTA: Record<PayloadToken["rol"], string> = {
   pasajero: "/perfil",
 };
 
-function esActual(pathname: string, href: string) {
-  if (href === "/mis-boletos") return pathname === "/mis-boletos";
+function esActual(pathname: string, href: string, pestana: string | null) {
+  // /mis-boletos redirige a /perfil?tab=boletos: ahí también se marca "Mis boletos".
+  if (href === "/mis-boletos") return pathname === "/mis-boletos" || (pathname === "/perfil" && pestana === "boletos");
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function MenuSitio({ ocultarEnlaces = false, extraSinSesion }: { ocultarEnlaces?: boolean; extraSinSesion?: React.ReactNode }) {
+type Props = { ocultarEnlaces?: boolean; extraSinSesion?: React.ReactNode };
+
+/** useSearchParams exige un Suspense; mientras tanto se pinta el mismo menú sin leer la pestaña. */
+export function MenuSitio(props: Props) {
+  return (
+    <Suspense fallback={<MenuBase {...props} pestana={null} />}>
+      <MenuConPestana {...props} />
+    </Suspense>
+  );
+}
+
+function MenuConPestana(props: Props) {
+  return <MenuBase {...props} pestana={useSearchParams().get("tab")} />;
+}
+
+function MenuBase({ ocultarEnlaces = false, extraSinSesion, pestana }: Props & { pestana: string | null }) {
   const pathname = usePathname();
   const [payload, setPayload] = useState<PayloadToken | null>(null);
   const [abierto, setAbierto] = useState(false);
+  const botonMenu = useRef<HTMLButtonElement>(null);
+  const panelMenu = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const token = obtenerToken();
@@ -47,11 +65,29 @@ export function MenuSitio({ ocultarEnlaces = false, extraSinSesion }: { ocultarE
     setAbierto(false);
   }, [pathname]);
 
+  // Se cierra con Esc o tocando fuera del menú; al cerrarse, el foco vuelve al botón de las tres rayitas.
   useEffect(() => {
     if (!abierto) return;
-    const alEscape = (e: KeyboardEvent) => e.key === "Escape" && setAbierto(false);
+    const cerrar = () => {
+      setAbierto(false);
+      botonMenu.current?.focus();
+    };
+    const alEscape = (e: KeyboardEvent) => e.key === "Escape" && cerrar();
+    const alTocarFuera = (e: PointerEvent) => {
+      const objetivo = e.target as Node;
+      if (panelMenu.current?.contains(objetivo) || botonMenu.current?.contains(objetivo)) return;
+      setAbierto(false);
+      // El navegador mueve el foco al terminar el toque; se devuelve al botón después de ese paso.
+      const devolverFoco = () => botonMenu.current?.focus();
+      document.addEventListener("click", devolverFoco, { once: true, capture: false });
+      window.setTimeout(() => document.removeEventListener("click", devolverFoco), 1000);
+    };
     window.addEventListener("keydown", alEscape);
-    return () => window.removeEventListener("keydown", alEscape);
+    document.addEventListener("pointerdown", alTocarFuera);
+    return () => {
+      window.removeEventListener("keydown", alEscape);
+      document.removeEventListener("pointerdown", alTocarFuera);
+    };
   }, [abierto]);
 
   function salir() {
@@ -67,7 +103,7 @@ export function MenuSitio({ ocultarEnlaces = false, extraSinSesion }: { ocultarE
       {!ocultarEnlaces && (
         <nav aria-label="Menú principal" className="hidden items-center gap-[30px] md:flex">
           {ENLACES_MENU.map((e) => {
-            const actual = esActual(pathname, e.href);
+            const actual = esActual(pathname, e.href, pestana);
             return (
               <Link
                 key={e.href}
@@ -100,6 +136,7 @@ export function MenuSitio({ ocultarEnlaces = false, extraSinSesion }: { ocultarE
       {!ocultarEnlaces && (
         <>
           <button
+            ref={botonMenu}
             type="button"
             onClick={() => setAbierto((a) => !a)}
             aria-expanded={abierto}
@@ -114,12 +151,13 @@ export function MenuSitio({ ocultarEnlaces = false, extraSinSesion }: { ocultarE
 
           {abierto && (
             <nav
+              ref={panelMenu}
               id="menu-celular"
               aria-label="Menú principal"
               className="fixed left-4 right-4 top-[68px] z-50 flex flex-col gap-1 rounded-card bg-ink-2 p-3 shadow-float md:hidden"
             >
               {ENLACES_MENU.map((e) => {
-                const actual = esActual(pathname, e.href);
+                const actual = esActual(pathname, e.href, pestana);
                 return (
                   <Link
                     key={e.href}
