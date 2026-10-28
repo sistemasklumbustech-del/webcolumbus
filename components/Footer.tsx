@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogoKlumbus } from "./LogoKlumbus";
 import { obtenerContactoSoporte, type ContactoSoporte } from "@/lib/api";
@@ -67,7 +68,7 @@ export function Footer() {
   const pathname = usePathname();
   const [contacto, setContacto] = useState<ContactoSoporte>({ correo: null, telefono: null });
   // Columnas abiertas en celular (la primera abierta de inicio); en PC siempre se ven todas.
-  const [abiertas, setAbiertas] = useState<Set<string>>(new Set(["compania"]));
+  const [abiertas, setAbiertas] = useState<Set<string>>(new Set(["explora"]));
   function alternar(id: string) {
     setAbiertas((actual) => {
       const nuevo = new Set(actual);
@@ -90,73 +91,98 @@ export function Footer() {
   }
 
   const esPortada = pathname === "/";
+  const telefono = formatearTelefono(contacto.telefono);
 
   return (
     <footer className={`kb-footer ${esPortada ? "mt-0 pb-20 md:pb-0" : "mt-8 md:mt-[72px]"}`}>
-      <div className="mx-auto grid max-w-[1280px] gap-2 px-5 pb-[34px] pt-9 md:grid-cols-[1.6fr_1fr_1fr_auto] md:gap-8 md:px-16 md:pb-12 md:pt-12">
-        <div className="pb-4 md:pb-0">
-          <LogoKlumbus className="mb-3 h-[26px] md:h-[30px]" />
-          <p className="max-w-[34ch] text-[13px] md:text-sm">
-            Compra tu pasaje de bus en Ecuador de forma simple y segura.
-          </p>
+      <div className="mx-auto max-w-[1280px] px-5 pt-9 md:px-16 md:pt-14">
+        <div className="grid gap-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] md:gap-10">
+          {/* Marca y contacto */}
+          <div className="pb-5 md:pb-0">
+            <LogoKlumbus className="mb-3.5 h-[26px] md:h-[30px]" />
+            <p className="max-w-[32ch] text-[13px] leading-relaxed md:text-sm">
+              Compra tu pasaje de bus en Ecuador de forma simple y segura.
+            </p>
+            {(contacto.correo || telefono) && (
+              <ul className="mt-5 space-y-2.5 text-[13px] md:text-sm">
+                {telefono && (
+                  <li>
+                    <a href={`tel:${telefono.enlace}`} className="group inline-flex items-center gap-2.5 text-white">
+                      <span className="grid h-9 w-9 place-items-center rounded-xl bg-ink-2 shadow-[inset_0_0_0_1px_#262A35] transition-colors group-hover:bg-kbyellow group-hover:text-ink">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />
+                        </svg>
+                      </span>
+                      {telefono.texto}
+                    </a>
+                  </li>
+                )}
+                {contacto.correo && (
+                  <li>
+                    <a href={`mailto:${contacto.correo}`} className="group inline-flex items-center gap-2.5 text-white">
+                      <span className="grid h-9 w-9 place-items-center rounded-xl bg-ink-2 shadow-[inset_0_0_0_1px_#262A35] transition-colors group-hover:bg-kbyellow group-hover:text-ink">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <rect x="3" y="5" width="18" height="14" rx="2" />
+                          <path d="M3 7l9 6 9-6" />
+                        </svg>
+                      </span>
+                      <span className="break-all">{contacto.correo}</span>
+                    </a>
+                  </li>
+                )}
+              </ul>
+            )}
+          </div>
+
+          <Columna abierta={abiertas.has("explora")} alAlternar={alternar} id="explora" titulo="Explora">
+            <ul className="space-y-2.5 text-[13px] md:text-sm">
+              <li><Link href="/#destinos" className="hover:text-white">Destinos</Link></li>
+              <li><a href="/rutas" className="hover:text-white">Rutas y horarios</a></li>
+              <li><a href="/cooperativas" className="hover:text-white">Cooperativas</a></li>
+              <li><Link href="/#como" className="hover:text-white">Cómo funciona</Link></li>
+            </ul>
+          </Columna>
+
+          <Columna abierta={abiertas.has("compania")} alAlternar={alternar} id="compania" titulo="Compañía">
+            <ul className="space-y-2.5 text-[13px] md:text-sm">
+              <li><a href="/ayuda" className="hover:text-white">Ayuda</a></li>
+              <li><a href="/anunciar" className="hover:text-white">Anuncia con nosotros</a></li>
+              <li><a href="/ingresar" className="hover:text-white">Iniciar sesión</a></li>
+              <li><a href="/registro" className="hover:text-white">Crear cuenta</a></li>
+            </ul>
+          </Columna>
+
+          <Columna abierta={abiertas.has("legal")} alAlternar={alternar} id="legal" titulo="Legal">
+            <ul className="space-y-2.5 text-[13px] md:text-sm">
+              <li><a href="/terminos" className="hover:text-white">Términos de Servicio</a></li>
+              <li><a href="/privacidad" className="hover:text-white">Política de Privacidad</a></li>
+            </ul>
+          </Columna>
         </div>
 
-        <Columna abierta={abiertas.has("compania")} alAlternar={alternar} id="compania" titulo="Compañía">
-          <ul className="space-y-2 text-[13px] md:text-sm">
-            <li>
-              <a href="/anunciar" className="hover:text-white">
-                Anuncia con nosotros
-              </a>
-            </li>
-            <li>
-              <a href="/ingresar" className="hover:text-white">
-                Iniciar sesión
-              </a>
-            </li>
-          </ul>
-        </Columna>
-
-        <Columna abierta={abiertas.has("legal")} alAlternar={alternar} id="legal" titulo="Legal">
-          <ul className="space-y-2 text-[13px] md:text-sm">
-            <li>
-              <a href="/terminos" className="hover:text-white">
-                Términos de Servicio
-              </a>
-            </li>
-            <li>
-              <a href="/privacidad" className="hover:text-white">
-                Política de Privacidad
-              </a>
-            </li>
-          </ul>
-        </Columna>
-
-        <Columna abierta={abiertas.has("ayuda")} alAlternar={alternar} id="ayuda" titulo="Ayuda">
-          <ul className="space-y-2 text-[13px] md:text-sm">
-            {contacto.correo && (
-              <li>
-                <a href={`mailto:${contacto.correo}`} className="whitespace-nowrap hover:text-white">
-                  {contacto.correo}
-                </a>
-              </li>
-            )}
-            {contacto.telefono && (
-              <li>
-                <a href={`tel:${contacto.telefono}`} className="hover:text-white">
-                  {contacto.telefono}
-                </a>
-              </li>
-            )}
-            {!contacto.correo && !contacto.telefono && (
-              <li className="text-muted-3">Próximamente</li>
-            )}
-          </ul>
-        </Columna>
-
-        <div className="border-t border-ink-3 pt-4 text-xs text-muted-3 md:col-span-4 md:pt-[18px] md:text-[13px]">
-          © {new Date().getFullYear()} Klumbus. Todos los derechos reservados.
+        <div className="mt-2 flex flex-col gap-1.5 border-t border-ink-3 py-5 text-xs text-muted-3 md:mt-12 md:flex-row md:items-center md:justify-between md:text-[13px]">
+          <span>© {new Date().getFullYear()} Klumbus. Todos los derechos reservados.</span>
+          <span>Pasajes de bus en línea · Ecuador</span>
         </div>
       </div>
     </footer>
   );
+}
+
+/**
+ * Muestra el teléfono de soporte con el prefijo de Ecuador: "0995632587" -> "+593 99 563 2587"
+ * (y el enlace "tel:+593995632587"). Si el número ya trae prefijo o tiene otra forma, se deja igual.
+ */
+function formatearTelefono(telefono: string | null): { texto: string; enlace: string } | null {
+  if (!telefono) return null;
+  const digitos = telefono.replace(/\D/g, "");
+  if (/^0\d{9}$/.test(digitos)) {
+    const n = digitos.slice(1);
+    return { texto: `+593 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}`, enlace: `+593${n}` };
+  }
+  if (/^593\d{9}$/.test(digitos)) {
+    const n = digitos.slice(3);
+    return { texto: `+593 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}`, enlace: `+593${n}` };
+  }
+  return { texto: telefono, enlace: telefono.replace(/\s/g, "") };
 }
