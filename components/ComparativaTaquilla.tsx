@@ -40,10 +40,10 @@ function Palomita() {
 
 export function ComparativaTaquilla() {
   return (
-    <section id="porque" className="mt-14 scroll-mt-20 bg-kbyellow py-14 text-ink md:mt-[72px] md:py-[88px]">
+    <section id="porque" className="mt-14 scroll-mt-20 bg-kbyellow py-14 text-ink md:mt-14 md:py-16">
       <div className="mx-auto max-w-[1280px] px-5 md:px-16">
         <span className="kb-eyebrow-barra !text-ink [&]:before:!bg-ink">¿Por qué Klumbus?</span>
-        <h2 className="mt-1.5 text-[27px] font-bold leading-[1.1] tracking-[-0.025em] md:text-[44px]">
+        <h2 className="mt-1.5 text-[27px] font-bold leading-[1.1] tracking-[-0.025em] md:text-[34px]">
           Deja la fila.
           <br />
           Viaja tranquilo.

@@ -28,7 +28,7 @@ export async function RutasDisponibles() {
         <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
           <div>
             <span className="kb-eyebrow-barra">Horarios y precios</span>
-            <h2 className="text-[27px] font-bold leading-[1.1] tracking-[-0.025em] md:text-[40px]">
+            <h2 className="text-[27px] font-bold leading-[1.1] tracking-[-0.025em] md:text-[32px]">
               Rutas desde <em className="kb-marca">{REFERENCIA.terminal.ciudad}</em>
             </h2>
           </div>

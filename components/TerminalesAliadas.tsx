@@ -67,13 +67,13 @@ export async function TerminalesAliadas() {
   const otras = terminales.slice(1);
 
   return (
-    <section id="terminal" className="mt-[30px] scroll-mt-20 overflow-hidden bg-ink py-14 text-white md:mt-16 md:py-[104px]">
-      <div className={`mx-auto grid max-w-[1280px] items-center gap-8 px-5 md:px-16 ${hayMapa ? "md:grid-cols-2 md:gap-[72px]" : ""}`}>
+    <section id="terminal" className="mt-[30px] scroll-mt-20 overflow-hidden bg-ink py-14 text-white md:mt-14 md:py-16">
+      <div className={`mx-auto grid max-w-[1280px] items-center gap-8 px-5 md:px-16 ${hayMapa ? "md:grid-cols-[420px_1fr] md:gap-16" : ""}`}>
         {hayMapa && (
           <div
             role="img"
             aria-label={`Mapa de salidas desde ${principal.ciudad} hacia ${destinos.join(", ")}`}
-            className="relative aspect-square w-full max-w-[560px] overflow-hidden rounded-[28px] bg-[radial-gradient(120%_90%_at_30%_70%,#1d212b_0%,#171A22_55%,#11141a_100%)] shadow-[inset_0_0_0_1px_#262A35]"
+            className="relative aspect-square w-full max-w-[560px] md:max-w-[420px] overflow-hidden rounded-[28px] bg-[radial-gradient(120%_90%_at_30%_70%,#1d212b_0%,#171A22_55%,#11141a_100%)] shadow-[inset_0_0_0_1px_#262A35]"
           >
             <MapaSalidas origen={principal.ciudad} destinos={destinos} />
           </div>
@@ -85,7 +85,7 @@ export async function TerminalesAliadas() {
             </svg>
             Terminal aliada
           </span>
-          <h2 className="mb-2.5 mt-3.5 text-[28px] font-bold leading-[1.08] tracking-[-0.025em] md:text-[46px]">{principal.nombre}</h2>
+          <h2 className="mb-2.5 mt-3.5 text-[28px] font-bold leading-[1.08] tracking-[-0.025em] md:text-[36px]">{principal.nombre}</h2>
           <p className="max-w-[46ch] text-ondark">
             Compra en línea y ve directo al andén. Tu boleto ya está en tu celular, sin pasar por la taquilla.
           </p>

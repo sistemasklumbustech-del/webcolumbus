@@ -55,7 +55,7 @@ export function TablaRutasReferencia() {
           <a
             key={d.ciudad}
             href="#buscar"
-            className={`grid grid-cols-[1fr_auto] items-center gap-x-3.5 gap-y-1 px-[18px] py-4 transition-colors hover:bg-[#FBFBFC] md:gap-4 md:px-7 ${COLUMNAS} ${i > 0 ? "border-t border-line" : ""}`}
+            className={`grid grid-cols-[1fr_auto] items-center gap-x-3.5 gap-y-1 px-[18px] py-4 transition-colors md:py-3 hover:bg-[#FBFBFC] md:gap-4 md:px-7 ${COLUMNAS} ${i > 0 ? "border-t border-line" : ""}`}
           >
             <div className="flex min-w-0 items-center gap-3">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] bg-kbbg">

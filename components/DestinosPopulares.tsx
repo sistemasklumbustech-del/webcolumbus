@@ -74,7 +74,7 @@ export async function DestinosPopulares() {
         </p>
       </div>
 
-      <div className="-mx-5 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-5 pb-2.5 [-ms-overflow-style:none] [scrollbar-width:none] md:mx-0 md:grid md:snap-none md:grid-cols-4 md:auto-rows-[240px] md:gap-[18px] md:overflow-visible md:px-0 md:pb-0 [&::-webkit-scrollbar]:hidden">
+      <div className="-mx-5 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-5 pb-2.5 [-ms-overflow-style:none] [scrollbar-width:none] md:mx-0 md:grid md:snap-none md:grid-cols-4 md:auto-rows-[170px] md:gap-[18px] md:overflow-visible md:px-0 md:pb-0 [&::-webkit-scrollbar]:hidden">
         {TILES.map((t, i) => {
           const ref = REFERENCIA.destinos.find((d) => claveCiudad(d.ciudad) === claveCiudad(t.ciudad));
           const precio = modoReferencia ? ref?.precio : reales.get(claveCiudad(t.ciudad));
@@ -107,7 +107,7 @@ export async function DestinosPopulares() {
               )}
               <div className="absolute inset-x-5 bottom-5 flex items-end justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className={`font-bold leading-none tracking-[-0.02em] ${t.forma === "grande" ? "text-[30px] md:text-[46px]" : "text-[30px]"}`}>
+                  <h3 className={`font-bold leading-none tracking-[-0.02em] ${t.forma === "grande" ? "text-[30px] md:text-[38px]" : "text-[30px]"}`}>
                     {t.ciudad}
                   </h3>
                   <span className="mt-2 block text-[13px] text-ondark">{meta}</span>

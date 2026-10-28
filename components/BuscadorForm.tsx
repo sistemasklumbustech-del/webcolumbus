@@ -97,6 +97,9 @@ export function BuscadorForm() {
   const [vueltaDestino, setVueltaDestino] = useState<PuntoOperacion | null | undefined>(undefined);
   const [fechaVuelta, setFechaVuelta] = useState(hoyISO());
   const [franjaVuelta, setFranjaVuelta] = useState("");
+  // Solo apariencia: la vuelta muestra únicamente su fecha y hora (la ruta se invierte sola, como en
+  // FlixBus o Busbud). Los campos de otra ruta de regreso se abren con "Cambiar ruta de vuelta".
+  const [verRutaVuelta, setVerRutaVuelta] = useState(false);
   const [pasajeros, setPasajeros] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
@@ -156,7 +159,6 @@ export function BuscadorForm() {
     router.push(`/buscar?${params.toString()}`);
   }
 
-  const claseTitulo = "mb-2 flex items-center gap-2 text-sm font-semibold text-ink";
   const claseGrilla = "grid grid-cols-2 gap-2.5 lg:grid-cols-[1fr_1fr_190px_210px]";
   const claseNumeroTramo = "rounded-full bg-kbyellow px-2 py-0.5 text-xs font-bold text-ink";
 
@@ -175,11 +177,6 @@ export function BuscadorForm() {
       </div>
 
       <section aria-label={idaYVuelta ? "Viaje de ida" : "Viaje"}>
-        {idaYVuelta && (
-          <p className={claseTitulo}>
-            <span className={claseNumeroTramo}>1</span> Ida
-          </p>
-        )}
         <div className={claseGrilla}>
           <Casilla icono={PUNTO_ORIGEN} className="col-span-2 lg:col-span-1">
             <SelectorCiudad etiqueta="Origen" placeholder="¿Desde dónde sales?" valor={origen} onCambio={setOrigen} compacto />
@@ -205,34 +202,31 @@ export function BuscadorForm() {
       </section>
 
       {idaYVuelta && (
-        <section aria-label="Viaje de vuelta" className="border-t border-line pt-4">
-          <p className={claseTitulo}>
-            <span className={claseNumeroTramo}>2</span> Vuelta
-          </p>
-          <div className={claseGrilla}>
-            {/* key: si cambia el destino/origen de la ida y la vuelta lo
-                sigue automáticamente, el selector se vuelve a crear para
-                mostrar la ciudad nueva. */}
-            <Casilla icono={PUNTO_ORIGEN} className="col-span-2 lg:col-span-1">
-              <SelectorCiudad
-                key={`vuelta-origen-${vueltaOrigen === undefined ? (destino?.id ?? "vacio") : "manual"}`}
-                etiqueta="Origen de la vuelta"
-                placeholder="¿Desde dónde regresas?"
-                valor={origenDeVuelta ?? null}
-                onCambio={setVueltaOrigen}
-                compacto
-              />
-            </Casilla>
-            <Casilla icono={PUNTO_DESTINO} className="col-span-2 lg:col-span-1">
-              <SelectorCiudad
-                key={`vuelta-destino-${vueltaDestino === undefined ? (origen?.id ?? "vacio") : "manual"}`}
-                etiqueta="Destino de la vuelta"
-                placeholder="¿A dónde regresas?"
-                valor={destinoDeVuelta ?? null}
-                onCambio={setVueltaDestino}
-                compacto
-              />
-            </Casilla>
+        <section aria-label="Viaje de vuelta" className="flex flex-col gap-2.5">
+          <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-[1fr_190px_210px] lg:items-center">
+            <p className="col-span-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-2 lg:col-span-1">
+              <span className={claseNumeroTramo}>Vuelta</span>
+              {!verRutaVuelta && (
+                <span className="font-medium text-ink">
+                  {origenDeVuelta && destinoDeVuelta
+                    ? `${origenDeVuelta.ciudad} → ${destinoDeVuelta.ciudad}`
+                    : "La misma ruta, al revés"}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (verRutaVuelta) {
+                    setVueltaOrigen(undefined);
+                    setVueltaDestino(undefined);
+                  }
+                  setVerRutaVuelta((v) => !v);
+                }}
+                className="font-semibold text-ink underline underline-offset-2"
+              >
+                {verRutaVuelta ? "Usar la misma ruta" : "Cambiar ruta de vuelta"}
+              </button>
+            </p>
             <Casilla icono={ICONO_FECHA}>
               <CampoFecha etiqueta="Fecha de vuelta" valor={fechaVuelta} minimo={fecha} onCambio={(v) => setFechaVuelta(v)} />
             </Casilla>
@@ -240,6 +234,33 @@ export function BuscadorForm() {
               <SelectorHora id="buscador-hora-vuelta" valor={franjaVuelta} onCambio={setFranjaVuelta} />
             </Casilla>
           </div>
+          {verRutaVuelta && (
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* key: si cambia el destino/origen de la ida y la vuelta lo
+                  sigue automáticamente, el selector se vuelve a crear para
+                  mostrar la ciudad nueva. */}
+              <Casilla icono={PUNTO_ORIGEN} className="col-span-2 lg:col-span-1">
+                <SelectorCiudad
+                  key={`vuelta-origen-${vueltaOrigen === undefined ? (destino?.id ?? "vacio") : "manual"}`}
+                  etiqueta="Origen de la vuelta"
+                  placeholder="¿Desde dónde regresas?"
+                  valor={origenDeVuelta ?? null}
+                  onCambio={setVueltaOrigen}
+                  compacto
+                />
+              </Casilla>
+              <Casilla icono={PUNTO_DESTINO} className="col-span-2 lg:col-span-1">
+                <SelectorCiudad
+                  key={`vuelta-destino-${vueltaDestino === undefined ? (origen?.id ?? "vacio") : "manual"}`}
+                  etiqueta="Destino de la vuelta"
+                  placeholder="¿A dónde regresas?"
+                  valor={destinoDeVuelta ?? null}
+                  onCambio={setVueltaDestino}
+                  compacto
+                />
+              </Casilla>
+            </div>
+          )}
         </section>
       )}
 
