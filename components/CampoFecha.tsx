@@ -24,11 +24,13 @@ function fechaAIso(fecha: Date): string {
   return `${anio}-${mes}-${dia}`;
 }
 
+const DIAS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+/** "2026-10-28" -> "Mié 28 oct" (indicación del director: la fecha con su día de la semana). */
 function formatoCorto(iso: string): string {
-  return isoAFecha(iso).toLocaleDateString("es-EC", {
-    day: "2-digit",
-    month: "short",
-  });
+  const f = isoAFecha(iso);
+  return `${DIAS[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]}`;
 }
 
 /**

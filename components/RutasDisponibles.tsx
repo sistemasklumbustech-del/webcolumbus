@@ -55,10 +55,10 @@ export async function RutasDisponibles() {
         )}
       </div>
       <div className="flex flex-col gap-2.5 md:grid md:grid-cols-3 md:gap-4">
-        {rutas.map((r) => (
+        {rutas.map((r, i) => (
           <div
             key={r.rutaId}
-            className="flex items-center gap-3 rounded-[20px] bg-white p-3.5 shadow-[0_2px_12px_rgba(11,13,18,.04)] md:rounded-card md:p-4 md:shadow-card"
+            className={`${i >= 4 ? "max-md:hidden " : ""}flex items-center gap-3 rounded-[20px] bg-white p-3.5 shadow-[0_2px_12px_rgba(11,13,18,.04)] md:rounded-card md:p-4 md:shadow-card`}
           >
             <span
               className="hidden h-[60px] w-[60px] shrink-0 place-items-center rounded-ctrl bg-[linear-gradient(135deg,#262A35,#0B0D12)] text-[13px] font-bold uppercase text-kbyellow md:grid"
@@ -87,6 +87,15 @@ export async function RutasDisponibles() {
           </div>
         ))}
       </div>
+      {/* En celular solo las primeras 4, con un botón para ver todas (indicación del director). */}
+      {rutas.length > 4 && (
+        <a href="/rutas" className="kb-btn mt-3 flex w-full items-center justify-center gap-2 bg-white text-[15px] font-semibold text-ink shadow-[inset_0_0_0_1.5px_#E9EBF0] md:hidden">
+          Ver todas las rutas ({rutas.length})
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+      )}
     </section>
   );
 }

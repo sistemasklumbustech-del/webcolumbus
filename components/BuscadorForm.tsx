@@ -38,7 +38,7 @@ function Casilla({
 }) {
   return (
     <div
-      className={`flex min-w-0 items-center gap-3 rounded-[18px] border-[1.5px] border-transparent bg-kbbg px-4 py-2.5 focus-within:border-ink focus-within:bg-white md:min-h-16 md:px-[18px] md:py-3 ${className}`}
+      className={`flex min-w-0 items-center gap-2 rounded-[18px] border-[1.5px] border-transparent bg-kbbg px-3 py-2.5 sm:gap-3 sm:px-4 focus-within:border-ink focus-within:bg-white md:min-h-16 md:px-[18px] md:py-3 ${className}`}
     >
       {icono}
       <div className="min-w-0 flex-1">{children}</div>
@@ -64,7 +64,7 @@ function SelectorHora({
         id={id}
         value={valor}
         onChange={(e) => onCambio(e.target.value)}
-        className="w-full bg-transparent p-0 text-sm font-semibold text-ink focus:outline-none md:text-[15px]"
+        className="w-full bg-transparent p-0 text-[13px] font-semibold text-ink focus:outline-none sm:text-sm md:text-[15px]"
       >
         <option value="">Cualquier hora</option>
         {FRANJAS_HORARIO.map((f) => (
@@ -159,7 +159,8 @@ export function BuscadorForm() {
     router.push(`/buscar?${params.toString()}`);
   }
 
-  const claseGrilla = "grid grid-cols-2 gap-2.5 lg:grid-cols-[1fr_1fr_190px_210px]";
+  // En celular la hora lleva un poco más de ancho que la fecha, para que "Cualquier hora" se lea completo.
+  const claseGrilla = "grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-2.5 lg:grid-cols-[1fr_1fr_190px_210px]";
   const claseNumeroTramo = "rounded-full bg-kbyellow px-2 py-0.5 text-xs font-bold text-ink";
 
   return (
@@ -203,7 +204,7 @@ export function BuscadorForm() {
 
       {idaYVuelta && (
         <section aria-label="Viaje de vuelta" className="flex flex-col gap-2.5">
-          <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-[1fr_190px_210px] lg:items-center">
+          <div className="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-2.5 lg:grid-cols-[1fr_190px_210px] lg:items-center">
             <p className="col-span-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-2 lg:col-span-1">
               <span className={claseNumeroTramo}>Vuelta</span>
               {!verRutaVuelta && (

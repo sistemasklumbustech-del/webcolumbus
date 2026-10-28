@@ -18,6 +18,9 @@ const REGIONES: { valor: "todas" | RegionRuta; etiqueta: string }[] = [
   { valor: "int", etiqueta: "Perú" },
 ];
 
+/** En celular se muestran solo las primeras rutas y un botón para ver todas (indicación del director). */
+const EN_CELULAR = 4;
+
 export function TablaRutasReferencia() {
   const [region, setRegion] = useState<"todas" | RegionRuta>("todas");
   const filas = REFERENCIA.destinos.filter((d) => region === "todas" || d.region === region);
@@ -42,8 +45,8 @@ export function TablaRutasReferencia() {
       </div>
 
       <ul className="mt-4 grid gap-2.5 sm:grid-cols-2 md:mt-5 md:gap-4 lg:grid-cols-4">
-        {filas.map((d) => (
-          <li key={d.ciudad}>
+        {filas.map((d, i) => (
+          <li key={d.ciudad} className={i >= EN_CELULAR ? "max-md:hidden" : undefined}>
             <a
               href="#buscar"
               className="kb-card group flex h-full items-center gap-3.5 !p-4 transition-shadow hover:shadow-float sm:flex-col sm:items-stretch sm:gap-4 md:!p-5"
@@ -87,6 +90,14 @@ export function TablaRutasReferencia() {
           </li>
         ))}
       </ul>
+      {filas.length > EN_CELULAR && (
+        <a href="/rutas" className="kb-btn mt-3 flex w-full items-center justify-center gap-2 bg-white text-[15px] font-semibold text-ink shadow-[inset_0_0_0_1.5px_#E9EBF0] md:hidden">
+          Ver todas las rutas ({filas.length})
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+      )}
     </>
   );
 }

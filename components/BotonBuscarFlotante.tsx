@@ -13,27 +13,31 @@ export function BotonBuscarFlotante({ objetivoId }: { objetivoId: string }) {
   useEffect(() => {
     const objetivo = document.getElementById(objetivoId);
     if (!objetivo) return;
-    // Se muestra cuando el buscador ya quedó arriba y se esconde al llegar al pie de página,
-    // para no tapar el contacto ni los enlaces del final.
+    // Regla del director: nunca dos botones de búsqueda a la vez ni tapando contenido. El botón solo
+    // aparece cuando el buscador ya quedó arriba y no se ve ninguna zona que tenga su propio botón de
+    // búsqueda o que no deba taparse: la sección amarilla "¿Por qué Klumbus?" y el pie de página.
+    const zonas = [document.getElementById("porque"), document.querySelector("footer")].filter(
+      (el): el is HTMLElement => el !== null,
+    );
     let buscadorArriba = false;
-    let pieVisible = false;
-    const actualizar = () => setVisible(buscadorArriba && !pieVisible);
+    const zonasVisibles = new Set<Element>();
     const observador = new IntersectionObserver(
       (entradas) => {
         for (const entrada of entradas) {
           if (entrada.target === objetivo) {
             buscadorArriba = !entrada.isIntersecting && entrada.boundingClientRect.top < 0;
+          } else if (entrada.isIntersecting) {
+            zonasVisibles.add(entrada.target);
           } else {
-            pieVisible = entrada.isIntersecting;
+            zonasVisibles.delete(entrada.target);
           }
         }
-        actualizar();
+        setVisible(buscadorArriba && zonasVisibles.size === 0);
       },
       { threshold: 0 },
     );
     observador.observe(objetivo);
-    const pie = document.querySelector("footer");
-    if (pie) observador.observe(pie);
+    zonas.forEach((z) => observador.observe(z));
     return () => observador.disconnect();
   }, [objetivoId]);
 
