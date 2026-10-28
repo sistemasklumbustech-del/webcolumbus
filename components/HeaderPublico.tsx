@@ -67,7 +67,7 @@ export function HeaderPublico() {
               extraSinSesion={
                 <Link
                   href="/registro"
-                  className="hidden min-h-11 items-center whitespace-nowrap rounded-tab bg-kbyellow px-3.5 sm:flex text-[13px] font-semibold text-ink transition hover:bg-[#F2C800] md:px-[18px] md:text-sm"
+                  className="hidden min-h-11 items-center whitespace-nowrap rounded-tab px-2 text-sm font-semibold text-white underline-offset-4 transition hover:text-kbyellow hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kbyellow lg:flex"
                 >
                   Registrarse
                 </Link>

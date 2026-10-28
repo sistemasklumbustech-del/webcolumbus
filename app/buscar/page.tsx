@@ -14,13 +14,15 @@ import { SinResultadosAlternativas } from "./SinResultadosAlternativas";
 import { TiraFechas } from "./TiraFechas";
 import { construirQuery } from "@/lib/buscar-url";
 import { FRANJAS_HORARIO } from "@/lib/franjas-horario";
+import { estimarTrayecto } from "@/lib/trayecto";
 
+const DIAS_CORTOS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+/** "2026-10-29" -> "Jue 29 oct" (formato corto del encabezado, igual que el buscador). */
 function formatearFecha(fecha: string): string {
-  return new Date(`${fecha}T00:00:00`).toLocaleDateString("es-EC", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  const [a, m, d] = fecha.split("-").map(Number);
+  return `${DIAS_CORTOS[new Date(Date.UTC(a, m - 1, d)).getUTCDay()]} ${d} ${MESES_CORTOS[m - 1]}`;
 }
 
 export default async function ResultadosBusquedaPage({
@@ -214,8 +216,11 @@ export default async function ResultadosBusquedaPage({
   function ordenar(lista: ResultadoViaje[]): ResultadoViaje[] {
     const copia = [...lista];
     switch (ordenarPor) {
-      case "precio_desc":
-        return copia.sort((a, b) => Number(b.precioBase) - Number(a.precioBase));
+      case "duracion": {
+        // "Más rápido": duración del viaje (misma estimación que muestra la tarjeta); sin dato, al final.
+        const minutos = (r: ResultadoViaje) => estimarTrayecto(r)?.minutos ?? Number.POSITIVE_INFINITY;
+        return copia.sort((a, b) => minutos(a) - minutos(b) || Number(a.precioBase) - Number(b.precioBase));
+      }
       case "salida_temprano":
         return copia.sort(
           (a, b) => new Date(a.horaSalidaProgramada).getTime() - new Date(b.horaSalidaProgramada).getTime(),
@@ -460,8 +465,7 @@ export default async function ResultadosBusquedaPage({
           <div className={mostrandoVuelta ? "lg:col-span-2" : ""}>
             <div className="mb-3.5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <p className="text-sm text-muted-2">
-                {grupos.length} cooperativa{grupos.length !== 1 ? "s" : ""} disponible
-                {grupos.length !== 1 ? "s" : ""} para esta ruta
+                {resultadosAMostrar.length} {resultadosAMostrar.length === 1 ? "salida disponible" : "salidas disponibles"}
               </p>
               {grupos.length > 0 && <OrdenarPor />}
             </div>

@@ -21,6 +21,27 @@ function formatearHora(iso: string): string {
     .replace(/[  ]/g, " ");
 }
 
+/**
+ * Nombre corto del terminal para el celular: "Terminal Terrestre Quitumbe" -> "Quitumbe". Se quitan
+ * las palabras genéricas y la ciudad; si no queda nada (ej. "Terminal Terrestre de Machala"), no se
+ * agrega nada y se ve solo la ciudad.
+ */
+function nombreCortoTerminal(nombre: string, ciudad?: string): string {
+  const sinTildes = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const genericas = new Set(["terminal", "terrestre", "de", "del", "la", "el", ...(ciudad ? sinTildes(ciudad).split(/\s+/) : [])]);
+  return nombre
+    .split(/\s+/)
+    .filter((p) => p && !genericas.has(sinTildes(p)))
+    .join(" ");
+}
+
+/** Celular: "Quito · Quitumbe" (ciudad + terminal corto). Sin ciudad conocida, el nombre completo. */
+function etiquetaTerminalCelular(nombre: string, ciudad?: string): string {
+  if (!ciudad) return nombre;
+  const corto = nombreCortoTerminal(nombre, ciudad);
+  return corto ? `${ciudad} · ${corto}` : ciudad;
+}
+
 /** Fecha (Ecuador) de una hora ISO, para saber si la llegada es al día siguiente. */
 function diaEcuador(iso: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Guayaquil" }).format(new Date(iso));
@@ -31,6 +52,24 @@ function diasDespues(salidaIso: string, llegadaIso: string): number {
   const a = Date.parse(`${diaEcuador(salidaIso)}T00:00:00Z`);
   const b = Date.parse(`${diaEcuador(llegadaIso)}T00:00:00Z`);
   return Math.round((b - a) / 86400000);
+}
+
+/**
+ * Nombre del terminal: en PC el nombre completo en hasta 2 líneas; en celular "ciudad · terminal corto"
+ * en hasta 2 líneas (Quito tiene dos terminales: el pasajero debe saber a cuál llega).
+ */
+function TerminalNombre({ nombre, ciudad, alDerecha = false }: { nombre: string; ciudad?: string; alDerecha?: boolean }) {
+  const clase = `kb-timeline__city line-clamp-2 ${alDerecha ? "ml-auto" : ""}`;
+  return (
+    <>
+      <div className={`${clase} max-w-[104px] md:hidden`} title={nombre}>
+        {etiquetaTerminalCelular(nombre, ciudad)}
+      </div>
+      <div className={`${clase} hidden md:[display:-webkit-box] ${alDerecha ? "text-right" : ""}`} title={nombre}>
+        {nombre}
+      </div>
+    </>
+  );
 }
 
 /**
@@ -84,7 +123,7 @@ export function TarjetaCooperativaAgrupada({
           🎁 Invita a un amigo y gana ${beneficiosReferidos.creditoReferidor.toFixed(2)} de crédito
         </div>
       )}
-      <div className="flex flex-col gap-3.5 p-4 md:grid md:grid-cols-[170px_1fr_180px] md:items-center md:gap-5 md:px-6 md:py-5 xl:grid-cols-[230px_1fr_210px] xl:gap-7">
+      <div className="flex flex-col gap-3.5 p-4 md:grid md:grid-cols-[140px_1fr_150px] md:items-center md:gap-5 md:px-6 md:py-5 xl:grid-cols-[200px_1fr_190px] xl:gap-7">
         {/* Cooperativa */}
         <div className="min-w-0">
           <div className="flex items-center gap-3">
@@ -132,7 +171,9 @@ export function TarjetaCooperativaAgrupada({
           <div className="kb-timeline !grid-cols-[auto_minmax(72px,1fr)_auto] md:gap-3.5">
             <div>
               <div className="whitespace-nowrap text-lg font-semibold tabular-nums md:text-[22px]">{formatearHora(activo.horaSalidaProgramada)}</div>
-              <div className="kb-timeline__city max-w-[92px] truncate md:max-w-[140px]" title={activo.origenNombre}>{activo.origenNombre}</div>
+              <div className="md:hidden">
+                <TerminalNombre nombre={activo.origenNombre} ciudad={activo.origenCiudad} />
+              </div>
             </div>
             <div className="flex flex-col items-center gap-[3px] whitespace-nowrap text-[11px] text-muted-2 md:text-xs">
               {estimacion && (
@@ -168,8 +209,8 @@ export function TarjetaCooperativaAgrupada({
                     </sup>
                   )}
                 </div>
-                <div className="kb-timeline__city ml-auto max-w-[92px] truncate md:max-w-[140px]" title={activo.destinoNombre}>
-                  {activo.destinoNombre}
+                <div className="md:hidden">
+                  <TerminalNombre nombre={activo.destinoNombre} ciudad={activo.destinoCiudad} alDerecha />
                 </div>
                 {!estimacion.llegadaEsReal && <div className="text-[11px] text-muted-3">hora aprox.</div>}
               </div>
@@ -177,6 +218,16 @@ export function TarjetaCooperativaAgrupada({
               <div className="text-right">
                 <div className="kb-timeline__city">{activo.destinoNombre}</div>
               </div>
+            )}
+          </div>
+
+          {/* PC: nombres de los terminales en su propia fila (cada uno con la mitad del ancho, hasta 2 líneas). */}
+          <div className="mt-1 hidden grid-cols-2 gap-4 md:grid">
+            <TerminalNombre nombre={activo.origenNombre} ciudad={activo.origenCiudad} />
+            {estimacion ? (
+              <TerminalNombre nombre={activo.destinoNombre} ciudad={activo.destinoCiudad} alDerecha />
+            ) : (
+              <span />
             )}
           </div>
 
@@ -219,6 +270,13 @@ export function TarjetaCooperativaAgrupada({
           <div className="text-right md:flex md:flex-col md:items-end md:gap-1.5">
             <p className="text-[19px] font-bold tabular-nums md:text-2xl">${Number(activo.precioBase).toFixed(2)}</p>
             <p className="text-[11px] text-muted-2 md:-mt-1.5 md:text-xs">por persona</p>
+            {/* Celular: toda la tarjeta se toca (enlace de abajo); esta señal lo deja claro. */}
+            <span aria-hidden="true" className="mt-1.5 inline-flex h-9 items-center gap-1 rounded-[12px] bg-kbyellow px-3.5 text-[13px] font-semibold text-ink md:hidden">
+              Elegir
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </span>
             <Link
               href={hrefsPorViaje[activo.viajeId]}
               className="kb-btn kb-btn--primary absolute inset-0 z-[1] h-auto bg-transparent p-0 md:static md:mt-1 md:h-12 md:w-full whitespace-nowrap md:bg-kbyellow md:px-4 xl:px-7"
