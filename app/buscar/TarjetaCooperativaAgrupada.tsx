@@ -21,6 +21,18 @@ function formatearHora(iso: string): string {
     .replace(/[  ]/g, " ");
 }
 
+/** Fecha (Ecuador) de una hora ISO, para saber si la llegada es al día siguiente. */
+function diaEcuador(iso: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Guayaquil" }).format(new Date(iso));
+}
+
+/** Cuántos días después de la salida llega el bus (0, 1, 2...). */
+function diasDespues(salidaIso: string, llegadaIso: string): number {
+  const a = Date.parse(`${diaEcuador(salidaIso)}T00:00:00Z`);
+  const b = Date.parse(`${diaEcuador(llegadaIso)}T00:00:00Z`);
+  return Math.round((b - a) / 86400000);
+}
+
 /**
  * Fase 6-buscador (17-ago-2026) -- "Ver horarios" agrupado por
  * cooperativa, orden real del director: hoy cada horario de una
@@ -107,7 +119,7 @@ export function TarjetaCooperativaAgrupada({
           {activo.tipoVehiculoAmenidades.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {activo.tipoVehiculoAmenidades.map((a) => (
-                <span key={a} className="rounded-[10px] bg-kbbg px-2 py-1 text-[11px] text-[#555B69]">
+                <span key={a} className="rounded-[10px] bg-kbbg px-2 py-1 text-[11px] text-muted-2">
                   {AMENIDADES_CATALOGO.find((cat) => cat.valor === a)?.etiqueta ?? a}
                 </span>
               ))}
@@ -120,7 +132,7 @@ export function TarjetaCooperativaAgrupada({
           <div className="kb-timeline !grid-cols-[auto_minmax(72px,1fr)_auto] md:gap-3.5">
             <div>
               <div className="whitespace-nowrap text-lg font-semibold tabular-nums md:text-[22px]">{formatearHora(activo.horaSalidaProgramada)}</div>
-              <div className="kb-timeline__city max-w-[120px]">{activo.origenNombre}</div>
+              <div className="kb-timeline__city max-w-[92px] truncate md:max-w-[140px]" title={activo.origenNombre}>{activo.origenNombre}</div>
             </div>
             <div className="flex flex-col items-center gap-[3px] whitespace-nowrap text-[11px] text-muted-2 md:text-xs">
               {estimacion && (
@@ -148,11 +160,18 @@ export function TarjetaCooperativaAgrupada({
             </div>
             {estimacion ? (
               <div className="text-right">
-                <div className="whitespace-nowrap text-lg font-semibold tabular-nums md:text-[22px]">{formatearHora(estimacion.llegadaIso)}</div>
-                <div className="kb-timeline__city ml-auto max-w-[120px]">
-                  {activo.destinoNombre}
-                  {!estimacion.llegadaEsReal ? " · aprox." : ""}
+                <div className="whitespace-nowrap text-lg font-semibold tabular-nums md:text-[22px]">
+                  {formatearHora(estimacion.llegadaIso)}
+                  {diasDespues(activo.horaSalidaProgramada, estimacion.llegadaIso) > 0 && (
+                    <sup className="ml-1 rounded-md bg-kbyellow-soft px-1 py-0.5 align-top text-[10px] font-semibold text-ink md:px-1.5 md:text-[11px]">
+                      +{diasDespues(activo.horaSalidaProgramada, estimacion.llegadaIso)} día
+                    </sup>
+                  )}
                 </div>
+                <div className="kb-timeline__city ml-auto max-w-[92px] truncate md:max-w-[140px]" title={activo.destinoNombre}>
+                  {activo.destinoNombre}
+                </div>
+                {!estimacion.llegadaEsReal && <div className="text-[11px] text-muted-3">hora aprox.</div>}
               </div>
             ) : (
               <div className="text-right">
