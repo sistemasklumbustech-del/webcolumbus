@@ -85,6 +85,8 @@ export function Footer() {
   if (
     pathname.startsWith("/panel-empresa") ||
     pathname.startsWith("/admin") ||
+    pathname === "/ingresar" ||
+    pathname === "/registro" ||
     /^\/viajes\/[^/]+\/(asientos|checkout)/.test(pathname)
   ) {
     return null;

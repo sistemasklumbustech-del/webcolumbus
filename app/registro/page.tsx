@@ -68,9 +68,11 @@ function FormularioRegistro() {
       titulo="Compra más rápido"
       destacado="con tu cuenta."
       puntos={["Datos guardados", "Historial de boletos"]}
+      pestana="registro"
+      volverA={searchParams.get("volverA")}
     >
-      <h1 className="text-[26px] font-semibold md:text-[32px]">Crear cuenta</h1>
-      <p className="mb-3.5 mt-1 text-sm text-ondark">Regístrate para comprar tu pasaje.</p>
+      <h1 className="text-[26px] font-semibold md:text-[30px]">Crea tu cuenta</h1>
+      <p className="mb-5 mt-1 text-sm text-ondark">Regístrate para comprar tu pasaje.</p>
 
       <form onSubmit={enviar} className="flex flex-col gap-3.5">
         <div className="grid grid-cols-2 gap-3">
@@ -145,6 +147,7 @@ function FormularioRegistro() {
           </div>
         </div>
 
+        <div className="grid gap-3.5 md:grid-cols-2 md:gap-3">
         <div>
           <label htmlFor="registro-correo" className="kb-label">
             Correo
@@ -161,9 +164,10 @@ function FormularioRegistro() {
         </div>
         <div>
           <label htmlFor="registro-password" className="kb-label">
-            Contraseña (mínimo 8 caracteres)
+            Contraseña
           </label>
           <CampoPassword id="registro-password" value={password} onChange={setPassword} placeholder="Mínimo 8 caracteres" />
+        </div>
         </div>
 
         <label htmlFor="registro-terminos" className="flex cursor-pointer items-center gap-2.5 text-[13px]">
