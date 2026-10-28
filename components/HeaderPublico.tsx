@@ -123,7 +123,7 @@ export function HeaderPublico() {
               </nav>
             ) : (
               <nav aria-label="Cuenta" className="flex items-center gap-2.5">
-                <Link href="/ingresar" className="whitespace-nowrap px-2 text-sm font-semibold text-white transition hover:text-kbyellow">
+                <Link href="/ingresar" className="kb-btn-sesion">
                   Iniciar sesión
                 </Link>
                 <Link

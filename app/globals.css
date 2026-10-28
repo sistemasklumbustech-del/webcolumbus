@@ -183,3 +183,29 @@ html {
     opacity: 0;
   }
 }
+
+/* Botón "Iniciar sesión" del encabezado (28-oct-2026, aprobado por el director): borde y letras
+   blancas sobre negro, sin relleno amarillo (el amarillo queda para la acción principal de cada
+   pantalla). Mínimo 44 px de alto para el dedo; se nota con el cursor encima y con el teclado. */
+.kb-btn-sesion {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 14px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.85);
+  transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.kb-btn-sesion:hover {
+  background: #fff;
+  color: #0b0d12;
+}
+.kb-btn-sesion:focus-visible {
+  outline: 2px solid #fdd514;
+  outline-offset: 3px;
+}

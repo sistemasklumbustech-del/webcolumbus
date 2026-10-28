@@ -197,7 +197,7 @@ function FormularioRegistro() {
           href={`/ingresar${searchParams.get("volverA") ? `?volverA=${encodeURIComponent(searchParams.get("volverA")!)}` : ""}`}
           className="font-semibold text-kbyellow hover:underline"
         >
-          Ingresar
+          Iniciar sesión
         </Link>
       </p>
     </AccesoLayout>
