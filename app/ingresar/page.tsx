@@ -332,9 +332,11 @@ function FormularioIngreso() {
       titulo="Tus viajes,"
       destacado="en un solo lugar."
       puntos={["Boletos con QR", "Compra sin filas", "Todas las cooperativas"]}
+      pestana="ingresar"
+      volverA={searchParams.get("volverA")}
     >
-      <h1 className="text-[26px] font-semibold md:text-[32px]">Ingresar</h1>
-      <p className="mb-3.5 mt-1 text-sm text-ondark">Entra para ver tus boletos</p>
+      <h1 className="text-[26px] font-semibold md:text-[30px]">Bienvenido de nuevo</h1>
+      <p className="mb-5 mt-1 text-sm text-ondark">Entra para ver tus boletos</p>
       {searchParams.get("sesion") === "vencida" && (
         <p className="kb-alert kb-alert--info mb-3.5">Tu sesión venció. Vuelve a iniciar sesión para continuar.</p>
       )}
