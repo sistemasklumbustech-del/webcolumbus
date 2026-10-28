@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MAPA_ALTO, MAPA_ANCHO, SILUETAS } from "@/lib/mapa-ecuador";
 import { puntosDelMapa, type DestinoMapa } from "@/lib/mapa-salidas";
 
@@ -28,13 +28,46 @@ const ETIQUETA_PAIS = { font: "600 10px Poppins, sans-serif", letterSpacing: "0.
 export function MapaSalidas({ origen, destinos }: Props) {
   const datos = puntosDelMapa(origen, destinos);
   const [activa, setActiva] = useState<string | null>(datos?.puntos[0]?.clave ?? null);
+  // Animación liviana (condición del director): solo se mueve el bus de la ruta elegida, nada se anima
+  // con "reducir movimiento" o "ahorro de datos" activados, y todo se pausa cuando el mapa no está en
+  // pantalla, para no gastar batería mientras la persona lee otra sección.
+  const [animar, setAnimar] = useState(false);
+  const [enPantalla, setEnPantalla] = useState(false);
+  const contenedor = useRef<HTMLDivElement>(null);
+  const lienzo = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    const consulta = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const ahorro = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    const actualizar = () => setAnimar(!consulta.matches && !ahorro);
+    actualizar();
+    consulta.addEventListener("change", actualizar);
+    return () => consulta.removeEventListener("change", actualizar);
+  }, []);
+
+  useEffect(() => {
+    const el = contenedor.current;
+    if (!el) return;
+    const observador = new IntersectionObserver(([e]) => setEnPantalla(e.isIntersecting), { threshold: 0.1 });
+    observador.observe(el);
+    return () => observador.disconnect();
+  }, []);
+
+  const moviendo = animar && enPantalla;
+  useEffect(() => {
+    const svg = lienzo.current;
+    if (!svg) return;
+    if (moviendo) svg.unpauseAnimations();
+    else svg.pauseAnimations();
+  }, [moviendo]);
+
   if (!datos) return null;
   const { ox, oy, puntos } = datos;
   const elegido = puntos.find((p) => p.clave === activa) ?? puntos[0];
 
   return (
-    <div className="flex flex-col">
-      <svg viewBox={`0 0 ${MAPA_ANCHO} ${MAPA_ALTO}`} role="img" aria-label={`Mapa de salidas desde ${origen}`} className="mapa-salidas h-auto w-full">
+    <div ref={contenedor} className="flex flex-col">
+      <svg ref={lienzo} viewBox={`0 0 ${MAPA_ANCHO} ${MAPA_ALTO}`} role="img" aria-label={`Mapa de salidas desde ${origen}`} className={`mapa-salidas h-auto w-full ${moviendo ? "" : "mapa-quieto"}`}>
         <defs>
           <radialGradient id="mapa-brillo" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#FDD514" stopOpacity=".16" />
@@ -56,7 +89,7 @@ export function MapaSalidas({ origen, destinos }: Props) {
         </text>
 
         {/* Rutas */}
-        {puntos.map((p, i) => {
+        {puntos.map((p) => {
           const on = p.clave === elegido.clave;
           return (
             <g key={`r-${p.clave}`}>
@@ -71,11 +104,13 @@ export function MapaSalidas({ origen, destinos }: Props) {
                 className={on ? "ruta" : undefined}
                 style={{ transition: "opacity .25s, stroke-width .25s" }}
               />
-              <circle r={on ? 4.5 : 3} fill="#FDD514" className="mapa-bus" opacity={on ? 1 : 0.7}>
-                <animateMotion dur={`${3 + (i % 3) * 0.6}s`} begin={`${(i * 0.45).toFixed(2)}s`} repeatCount="indefinite" rotate="auto">
-                  <mpath href={`#ruta-${p.clave}`} />
-                </animateMotion>
-              </circle>
+              {on && animar && (
+                <circle key={`bus-${p.clave}`} r="4.5" fill="#FDD514" className="mapa-bus">
+                  <animateMotion dur="2.8s" repeatCount="indefinite" rotate="auto">
+                    <mpath href={`#ruta-${p.clave}`} />
+                  </animateMotion>
+                </circle>
+              )}
             </g>
           );
         })}

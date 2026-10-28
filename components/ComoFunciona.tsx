@@ -27,7 +27,7 @@ const PARADAS = [
   {
     etiqueta: "Paga",
     titulo: "Paga como prefieras",
-    descripcion: "Tarjeta, DeUna, transferencia o efectivo.",
+    descripcion: "Tarjeta, DeUna, PayPhone o transferencia.",
     icono: (
       <>
         <rect x="3" y="6" width="18" height="12" rx="2.5" />

@@ -59,7 +59,7 @@ export async function TerminalesAliadas() {
 
   const cifras = modoReferencia
     ? [
-        { valor: String(REFERENCIA.cifras.cooperativas), texto: "cooperativas" },
+        // Sin datos reales del API no se muestra un número de cooperativas (decisión del director).
         { valor: String(REFERENCIA.cifras.regiones), texto: `regiones: ${REFERENCIA.cifras.regionesTexto}` },
         { valor: "24/7", texto: "compras en línea" },
       ]
@@ -106,7 +106,7 @@ export async function TerminalesAliadas() {
             Compra en línea y ve directo al andén. Tu boleto ya está en tu celular, sin pasar por la taquilla.
           </p>
 
-          <div className="my-6 grid grid-cols-3 gap-2.5">
+          <div className={`my-6 grid gap-2.5 ${cifras.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
             {cifras.map((c) => (
               <div key={c.texto} className="rounded-[18px] bg-ink-2 px-3 py-3.5 shadow-[inset_0_0_0_1px_#262A35] md:px-4 md:py-[18px]">
                 <b className="block text-2xl font-bold leading-[1.1] text-kbyellow md:text-[28px]">{c.valor}</b>

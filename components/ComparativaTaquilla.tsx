@@ -3,8 +3,9 @@
  * de pago; a la derecha una tabla que compara, tema por tema, la taquilla con Klumbus.
  * Es solo contenido fijo; el botón lleva al buscador de siempre.
  *
- * Los métodos de pago son los que ofrece el checkout hoy (DeUna, PayPhone, tarjeta Visa /
- * Mastercard / Diners y transferencia bancaria).
+ * Los métodos de pago son los que acepta el checkout: tarjeta (Visa, Mastercard, Diners) y DeUna en
+ * línea, más los que cada cooperativa activa (PayPhone, transferencia). Si se quita uno del checkout,
+ * se quita también de aquí.
  */
 /** Cada fila compara lo mismo: cómo es en la taquilla y cómo es con Klumbus. */
 const COMPARACION = [

@@ -24,14 +24,16 @@ interface Destino {
 const CANDIDATOS: Destino[] = [
   { ciudad: "Guayaquil", foto: "/img/destinos/guayaquil.jpg", zona: "Costa · Guayas" },
   { ciudad: "Quito", foto: "/img/destinos/quito.jpg", zona: "Sierra · Pichincha" },
-  { ciudad: "Cuenca", ilustracion: "cuenca", zona: "Sierra · Azuay" },
-  { ciudad: "Loja", ilustracion: "loja", zona: "Sierra · Loja" },
+  { ciudad: "Cuenca", foto: "/img/destinos/cuenca.jpg", zona: "Sierra · Azuay" },
+  { ciudad: "Loja", foto: "/img/destinos/loja.jpg", zona: "Sierra · Loja" },
   { ciudad: "Baños", foto: "/img/destinos/banos.jpg", zona: "Sierra · Tungurahua" },
   { ciudad: "Salinas", foto: "/img/destinos/salinas.jpg", zona: "Costa · Santa Elena" },
   { ciudad: "Montañita", foto: "/img/destinos/montanita.jpg", zona: "Costa · Santa Elena" },
   { ciudad: "Ibarra", foto: "/img/destinos/ibarra.jpg", zona: "Sierra · Imbabura" },
   { ciudad: "Huaquillas", ilustracion: "huaquillas", zona: "Costa · frontera" },
-  { ciudad: "Zaruma", ilustracion: "zaruma", zona: "Sierra · El Oro" },
+  { ciudad: "Zaruma", foto: "/img/destinos/zaruma.jpg", zona: "Sierra · El Oro" },
+  { ciudad: "Puyo", foto: "/img/destinos/puyo.jpg", zona: "Oriente · Pastaza" },
+  { ciudad: "Máncora", foto: "/img/destinos/mancora.jpg", zona: "Perú · Piura" },
 ];
 
 const CANTIDAD = 4;
@@ -97,7 +99,8 @@ export async function DestinosPopulares() {
               {d.foto ? (
                 <Image
                   src={d.foto}
-                  alt={`Vista de ${d.ciudad}`}
+                  alt={`Foto de ${d.ciudad}, destino desde ${modoReferencia ? REFERENCIA.terminal.ciudad : "la terminal"}`}
+                  loading="lazy"
                   fill
                   sizes="(min-width: 768px) 300px, 68vw"
                   className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-105"
