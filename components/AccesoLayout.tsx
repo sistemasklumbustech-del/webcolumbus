@@ -87,7 +87,7 @@ export function AccesoLayout({
         <div className="hidden justify-end md:flex">
           <Volver />
         </div>
-        <div className="mx-auto flex w-full max-w-[440px] flex-1 flex-col justify-center md:py-6">
+        <div className="mx-auto flex w-full max-w-[440px] flex-1 flex-col md:pt-[6vh]">
           <nav aria-label="Ingresar o crear cuenta" className="mb-6 flex gap-1 rounded-[16px] bg-ink-2 p-1 shadow-[inset_0_0_0_1px_#262A35]">
             <Link href={`/ingresar${sufijo}`} aria-current={pestana === "ingresar" ? "page" : undefined} className={clasePestana(pestana === "ingresar")}>
               Ingresar

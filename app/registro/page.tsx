@@ -147,7 +147,6 @@ function FormularioRegistro() {
           </div>
         </div>
 
-        <div className="grid gap-3.5 md:grid-cols-2 md:gap-3">
         <div>
           <label htmlFor="registro-correo" className="kb-label">
             Correo
@@ -167,7 +166,6 @@ function FormularioRegistro() {
             Contraseña
           </label>
           <CampoPassword id="registro-password" value={password} onChange={setPassword} placeholder="Mínimo 8 caracteres" />
-        </div>
         </div>
 
         <label htmlFor="registro-terminos" className="flex cursor-pointer items-center gap-2.5 text-[13px]">
