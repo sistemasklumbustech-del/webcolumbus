@@ -13,11 +13,27 @@ export function BotonBuscarFlotante({ objetivoId }: { objetivoId: string }) {
   useEffect(() => {
     const objetivo = document.getElementById(objetivoId);
     if (!objetivo) return;
+    // Se muestra cuando el buscador ya quedó arriba y se esconde al llegar al pie de página,
+    // para no tapar el contacto ni los enlaces del final.
+    let buscadorArriba = false;
+    let pieVisible = false;
+    const actualizar = () => setVisible(buscadorArriba && !pieVisible);
     const observador = new IntersectionObserver(
-      ([entrada]) => setVisible(!entrada.isIntersecting && entrada.boundingClientRect.top < 0),
+      (entradas) => {
+        for (const entrada of entradas) {
+          if (entrada.target === objetivo) {
+            buscadorArriba = !entrada.isIntersecting && entrada.boundingClientRect.top < 0;
+          } else {
+            pieVisible = entrada.isIntersecting;
+          }
+        }
+        actualizar();
+      },
       { threshold: 0 },
     );
     observador.observe(objetivo);
+    const pie = document.querySelector("footer");
+    if (pie) observador.observe(pie);
     return () => observador.disconnect();
   }, [objetivoId]);
 

@@ -94,12 +94,13 @@ export function Footer() {
   const telefono = formatearTelefono(contacto.telefono);
 
   return (
-    <footer className={`kb-footer ${esPortada ? "mt-0 pb-20 md:pb-0" : "mt-8 md:mt-[72px]"}`}>
+    <footer className={`kb-footer ${esPortada ? "mt-0" : "mt-8 md:mt-[72px]"}`}>
       <div className="mx-auto max-w-[1280px] px-5 pt-9 md:px-16 md:pt-14">
         <div className="grid gap-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] md:gap-10">
           {/* Marca y contacto */}
           <div className="pb-5 md:pb-0">
-            <LogoKlumbus className="mb-3.5 h-[26px] md:h-[30px]" />
+            {/* En celular el logo ya está fijo en el encabezado; aquí solo se muestra en PC. */}
+            <LogoKlumbus className="mb-3.5 hidden h-[30px] md:block" />
             <p className="max-w-[32ch] text-[13px] leading-relaxed md:text-sm">
               Compra tu pasaje de bus en Ecuador de forma simple y segura.
             </p>
