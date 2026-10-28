@@ -4,8 +4,9 @@ import { useState } from "react";
 import { REFERENCIA, type RegionRuta } from "@/lib/portada-datos";
 
 /**
- * Tabla "Rutas desde la terminal" con datos de REFERENCIA (ver lib/portada-datos.ts): destino,
- * duración, salidas, cooperativas y precio, con filtro por región. Solo se muestra mientras el API
+ * "Rutas desde la terminal" con datos de REFERENCIA (ver lib/portada-datos.ts): una tarjeta por
+ * destino (duración, salidas, cooperativas y precio), en 4 columnas en PC y en lista en celular, con
+ * filtro por región. Solo se muestra mientras el API
  * no tenga rutas reales; apenas las tenga, RutasDisponibles las muestra en su lugar. El filtro solo
  * oculta o muestra filas, no consulta nada.
  */
@@ -16,8 +17,6 @@ const REGIONES: { valor: "todas" | RegionRuta; etiqueta: string }[] = [
   { valor: "oriente", etiqueta: "Oriente" },
   { valor: "int", etiqueta: "Perú" },
 ];
-
-const COLUMNAS = "md:grid-cols-[minmax(0,1.5fr)_110px_140px_minmax(0,1.4fr)_110px_150px]";
 
 export function TablaRutasReferencia() {
   const [region, setRegion] = useState<"todas" | RegionRuta>("todas");
@@ -42,51 +41,52 @@ export function TablaRutasReferencia() {
         ))}
       </div>
 
-      <div className="mt-[18px] overflow-hidden rounded-[26px] bg-white shadow-[0_2px_20px_rgba(11,13,18,.05)]">
-        <div className={`hidden gap-4 border-b border-line bg-[#FBFBFC] px-7 py-4 text-xs font-semibold uppercase tracking-[0.08em] text-muted-3 md:grid ${COLUMNAS}`} aria-hidden="true">
-          <span>Destino</span>
-          <span>Duración</span>
-          <span>Salidas</span>
-          <span>Cooperativas</span>
-          <span>Desde</span>
-          <span />
-        </div>
-        {filas.map((d, i) => (
-          <a
-            key={d.ciudad}
-            href="#buscar"
-            className={`grid grid-cols-[1fr_auto] items-center gap-x-3.5 gap-y-1 px-[18px] py-4 transition-colors md:py-3 hover:bg-[#FBFBFC] md:gap-4 md:px-7 ${COLUMNAS} ${i > 0 ? "border-t border-line" : ""}`}
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] bg-kbbg">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" />
-                  <circle cx="12" cy="9.5" r="2.5" />
-                </svg>
-              </span>
-              <div>
-                <b className="block text-base font-semibold">{d.ciudad}</b>
-                <small className="block text-xs text-muted-2">{d.zona}</small>
+      <ul className="mt-4 grid gap-2.5 sm:grid-cols-2 md:mt-5 md:gap-4 lg:grid-cols-4">
+        {filas.map((d) => (
+          <li key={d.ciudad}>
+            <a
+              href="#buscar"
+              className="kb-card group flex h-full items-center gap-3.5 !p-4 transition-shadow hover:shadow-float sm:flex-col sm:items-stretch sm:gap-4 md:!p-5"
+            >
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-3">
+                  {REFERENCIA.terminal.ciudad} →
+                </span>
+                <b className="mt-0.5 block truncate text-lg font-semibold leading-tight tracking-[-0.01em]">{d.ciudad}</b>
+                <span className="block truncate text-xs text-muted-2">{d.zona}</span>
+                <div className="mt-2.5 flex flex-wrap gap-1.5 text-xs font-medium text-ink">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-kbbg px-2.5 py-1">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M12 7v5l3 2" />
+                    </svg>
+                    {d.duracion}
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-kbbg px-2.5 py-1">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                      <path d="M6 4h12a2 2 0 0 1 2 2v9H4V6a2 2 0 0 1 2-2zM4 11h16M7 19v-4M17 19v-4" />
+                    </svg>
+                    {d.salidas}
+                  </span>
+                </div>
+                <span className="mt-2 hidden truncate text-xs text-muted-2 sm:block">{d.cooperativas}</span>
               </div>
-            </div>
-            <div className="text-right md:order-5 md:text-left">
-              <small className="block text-[11px] text-muted-2 md:hidden">desde</small>
-              <b className="text-lg font-bold tabular-nums">${d.precio.toFixed(2)}</b>
-            </div>
-            <div className="col-span-2 flex flex-wrap gap-x-3.5 gap-y-1.5 pl-14 text-[12.5px] text-muted-2 md:contents md:text-sm md:text-ink">
-              <span>{d.duracion}</span>
-              <span>{d.salidas}</span>
-              <span className="md:text-[13.5px] md:text-muted-2">{d.cooperativas}</span>
-            </div>
-            <span className="hidden h-11 items-center justify-center gap-2 rounded-[14px] bg-kbbg text-sm font-semibold md:order-6 md:inline-flex">
-              Ver horarios
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </span>
-          </a>
+              <div className="flex shrink-0 items-end justify-between gap-3 sm:border-t sm:border-line sm:pt-3.5">
+                <div className="text-right leading-[1.1] sm:text-left">
+                  <small className="block text-[11px] text-muted-2">desde</small>
+                  <b className="text-xl font-bold tabular-nums">${d.precio.toFixed(2)}</b>
+                </div>
+                <span className="hidden h-10 items-center gap-1.5 rounded-tab bg-ink px-3.5 text-[13px] font-semibold text-white transition-colors group-hover:bg-kbyellow group-hover:text-ink sm:inline-flex">
+                  Horarios
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </span>
+              </div>
+            </a>
+          </li>
         ))}
-      </div>
+      </ul>
     </>
   );
 }
