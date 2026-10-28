@@ -161,7 +161,7 @@ export function Hero() {
               </a>
               <a
                 href={hrefCuenta}
-                className="rounded-xl bg-kbyellow px-3.5 py-[9px] text-[13px] font-semibold text-ink md:flex md:h-11 md:items-center md:rounded-tab md:px-[18px] md:py-0 md:text-sm"
+                className="kb-btn-sesion"
               >
                 {textoCuenta}
               </a>

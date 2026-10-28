@@ -6,7 +6,7 @@ import { LogoKlumbus } from "./LogoKlumbus";
  * Ingresar y Crear cuenta -- pantalla dividida (prueba de rediseño, 28-oct-2026; estándar de
  * Airbnb/Booking/FlixBus):
  * - PC: a la izquierda la foto a todo lo alto (fija al bajar), con el logo y la frase encima; a la
- *   derecha el formulario centrado, con las pestañas "Ingresar | Crear cuenta".
+ *   derecha el formulario centrado, con las pestañas "Iniciar sesión | Crear cuenta".
  * - Celular: una franja de foto arriba (la pasajera con su boleto) y el formulario debajo.
  * - Sin el menú ni el pie de página del sitio (ver HeaderPublico y Footer): solo el logo y
  *   "Volver al inicio".
@@ -88,9 +88,9 @@ export function AccesoLayout({
           <Volver />
         </div>
         <div className="mx-auto flex w-full max-w-[440px] flex-1 flex-col md:pt-[6vh]">
-          <nav aria-label="Ingresar o crear cuenta" className="mb-6 flex gap-1 rounded-[16px] bg-ink-2 p-1 shadow-[inset_0_0_0_1px_#262A35]">
+          <nav aria-label="Iniciar sesión o crear cuenta" className="mb-6 flex gap-1 rounded-[16px] bg-ink-2 p-1 shadow-[inset_0_0_0_1px_#262A35]">
             <Link href={`/ingresar${sufijo}`} aria-current={pestana === "ingresar" ? "page" : undefined} className={clasePestana(pestana === "ingresar")}>
-              Ingresar
+              Iniciar sesión
             </Link>
             <Link href={`/registro${sufijo}`} aria-current={pestana === "registro" ? "page" : undefined} className={clasePestana(pestana === "registro")}>
               Crear cuenta
