@@ -654,7 +654,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   const textoSillas = (lista: string[]) => (lista.length === 1 ? `Asiento ${lista[0]}` : `Asientos ${lista.join(", ")}`);
 
   /** Resumen de cada tramo (ruta, salida, cooperativa y asientos), para la tarjeta negra, el celular y la revisión. */
-  const listaTramos = (oscuro: boolean) => (
+  const listaTramos = (oscuro: boolean, sinRuta = false) => (
     <ul className="flex flex-col gap-3">
       {tramos.map((t) => (
         <li key={t.etiqueta ?? "unico"} className={`flex gap-3 ${tramos.length > 1 ? `rounded-[16px] p-3 ${oscuro ? "bg-ink-2" : "bg-kbbg"}` : ""}`}>
@@ -671,7 +671,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
             {t.etiqueta && (
               <span className={`text-[11px] font-semibold uppercase tracking-[.08em] ${oscuro ? "text-kbyellow" : "text-muted-2"}`}>{t.etiqueta}</span>
             )}
-            {t.r.origen && t.r.destino && (
+            {t.r.origen && t.r.destino && !sinRuta && (
               <b className="block text-[15px] font-semibold leading-snug">
                 {t.r.origen} → {t.r.destino}
               </b>
@@ -762,7 +762,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
       </div>
 
       <div className="mx-auto grid w-full max-w-[1280px] flex-1 items-start gap-6 px-5 py-5 md:px-16 md:py-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]">
-        <form id="checkout-form" onSubmit={revisarCompra} className="flex min-w-0 flex-col gap-4">
+        <form id="checkout-form" onSubmit={revisarCompra} className="flex min-w-0 flex-col gap-4 pb-6 md:pb-0">
           {/* Celular: el resumen del viaje arriba (en PC va en la tarjeta negra). */}
           <section aria-label="Tu viaje" className="kb-card kb-on-white flex flex-col gap-3 p-4 md:hidden">
             <span className="text-[11px] font-semibold uppercase tracking-[.08em] text-muted-2">Tu viaje</span>
@@ -1207,7 +1207,8 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           <div className="flex flex-col gap-3.5 rounded-card bg-ink p-6 text-white">
             <span className="text-xs font-semibold uppercase tracking-[.08em] text-kbyellow">Resumen</span>
             <b className="text-[22px] font-semibold leading-tight">{rutaTitulo ?? "Tu compra"}</b>
-            {listaTramos(true)}
+            {/* Solo ida: la ruta ya está en el título, no se repite. */}
+            {listaTramos(true, !esIdaYVuelta && !!rutaTitulo)}
             {tarifaEstimada !== null && (
               <>
                 <hr className="h-px border-0 bg-ink-3" />
