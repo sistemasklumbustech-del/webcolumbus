@@ -131,6 +131,7 @@ export function FiltrosBusqueda({
       {abierto && (
         <HojaFiltros
           cantidad={cantidad}
+          totalDelDia={salidas.length}
           hayCambiosOFiltros={cuantosFiltrosActivos(borrador) > 0}
           onLimpiar={() => setBorrador(SIN_FILTROS)}
           onCerrar={() => setAbierto(false)}
@@ -150,6 +151,7 @@ export function FiltrosBusqueda({
 function HojaFiltros({
   children,
   cantidad,
+  totalDelDia,
   hayCambiosOFiltros,
   onLimpiar,
   onCerrar,
@@ -157,6 +159,7 @@ function HojaFiltros({
 }: {
   children: React.ReactNode;
   cantidad: number;
+  totalDelDia: number;
   hayCambiosOFiltros: boolean;
   onLimpiar: () => void;
   onCerrar: () => void;
@@ -220,6 +223,19 @@ function HojaFiltros({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-5">{children}</div>
+        {cantidad === 0 && totalDelDia > 0 && (
+          <div role="status" className="flex items-center justify-between gap-3 border-t border-line bg-kbbg px-5 py-3">
+            <p className="text-[13px] leading-snug">
+              <span className="block font-semibold">Ninguna salida cumple tus filtros</span>
+              <span className="text-muted-2">
+                Hay {totalDelDia} {totalDelDia === 1 ? "salida" : "salidas"} este día.
+              </span>
+            </p>
+            <button type="button" onClick={onLimpiar} className="kb-btn kb-btn--dark h-11 shrink-0 px-4 text-[13px]">
+              Quitar filtros
+            </button>
+          </div>
+        )}
         <div className="flex items-center gap-3 border-t border-line px-5 pb-[calc(14px+env(safe-area-inset-bottom,0px))] pt-3.5 shadow-[0_-10px_30px_rgba(11,13,18,.06)]">
           <button
             type="button"
@@ -279,7 +295,8 @@ function ContenidoFiltros({
         <fieldset>
           <legend className={claseTitulo}>Precio</legend>
           <p className="mb-2 text-sm font-medium tabular-nums">
-            {dinero(desde)} – {dinero(hasta)}
+            {/* El texto muestra el filtro tal cual (ej. un enlace con un máximo por debajo del rango). */}
+            {dinero(filtros.precioMin ?? desde)} – {dinero(filtros.precioMax ?? hasta)}
           </p>
           <div className="kb-rango">
             <span className="kb-rango__pista" />

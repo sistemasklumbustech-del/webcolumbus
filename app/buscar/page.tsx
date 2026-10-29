@@ -8,7 +8,7 @@ import {
 import { FiltrosBusqueda } from "./FiltrosBusqueda";
 import { OrdenarPor } from "./OrdenarPor";
 import { CambiarBusqueda } from "./CambiarBusqueda";
-import { aFiltrable, cumpleFiltros, leerFiltros } from "@/lib/filtrar-resultados";
+import { SIN_FILTROS, aFiltrable, cumpleFiltros, filtrosAUrl, leerFiltros } from "@/lib/filtrar-resultados";
 import { TarjetaCooperativaAgrupada } from "./TarjetaCooperativaAgrupada";
 import { SinResultadosAlternativas } from "./SinResultadosAlternativas";
 import { TiraFechas } from "./TiraFechas";
@@ -535,7 +535,24 @@ export default async function ResultadosBusquedaPage({
             <div className="flex flex-col gap-3.5">
               {error && <p className="kb-alert kb-alert--error">{error}</p>}
 
-              {!error && grupos.length === 0 && (
+              {/* El día SÍ tiene viajes, pero los filtros no dejan ninguno: no es "no hay viajes". */}
+              {!error && grupos.length === 0 && todasLasSalidasIda.length > 0 && (
+                <div className="rounded-card bg-white p-8 text-center shadow-card">
+                  <p className="text-lg font-semibold">Ninguna salida cumple tus filtros</p>
+                  <p className="mt-1 text-sm text-muted-2">
+                    Hay {todasLasSalidasIda.length} {todasLasSalidasIda.length === 1 ? "salida" : "salidas"} este día.
+                  </p>
+                  <Link
+                    href={hrefBuscar(filtrosAUrl(SIN_FILTROS))}
+                    scroll={false}
+                    className="kb-btn kb-btn--dark mt-4 inline-flex h-12 px-6"
+                  >
+                    Quitar filtros
+                  </Link>
+                </div>
+              )}
+
+              {!error && grupos.length === 0 && todasLasSalidasIda.length === 0 && (
                 <div className="rounded-card bg-white p-8 text-center shadow-card">
                   <p className="text-lg font-semibold">
                     {mostrandoVuelta

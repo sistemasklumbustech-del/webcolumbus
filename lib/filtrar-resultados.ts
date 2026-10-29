@@ -6,8 +6,8 @@ import type { ResultadoViaje } from "./api";
  * La búsqueda de la API trae TODAS las salidas del día en una sola respuesta (sin paginación), así
  * que los filtros se aplican sobre esa lista con esta misma función, en el servidor (página) y en el
  * navegador (hoja de filtros del celular, que cuenta "Ver X salidas" en vivo sin pedir nada a la API).
- * Mismas reglas que la API: hora de salida en hora de Ecuador con los extremos incluidos, y las
- * comodidades marcadas deben estar TODAS en el bus.
+ * Reglas: hora de salida en hora de Ecuador, comparando horas y minutos, con los extremos incluidos;
+ * las comodidades marcadas deben estar TODAS en el bus (igual que la API).
  */
 
 /** Lo mínimo de cada salida que necesitan los filtros (se manda al navegador). */
@@ -107,8 +107,9 @@ export function aFiltrable(r: ResultadoViaje): SalidaFiltrable {
 /** ¿Esta salida pasa los filtros? `ignorar` deja fuera un filtro (ej. el de hora, para el aviso "fuera de franja"). */
 export function cumpleFiltros(s: SalidaFiltrable, f: Filtros, ignorar: { hora?: boolean } = {}): boolean {
   if (!ignorar.hora && f.horaDesde && f.horaHasta) {
-    const hora = s.hora;
-    if (hora < `${f.horaDesde}:00` || hora > `${f.horaHasta}:00`) return false;
+    // Se compara solo HH:MM: una salida a las 23:59:30 entra en "Noche" (hasta 23:59).
+    const hora = s.hora.slice(0, 5);
+    if (hora < f.horaDesde || hora > f.horaHasta) return false;
   }
   if (f.amenidades.length && !f.amenidades.every((a) => s.amenidades.includes(a))) return false;
   if (f.cooperativas.length && !f.cooperativas.includes(s.cooperativaId)) return false;
