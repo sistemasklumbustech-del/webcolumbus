@@ -84,23 +84,59 @@ function SelectorHora({
  * destino invertidos, pero se pueden cambiar (ej. volver desde otra
  * terminal o ciudad).
  */
-export function BuscadorForm() {
+/** Búsqueda actual, para abrir el buscador ya lleno ("Cambiar búsqueda" en la página de resultados). */
+export interface BusquedaInicial {
+  origenId: string;
+  origenCiudad: string;
+  destinoId: string;
+  destinoCiudad: string;
+  fecha: string;
+  pasajeros: number;
+  horaDesde: string | null;
+  horaHasta: string | null;
+  vuelta?: {
+    fecha: string;
+    origenId: string;
+    origenCiudad: string;
+    destinoId: string;
+    destinoCiudad: string;
+    horaDesde: string | null;
+    horaHasta: string | null;
+  };
+}
+
+function punto(id: string, ciudad: string): PuntoOperacion {
+  return { id, nombre: ciudad, ciudad, provincia: "", tipo: "" };
+}
+
+function franjaDe(desde: string | null, hasta: string | null): string {
+  return FRANJAS_HORARIO.find((f) => f.horaDesde === desde && f.horaHasta === hasta)?.valor ?? "";
+}
+
+export function BuscadorForm({ inicial, enPagina = false }: { inicial?: BusquedaInicial; enPagina?: boolean } = {}) {
   const router = useRouter();
-  const [origen, setOrigen] = useState<PuntoOperacion | null>(null);
-  const [destino, setDestino] = useState<PuntoOperacion | null>(null);
-  const [fecha, setFecha] = useState(hoyISO());
-  const [franja, setFranja] = useState("");
-  const [idaYVuelta, setIdaYVuelta] = useState(false);
+  const v = inicial?.vuelta;
+  // La vuelta "sigue" a la ida (ruta invertida) salvo que en la búsqueda actual fuera otra ruta.
+  const vueltaEsOtraRuta = !!inicial && !!v && (v.origenId !== inicial.destinoId || v.destinoId !== inicial.origenId);
+  const [origen, setOrigen] = useState<PuntoOperacion | null>(inicial ? punto(inicial.origenId, inicial.origenCiudad) : null);
+  const [destino, setDestino] = useState<PuntoOperacion | null>(inicial ? punto(inicial.destinoId, inicial.destinoCiudad) : null);
+  const [fecha, setFecha] = useState(inicial?.fecha ?? hoyISO());
+  const [franja, setFranja] = useState(inicial ? franjaDe(inicial.horaDesde, inicial.horaHasta) : "");
+  const [idaYVuelta, setIdaYVuelta] = useState(!!v);
   // undefined = "sigue automáticamente al destino/origen de la ida";
   // un valor (incluso null) = la persona lo cambió a mano.
-  const [vueltaOrigen, setVueltaOrigen] = useState<PuntoOperacion | null | undefined>(undefined);
-  const [vueltaDestino, setVueltaDestino] = useState<PuntoOperacion | null | undefined>(undefined);
-  const [fechaVuelta, setFechaVuelta] = useState(hoyISO());
-  const [franjaVuelta, setFranjaVuelta] = useState("");
+  const [vueltaOrigen, setVueltaOrigen] = useState<PuntoOperacion | null | undefined>(
+    vueltaEsOtraRuta && v ? punto(v.origenId, v.origenCiudad) : undefined,
+  );
+  const [vueltaDestino, setVueltaDestino] = useState<PuntoOperacion | null | undefined>(
+    vueltaEsOtraRuta && v ? punto(v.destinoId, v.destinoCiudad) : undefined,
+  );
+  const [fechaVuelta, setFechaVuelta] = useState(v?.fecha ?? inicial?.fecha ?? hoyISO());
+  const [franjaVuelta, setFranjaVuelta] = useState(v ? franjaDe(v.horaDesde, v.horaHasta) : "");
   // Solo apariencia: la vuelta muestra únicamente su fecha y hora (la ruta se invierte sola, como en
   // FlixBus o Busbud). Los campos de otra ruta de regreso se abren con "Cambiar ruta de vuelta".
-  const [verRutaVuelta, setVerRutaVuelta] = useState(false);
-  const [pasajeros, setPasajeros] = useState(1);
+  const [verRutaVuelta, setVerRutaVuelta] = useState(vueltaEsOtraRuta);
+  const [pasajeros, setPasajeros] = useState(inicial?.pasajeros ?? 1);
   const [error, setError] = useState<string | null>(null);
 
   const origenDeVuelta = vueltaOrigen === undefined ? destino : vueltaOrigen;
@@ -166,7 +202,9 @@ export function BuscadorForm() {
   return (
     <form
       onSubmit={buscar}
-      className="flex w-full flex-col gap-2.5 rounded-[26px] bg-white p-4 shadow-float md:gap-4 md:rounded-[28px] md:p-[22px]"
+      className={`flex w-full flex-col gap-2.5 rounded-[26px] bg-white p-4 md:gap-4 md:rounded-[28px] md:p-[22px] ${
+        enPagina ? "shadow-[inset_0_0_0_1px_#E9EBF0]" : "shadow-float"
+      }`}
     >
       <div role="group" aria-label="Tipo de viaje" className="kb-tabs w-full self-start md:w-auto">
         <button type="button" onClick={() => setIdaYVuelta(false)} aria-pressed={!idaYVuelta} className={`whitespace-nowrap ${!idaYVuelta ? "is-active" : ""}`}>
