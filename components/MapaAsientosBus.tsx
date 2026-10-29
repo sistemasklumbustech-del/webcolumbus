@@ -4,16 +4,19 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { interpretarCelda, type Celda, type PisoDistribucionAsientos } from "@/lib/api";
 
 /**
- * Mapa de asientos -- plano del bus (oct-2026, elegido por Adrián): el vehículo visto desde arriba,
- * como un plano real: paredes de doble línea, frente curvo con parabrisas y tablero, espejos, puesto
- * del conductor con su volante, entrada con escalones, pared de la cabina, escalera y baño (WC) en su
- * lugar, y el pasillo con el número de fila. Las sillas son las mismas del diseño oficial.
+ * Mapa de asientos -- modelos de vehículo (propuesta oct-2026): cada unidad se dibuja como un plano
+ * real visto desde arriba, con un modelo estándar por tipo:
+ *   - Bus de 1 piso · Bus de 2 pisos (los dos pisos del mismo largo) · Buseta · Microbús/van (con capó).
+ * Carrocería con parabrisas y plumillas, espejos, llantas asomando, ventanas a los lados, puesto del
+ * conductor a la izquierda con su volante, puerta a la derecha con escalones, escalera y baño en su
+ * lugar. Las sillas (las del diseño oficial) miran hacia el frente.
  *
- * - Un piso a la vez con pestañas (cada una dice cuántos asientos libres tiene).
- * - Vertical (frente arriba) en celular; acostado (frente a la izquierda) cuando el bus completo cabe
- *   a lo ancho. Si no cabe (ej. 15 filas en una pantalla de 1024 px), se queda vertical en vez de
- *   obligar a desplazarse de lado.
- * - La forma cambia un poco según el vehículo (bus, buseta, van, auto).
+ * Orientación: de pie (frente arriba) en celular; acostado (frente a la izquierda) en PC cuando cabe.
+ * Acostado, el lado del conductor (izquierdo del vehículo) queda ABAJO y la puerta ARRIBA, como en la
+ * realidad al mirar un bus que va hacia la izquierda.
+ *
+ * Todo se calcula en un solo sistema de medidas (el vehículo de pie); para acostarlo se gira el dibujo
+ * y se recalculan las posiciones de los botones, así el dibujo y las sillas nunca se desalinean.
  *
  * Mismo contrato de siempre: aquí solo se dibuja; qué asientos están libres, ocupados o elegidos lo
  * decide quien lo usa (pasajero en línea, vendedor en ventanilla o el constructor de la cooperativa).
@@ -28,8 +31,10 @@ export interface PropiedadesMapaBus {
   tieneBano: boolean;
   /** Marca con un punto los asientos VIP (útil al configurar el bus o vender en ventanilla). */
   mostrarVip?: boolean;
-  /** Categoría del vehículo (bus, buseta, van, auto): solo cambia un poco la forma de la carrocería. */
+  /** Categoría del vehículo (bus, buseta, van, auto): elige el modelo que se dibuja. */
   categoria?: string | null;
+  /** Nombre del tipo de vehículo (ej. "Doble Piso Ejecutivo 60"), para la barra de arriba del plano. */
+  nombreVehiculo?: string | null;
 }
 
 export type Posicion = "ventana" | "pasillo" | "centro";
@@ -81,9 +86,7 @@ function numeroDeFila(celdas: Celda[], piso: PisoDistribucionAsientos, indice: n
   return indice + 1;
 }
 
-/* ------------------------------------------------------------------ dibujos */
-
-/** Silla del diseño (la misma de hoy): respaldo, asiento y dos brazos. viewBox 40×40. */
+/** Silla del diseño oficial: respaldo, asiento y dos brazos. viewBox 40×40 (respaldo arriba). */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function DibujoSilla(_props: { ocupada?: boolean } = {}) {
   return (
@@ -96,27 +99,324 @@ export function DibujoSilla(_props: { ocupada?: boolean } = {}) {
   );
 }
 
-/** Espejo retrovisor con su brazo, saliendo de la esquina delantera izquierda (el derecho se refleja). */
-function Espejo({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
+/* ================================================================ modelos y medidas */
+
+type Modelo = "bus" | "buseta" | "micro";
+
+const NOMBRE_MODELO: Record<Modelo, (pisos: number) => string> = {
+  bus: (pisos) => (pisos > 1 ? "Bus de 2 pisos" : "Bus de 1 piso"),
+  buseta: () => "Buseta",
+  micro: () => "Microbús",
+};
+
+function modeloDe(categoria: string | null | undefined): Modelo {
+  const c = (categoria ?? "bus").toLowerCase();
+  if (c === "van" || c === "auto") return "micro";
+  if (c === "buseta") return "buseta";
+  return "bus";
+}
+
+// Medidas del plano (unidades = px a escala 1, vehículo de pie, frente arriba).
+const SILLA = 44; // ancho de una silla
+const PASO_FILA = 56; // largo de cada fila
+const PASILLO = 30;
+const SEPARACION = 4; // entre sillas vecinas
+const PARED = 12; // pared lateral con las ventanas
+const HOLGURA = 6; // entre la pared y la primera silla
+const MARGEN = 26; // espacio alrededor del vehículo (espejos, llantas)
+
+/** Largo del frente según el modelo y el piso: hasta donde empieza la primera fila. */
+function largoFrente(modelo: Modelo, piso: number): number {
+  if (piso > 0) return 78; // piso de arriba: ventanal panorámico
+  if (modelo === "micro") return 196; // capó + parabrisas + cabina
+  if (modelo === "buseta") return 164;
+  return 172;
+}
+const LARGO_ATRAS: Record<Modelo, number> = { bus: 46, buseta: 40, micro: 34 };
+const LARGO_BLOQUE = PASO_FILA + 14; // escalera o baño
+
+interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+interface Geometria {
+  modelo: Modelo;
+  ancho: number; // W: ancho exterior del vehículo
+  largo: number; // L: largo exterior
+  columnas: { x: number; w: number; pasillo: boolean; letra: string }[];
+  izq: [number, number]; // tramo (x) del grupo de sillas izquierdo
+  der: [number, number]; // tramo (x) del grupo derecho
+  frente: number;
+  filas: { y: number; numero: number; celdas: Celda[] }[];
+  escalera: Rect | null;
+  bano: Rect | null;
+  equipaje: Rect | null;
+  puerta: [number, number] | null; // tramo (y) de la puerta en la pared derecha
+}
+
+function calcularGeometria(
+  piso: PisoDistribucionAsientos,
+  indicePiso: number,
+  modelo: Modelo,
+  posBano: string,
+  posEscalera: string,
+  largoMinimo: number,
+): Geometria {
+  const numColumnas = Math.max(1, ...piso.filas.map((f) => f.celdas.length));
+  const esPasillo = Array.from({ length: numColumnas }, (_, j) => piso.filas.every((f) => f.celdas[j] == null));
+  let x = PARED + HOLGURA;
+  let letra = 0;
+  const columnas = esPasillo.map((p) => {
+    const w = p ? PASILLO : SILLA;
+    const col = { x, w, pasillo: p, letra: p ? "" : String.fromCharCode(65 + letra++) };
+    x += w + (p ? 0 : SEPARACION);
+    return col;
+  });
+  const ancho = x - (columnas.length && !columnas[columnas.length - 1].pasillo ? SEPARACION : 0) + HOLGURA + PARED;
+  const iPas = esPasillo.indexOf(true);
+  const uPas = esPasillo.lastIndexOf(true);
+  const izq: [number, number] = iPas >= 0 ? [PARED + HOLGURA, columnas[iPas].x] : [PARED + HOLGURA, ancho - PARED - HOLGURA];
+  const der: [number, number] = uPas >= 0 ? [columnas[uPas].x + PASILLO, ancho - PARED - HOLGURA] : izq;
+
+  const frente = largoFrente(modelo, indicePiso);
+  let y = frente;
+  let escalera: Rect | null = null;
+  let bano: Rect | null = null;
+  // Adelante: escalera (a la derecha) y/o baño (a la izquierda).
+  if (posEscalera === "frente" || posBano === "frente") {
+    if (posEscalera === "frente") escalera = { x: der[0], y: y + 4, w: der[1] - der[0], h: LARGO_BLOQUE - 10 };
+    if (posBano === "frente") bano = { x: izq[0], y: y + 4, w: izq[1] - izq[0] - 4, h: LARGO_BLOQUE - 10 };
+    y += LARGO_BLOQUE + 16; // + espacio para las letras de las columnas
+  }
+  const filas = piso.filas.map((f, i) => {
+    const fila = { y: y + i * PASO_FILA, numero: numeroDeFila(f.celdas, piso, i), celdas: f.celdas };
+    return fila;
+  });
+  y += piso.filas.length * PASO_FILA;
+  if (posBano === "atras" || posEscalera === "atras") {
+    if (posBano === "atras") bano = { x: der[0], y: y + 6, w: der[1] - der[0], h: LARGO_BLOQUE - 10 };
+    if (posEscalera === "atras") {
+      const lado = posBano === "atras" && iPas >= 0 ? izq : der;
+      escalera = { x: lado[0], y: y + 6, w: lado[1] - lado[0], h: LARGO_BLOQUE - 10 };
+    }
+    y += LARGO_BLOQUE;
+  }
+  // En un bus de 2 pisos los dos pisos miden lo mismo: lo que sobra abajo es la zona de equipaje.
+  let equipaje: Rect | null = null;
+  const largoBase = y + LARGO_ATRAS[modelo];
+  if (largoMinimo > largoBase + 20) {
+    if (indicePiso === 0) equipaje = { x: izq[0], y: y + 6, w: der[1] - izq[0], h: largoMinimo - largoBase - 12 };
+    y += largoMinimo - largoBase;
+  }
+  const largo = Math.max(largoMinimo, y + LARGO_ATRAS[modelo]);
+  const puerta: [number, number] | null =
+    indicePiso === 0 ? (modelo === "micro" ? [frente - 70, frente - 6] : [frente - 104, frente - 22]) : null;
+  return { modelo, ancho, largo, columnas, izq, der, frente, filas, escalera, bano, equipaje, puerta };
+}
+
+/** Largo que tendría un piso sin igualar (para que los 2 pisos midan lo mismo). */
+function largoNatural(piso: PisoDistribucionAsientos, i: number, modelo: Modelo, posBano: string, posEscalera: string) {
+  return calcularGeometria(piso, i, modelo, posBano, posEscalera, 0).largo;
+}
+
+/** Dónde termina el parabrisas (de pie, desde el frente). */
+function finDelVidrio(m: Modelo, arriba: boolean): number {
+  return arriba ? 54 : m === "micro" ? 104 : 46;
+}
+
+/* ================================================================ dibujo de la carrocería */
+
+const TINTA = "#1A1D24";
+
+/** Contorno exterior del vehículo de pie (frente arriba). */
+function contorno(m: Modelo, W: number, L: number, pisoArriba: boolean): string {
+  if (m === "micro" && !pisoArriba) {
+    // Capó más angosto que la cabina, como una van vista desde arriba.
+    const a = W * 0.1;
+    const b = W - a;
+    return `M ${a + 16} 0 H ${b - 16} Q ${b} 0 ${b + 2} 14 L ${W - 4} 74 Q ${W} 84 ${W} 98 V ${L - 18} Q ${W} ${L} ${W - 18} ${L} H 18 Q 0 ${L} 0 ${L - 18} V 98 Q 0 84 4 74 L ${a - 2} 14 Q ${a} 0 ${a + 16} 0 Z`;
+  }
+  const rf = m === "buseta" ? 34 : 26; // frente
+  const rt = 14; // atrás
+  return `M ${rf} 0 H ${W - rf} Q ${W} 0 ${W} ${rf} V ${L - rt} Q ${W} ${L} ${W - rt} ${L} H ${rt} Q 0 ${L} 0 ${L - rt} V ${rf} Q 0 0 ${rf} 0 Z`;
+}
+
+function ArteVehiculo({ g, indicePiso }: { g: Geometria; indicePiso: number }) {
+  const { modelo: m, ancho: W, largo: L, frente } = g;
+  const arriba = indicePiso > 0;
+  const inicioVidrio = m === "micro" && !arriba ? 62 : 6;
+  const finVidrio = finDelVidrio(m, arriba);
+  const yFilas = g.filas.length ? g.filas[0].y : frente;
+  const finFilas = g.filas.length ? g.filas[g.filas.length - 1].y + PASO_FILA : frente;
+  const ejes =
+    m === "micro" ? [74, L - 70] : m === "buseta" ? [frente - 44, L - 82] : [frente - 44, L - 150, L - 92];
+
   return (
-    <svg viewBox="0 0 24 44" aria-hidden="true" className={`kb-espejo ${className}`} style={style}>
-      <path d="M22 34c-6 0-12-4-14-12" fill="none" stroke="#1A1D24" strokeWidth="2.4" strokeLinecap="round" />
-      <rect x="2" y="4" width="10" height="20" rx="5" fill="#fff" stroke="#1A1D24" strokeWidth="2.2" />
-    </svg>
+    <g>
+      {/* Llantas (asoman a los lados) */}
+      {ejes.map((y, i) => (
+        <g key={i} fill={TINTA}>
+          <rect x={-6} y={y - 20} width={9} height={40} rx={3} />
+          <rect x={W - 3} y={y - 20} width={9} height={40} rx={3} />
+        </g>
+      ))}
+
+      {/* Espejos retrovisores (solo en el piso de abajo) */}
+      {!arriba &&
+        (m === "micro" ? (
+          <g fill="#fff" stroke={TINTA} strokeWidth={2}>
+            <path d={`M 4 84 L -12 78`} fill="none" strokeLinecap="round" />
+            <rect x={-22} y={68} width={12} height={18} rx={4} />
+            <path d={`M ${W - 4} 84 L ${W + 12} 78`} fill="none" strokeLinecap="round" />
+            <rect x={W + 10} y={68} width={12} height={18} rx={4} />
+          </g>
+        ) : (
+          <g fill="#fff" stroke={TINTA} strokeWidth={2.2} strokeLinecap="round">
+            <path d={`M 3 30 C -12 26 -18 12 -14 -2`} fill="none" />
+            <rect x={-20} y={-20} width={12} height={22} rx={6} />
+            <path d={`M ${W - 3} 30 C ${W + 12} 26 ${W + 18} 12 ${W + 14} -2`} fill="none" />
+            <rect x={W + 8} y={-20} width={12} height={22} rx={6} />
+          </g>
+        ))}
+
+      {/* Carrocería */}
+      <path d={contorno(m, W, L, arriba)} fill="#fff" stroke={TINTA} strokeWidth={3} filter="url(#kbSombra)" />
+
+      {/* Capó del microbús */}
+      {m === "micro" && !arriba && (
+        <g stroke="#C9CED7" strokeWidth={1.4} fill="none">
+          <path d={`M ${W * 0.3} 10 Q ${W / 2} 4 ${W * 0.7} 10`} />
+          <path d={`M ${W * 0.22} 30 Q ${W / 2} 22 ${W * 0.78} 30`} />
+        </g>
+      )}
+
+      {/* Faros (amarillo Klumbus) y luces traseras */}
+      {!arriba && (
+        <g>
+          <rect x={m === "micro" ? W * 0.12 : 10} y={-2} width={20} height={5} rx={2.5} fill="#FDD514" />
+          <rect x={(m === "micro" ? W * 0.88 : W - 10) - 20} y={-2} width={20} height={5} rx={2.5} fill="#FDD514" />
+        </g>
+      )}
+      <rect x={12} y={L - 3} width={22} height={5} rx={2.5} fill="#8A909C" />
+      <rect x={W - 34} y={L - 3} width={22} height={5} rx={2.5} fill="#8A909C" />
+
+      {/* Parabrisas con su tablero curvo y plumillas */}
+      <path
+        d={`M ${14} ${inicioVidrio + 10} Q ${W / 2} ${inicioVidrio - 6} ${W - 14} ${inicioVidrio + 10} L ${W - 16} ${finVidrio - 4} Q ${W / 2} ${finVidrio - 14} ${16} ${finVidrio - 4} Z`}
+        fill="url(#kbVidrio)"
+        stroke={TINTA}
+        strokeWidth={2}
+      />
+      {!arriba && (
+        <g stroke={TINTA} strokeWidth={1.6} strokeLinecap="round">
+          <path d={`M ${W * 0.3} ${finVidrio - 10} L ${W * 0.46} ${inicioVidrio + 12}`} />
+          <path d={`M ${W * 0.62} ${finVidrio - 10} L ${W * 0.78} ${inicioVidrio + 12}`} />
+        </g>
+      )}
+
+      {/* Paredes interiores (doble línea) */}
+      <rect
+        x={PARED - 3}
+        y={finVidrio + 2}
+        width={W - 2 * (PARED - 3)}
+        height={L - finVidrio - 12}
+        rx={8}
+        fill="#FBFBFC"
+        stroke={TINTA}
+        strokeWidth={1.4}
+      />
+
+      {/* Ventanas a cada lado de cada fila */}
+      {g.filas.map((f) => (
+        <g key={f.y} fill="#4A505C">
+          <rect x={3} y={f.y + 8} width={4} height={PASO_FILA - 16} rx={2} />
+          <rect x={W - 7} y={f.y + 8} width={4} height={PASO_FILA - 16} rx={2} />
+        </g>
+      ))}
+
+      {/* Pasillo */}
+      {g.columnas
+        .filter((c) => c.pasillo)
+        .map((c) => (
+          <rect key={c.x} x={c.x} y={yFilas - 4} width={c.w} height={finFilas - yFilas + 8} rx={6} fill="#EEF0F3" />
+        ))}
+
+      {/* Piso de abajo: puerta (abertura en la pared derecha) con escalones, y pared detrás del conductor */}
+      {g.puerta && (
+        <g>
+          <rect x={W - PARED - 2} y={g.puerta[0]} width={PARED + 6} height={g.puerta[1] - g.puerta[0]} fill="#fff" />
+          <g stroke="#9AA0AC" strokeWidth={1.6}>
+            {[0.25, 0.5, 0.75].map((t) => (
+              <line
+                key={t}
+                x1={g.der[1] - 34}
+                x2={W - 4}
+                y1={g.puerta![0] + (g.puerta![1] - g.puerta![0]) * t}
+                y2={g.puerta![0] + (g.puerta![1] - g.puerta![0]) * t}
+              />
+            ))}
+          </g>
+          <line x1={PARED - 3} x2={g.izq[1]} y1={frente - 26} y2={frente - 26} stroke={TINTA} strokeWidth={3} strokeLinecap="round" />
+        </g>
+      )}
+
+      {/* Escalera entre pisos */}
+      {g.escalera && (
+        <g>
+          <rect x={g.escalera.x} y={g.escalera.y} width={g.escalera.w} height={g.escalera.h} rx={8} fill="#F4F5F7" stroke="#9AA0AC" strokeWidth={1.5} />
+          {Array.from({ length: 5 }, (_, i) => (
+            <line
+              key={i}
+              x1={g.escalera!.x + 6}
+              x2={g.escalera!.x + g.escalera!.w - 6}
+              y1={g.escalera!.y + 10 + i * ((g.escalera!.h - 20) / 4)}
+              y2={g.escalera!.y + 10 + i * ((g.escalera!.h - 20) / 4)}
+              stroke="#C9CED7"
+              strokeWidth={2}
+            />
+          ))}
+        </g>
+      )}
+
+      {/* Baño: cubículo con inodoro y lavamanos */}
+      {g.bano && (
+        <g>
+          <rect x={g.bano.x} y={g.bano.y} width={g.bano.w} height={g.bano.h} rx={8} fill="#fff" stroke={TINTA} strokeWidth={2} />
+          <g transform={`translate(${g.bano.x + g.bano.w / 2 - 10} ${g.bano.y + g.bano.h / 2 - 14})`} fill="none" stroke={TINTA} strokeWidth={1.6}>
+            <rect x={3} y={0} width={14} height={6} rx={2} />
+            <ellipse cx={10} cy={17} rx={7} ry={9} />
+            <ellipse cx={10} cy={17.5} rx={3.6} ry={5} />
+          </g>
+        </g>
+      )}
+
+      {/* Equipaje (piso de abajo de un bus de 2 pisos) */}
+      {g.equipaje && (
+        <rect x={g.equipaje.x} y={g.equipaje.y} width={g.equipaje.w} height={g.equipaje.h} rx={8} fill="url(#kbRayado)" stroke="#C9CED7" strokeWidth={1.4} />
+      )}
+
+      {/* Parte trasera: rejilla del motor */}
+      {m !== "micro" && (
+        <g stroke="#C9CED7" strokeWidth={1.6}>
+          {[0, 1, 2].map((i) => (
+            <line key={i} x1={W / 2 - 24} x2={W / 2 + 24} y1={L - 26 + i * 6} y2={L - 26 + i * 6} />
+          ))}
+        </g>
+      )}
+    </g>
   );
 }
 
-function IconoVolante({ className = "" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="2.5" />
-      <path d="M12 14.5V21M9.6 11.2L3.5 9.5M14.4 11.2l6.1-1.7" />
-    </svg>
-  );
-}
+/* ================================================================ sillas y textos sobre el dibujo */
 
-/* ------------------------------------------------------------------ asiento */
+/** Convierte un rectángulo del vehículo de pie a la vista acostada (frente a la izquierda, conductor abajo). */
+function girar(r: Rect, W: number, acostado: boolean): Rect {
+  if (!acostado) return r;
+  return { x: r.y, y: W - (r.x + r.w), w: r.h, h: r.w };
+}
 
 function Asiento({
   numero,
@@ -125,8 +425,7 @@ function Asiento({
   estado,
   seleccionado,
   onAlternar,
-  r,
-  c,
+  caja,
   acostado,
   pisoVip,
 }: {
@@ -136,10 +435,8 @@ function Asiento({
   estado: string | undefined;
   seleccionado: boolean;
   onAlternar: (numero: string) => void;
-  r: number;
-  c: number;
+  caja: React.CSSProperties;
   acostado: boolean;
-  /** Todo el piso es VIP (ya lo dice la franja "Zona VIP"): no se marca cada asiento. */
   pisoVip: boolean;
 }) {
   const noDisponible = estado !== undefined && estado !== "disponible";
@@ -157,23 +454,18 @@ function Asiento({
   const estadoClase = noDisponible ? "is-ocupada" : seleccionado ? "is-elegida" : esMujeres ? "is-mujeres" : "";
 
   return (
-    <div
-      className="group relative flex items-center justify-center px-[3px] py-[3px]"
-      style={{ gridRow: acostado ? c : r, gridColumn: acostado ? r : c }}
-    >
+    <div className="group absolute" style={caja}>
       <button
         type="button"
         disabled={noDisponible}
         onClick={() => onAlternar(numero)}
         aria-label={`${descripcion}, ${textoEstado}`}
         aria-pressed={seleccionado}
-        className={`kb-silla ${estadoClase} ${acostado ? "is-acostada" : ""}`}
+        className={`kb-silla kb-silla--plano ${estadoClase} ${acostado ? "mira-izquierda" : "mira-arriba"}`}
       >
         <DibujoSilla />
         <span className="kb-silla__numero">{numero}</span>
-        {esVip && !pisoVip && !noDisponible && !seleccionado && (
-          <span className="kb-silla__vip" aria-hidden="true" />
-        )}
+        {esVip && !pisoVip && !noDisponible && !seleccionado && <span className="kb-silla__vip" aria-hidden="true" />}
       </button>
       <span role="tooltip" className="kb-silla__tip">
         {descripcion}
@@ -183,254 +475,204 @@ function Asiento({
   );
 }
 
-/* ------------------------------------------------------------------ piso */
-
-const ASIENTO_MIN = 36; // px por fila (mínimo) para acostar el bus, con mouse
-const ASIENTO_MIN_TACTIL = 44; // con pantalla táctil (tablet) las sillas nunca son más pequeñas
-const ASIENTO_MAX = 60; // px por fila (máximo) acostado
-const ANCHO_EXTRA_ACOSTADO = 180; // cabina + pared + letras + bordes (la escalera y el baño cuentan como filas)
-
 function Piso({
   piso,
   indicePiso,
-  totalPisos,
   acostado,
-  tamano,
+  escala,
+  largoMinimo,
+  posBano,
+  posEscalera,
+  modelo,
   props,
 }: {
   piso: PisoDistribucionAsientos;
   indicePiso: number;
-  totalPisos: number;
   acostado: boolean;
-  /** Ancho de cada fila cuando el bus va acostado (px). */
-  tamano: number;
+  escala: number;
+  largoMinimo: number;
+  posBano: string;
+  posEscalera: string;
+  modelo: Modelo;
   props: PropiedadesMapaBus;
 }) {
-  const esPrimerPiso = indicePiso === 0;
-  const posBano = piso.bano ?? (props.tieneBano && esPrimerPiso ? "atras" : "ninguno");
-  const posEscalera = piso.escalera ?? (totalPisos > 1 ? "frente" : "ninguno");
-  const textoEscalera = esPrimerPiso ? "Sube al piso 2" : "Baja al piso 1";
-  const categoria = (props.categoria ?? "bus").toLowerCase();
+  const g = calcularGeometria(piso, indicePiso, modelo, posBano, posEscalera, largoMinimo);
+  const totalAsientos = props.pisos.reduce(
+    (n, p) => n + p.filas.reduce((m, f) => m + f.celdas.filter((c) => interpretarCelda(c, p)).length, 0),
+    0,
+  );
+  const W = g.ancho;
+  const L = g.largo;
   const esVipPiso = piso.categoria?.toLowerCase() === "vip";
+  const anchoCaja = (acostado ? L : W) + 2 * MARGEN;
+  const altoCaja = (acostado ? W : L) + 2 * MARGEN;
 
-  const numColumnas = Math.max(1, ...piso.filas.map((f) => f.celdas.length));
-  const esPasillo = Array.from({ length: numColumnas }, (_, j) => piso.filas.every((f) => f.celdas[j] == null));
-  const letras: string[] = [];
-  let letra = 0;
-  esPasillo.forEach((p) => letras.push(p ? "" : String.fromCharCode(65 + letra++)));
-
-  // Grupos de asientos a cada lado del pasillo (para ubicar conductor, entrada, baño y escalera).
-  const primerPasillo = esPasillo.indexOf(true);
-  const ultimoPasillo = esPasillo.lastIndexOf(true);
-  const hayPasillo = primerPasillo >= 0;
-  const izq: [number, number] = hayPasillo ? [2, primerPasillo + 2] : [2, numColumnas + 2];
-  const der: [number, number] = hayPasillo ? [ultimoPasillo + 3, numColumnas + 2] : [2, numColumnas + 2];
-  const todo: [number, number] = [1, numColumnas + 3];
-
-  // Filas de la cuadrícula (en vertical; acostado se intercambian con las columnas):
-  // 1 cabina · 2 pared · [3 escalera/baño adelante] · letras · asientos · [baño/escalera atrás].
-  const hayAdelante = posEscalera === "frente" || posBano === "frente";
-  const filaCabina = 1;
-  const filaPared = 2;
-  const filaAdelante = 3;
-  const filaLetras = hayAdelante ? 4 : 3;
-  const filaInicio = filaLetras + 1;
-  const hayAtras = posBano === "atras" || posEscalera === "atras";
-  const filaAtras = filaInicio + piso.filas.length;
-
-  const alto = acostado ? tamano : 58;
-  const pistasFilas = [
-    esPrimerPiso ? (acostado ? "84px" : "104px") : acostado ? "64px" : "60px",
-    esPrimerPiso ? "14px" : "4px",
-    ...(hayAdelante ? [`${alto + 8}px`] : []),
-    acostado ? "22px" : "20px",
-    ...piso.filas.map(() => (acostado ? `${tamano}px` : "auto")),
-    ...(hayAtras ? [`${alto + 14}px`] : []),
-  ];
-  const pistaCeldas = esPasillo.map((p) => (p ? (acostado ? "30px" : "minmax(26px,34px)") : acostado ? `${tamano + 2}px` : "minmax(0,64px)"));
-  const pistasColumnas = ["12px", ...pistaCeldas, "12px"];
-  const estilo: React.CSSProperties = acostado
-    ? ({ gridTemplateColumns: pistasFilas.join(" "), gridTemplateRows: pistasColumnas.join(" "), "--tam": `${tamano - 4}px` } as React.CSSProperties)
-    : { gridTemplateColumns: pistasColumnas.join(" "), gridTemplateRows: pistasFilas.join(" ") };
-
-  /** Ubica un elemento: fila (a lo largo del bus) y columnas [desde, hasta) (a lo ancho). */
-  const ubicar = (fila: number, [desde, hasta]: [number, number]): React.CSSProperties =>
-    acostado ? { gridColumn: fila, gridRow: `${desde} / ${hasta}` } : { gridRow: fila, gridColumn: `${desde} / ${hasta}` };
-
-  // Forma según el vehículo: el frente más redondeado en van y auto.
-  const radioFrente = categoria === "auto" ? 72 : categoria === "van" ? 56 : categoria === "buseta" ? 44 : 34;
-  const radioAtras = categoria === "auto" ? 44 : 14;
-  const formaCarroceria: React.CSSProperties = acostado
-    ? { borderRadius: `${radioFrente}px ${radioAtras}px ${radioAtras}px ${radioFrente}px` }
-    : { borderRadius: `${radioFrente}px ${radioFrente}px ${radioAtras}px ${radioAtras}px` };
-
-  const elementos: React.ReactNode[] = [];
-
-  // Cabina: conductor con su volante (izquierda) y la entrada con escalones (derecha). En el piso 2, la vista panorámica.
-  if (esPrimerPiso) {
-    elementos.push(
-      <div key="conductor" className={`kb-plano-conductor ${acostado ? "is-acostado" : ""}`} style={ubicar(filaCabina, izq)}>
-        <span className="kb-plano-volante" aria-hidden="true">
-          <IconoVolante className="h-full w-full" />
-        </span>
-        <span className={`kb-silla is-conductor ${acostado ? "is-acostada" : ""}`} aria-hidden="true" style={acostado ? ({ "--tam": "40px" } as React.CSSProperties) : undefined}>
-          <DibujoSilla />
-        </span>
-        <span className="kb-plano-texto">Conductor</span>
-      </div>,
-      <div key="entrada" className={`kb-plano-entrada ${acostado ? "is-acostado" : ""}`} style={ubicar(filaCabina, der)}>
-        <span className="kb-plano-escalones" aria-hidden="true" />
-        <span className="kb-plano-texto">Entrada</span>
-      </div>,
+  /** Posición absoluta (px a escala) de un rectángulo del vehículo de pie. */
+  const caja = (r: Rect): React.CSSProperties => {
+    const q = girar(r, W, acostado);
+    return { left: (q.x + MARGEN) * escala, top: (q.y + MARGEN) * escala, width: q.w * escala, height: q.h * escala };
+  };
+  /** Texto centrado en un punto del vehículo de pie (no se gira ni se parte en renglones). */
+  const etiqueta = (texto: string, cx: number, cy: number, clase = "") => {
+    const q = girar({ x: cx, y: cy, w: 0, h: 0 }, W, acostado);
+    return (
+      <span
+        key={texto + cx + cy}
+        className={`kb-plano-rotulo absolute ${clase}`}
+        style={{ left: (q.x + MARGEN) * escala, top: (q.y + MARGEN) * escala }}
+      >
+        {texto}
+      </span>
     );
-  } else {
-    elementos.push(
-      <div key="panoramica" className="kb-plano-panoramica" style={ubicar(filaCabina, [2, numColumnas + 2])}>
-        <span className="kb-plano-texto">{acostado ? "Frente" : "Frente · vista panorámica"}</span>
-      </div>,
-    );
-  }
+  };
+  /** Punto para el rótulo de un bloque (escalera, baño): de pie, abajo del bloque; acostado, abajo también. */
+  const pieDe = (r: Rect): [number, number] => (acostado ? [r.x + 9, r.y + r.h / 2] : [r.x + r.w / 2, r.y + r.h - 10]);
 
-  // Pared que separa la cabina (con el paso libre en el pasillo). El piso de arriba no tiene cabina.
-  if (!esPrimerPiso) {
-    // sin pared
-  } else if (hayPasillo) {
-    elementos.push(
-      <span key="pared-i" aria-hidden="true" className={`kb-plano-pared ${acostado ? "is-acostado" : ""}`} style={ubicar(filaPared, [1, izq[1]])} />,
-      <span key="pared-d" aria-hidden="true" className={`kb-plano-pared ${acostado ? "is-acostado" : ""}`} style={ubicar(filaPared, [der[0], numColumnas + 3])} />,
-    );
-  } else {
-    elementos.push(<span key="pared" aria-hidden="true" className={`kb-plano-pared ${acostado ? "is-acostado" : ""}`} style={ubicar(filaPared, todo)} />);
-  }
-
-  const escalera = (fila: number, lado: [number, number]) => (
-    <div key="escalera" className={`kb-plano-escalera ${acostado ? "is-acostado" : ""}`} style={ubicar(fila, lado)}>
-      <span className="kb-plano-texto">{textoEscalera}</span>
-    </div>
-  );
-  const bano = (fila: number, lado: [number, number]) => (
-    <div key="bano" className="kb-plano-bano" style={ubicar(fila, lado)}>
-      <svg viewBox="0 0 40 40" className="h-8 w-8 shrink-0" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="11" y="3" width="18" height="8" rx="2.5" />
-        <path d="M12 11h16v6a8 9 0 0 1-16 0z" />
-        <ellipse cx="20" cy="27" rx="7.5" ry="9" />
-        <ellipse cx="20" cy="27.5" rx="4" ry="5.5" />
-      </svg>
-      <span className="text-[13px] font-bold tracking-wide">WC</span>
-    </div>
-  );
-  if (posEscalera === "frente") elementos.push(escalera(filaAdelante, der));
-  if (posBano === "frente") elementos.push(bano(filaAdelante, izq));
-  if (posBano === "atras") elementos.push(bano(filaAtras, der));
-  if (posEscalera === "atras") elementos.push(escalera(filaAtras, posBano === "atras" && hayPasillo ? izq : der));
-
-  // Letras de las columnas.
-  letras.forEach((l, j) => {
-    if (l)
-      elementos.push(
-        <span key={`l${j}`} aria-hidden="true" className="grid place-items-center text-[11px] font-semibold text-muted-3" style={ubicar(filaLetras, [j + 2, j + 3])}>
-          {l}
-        </span>,
-      );
-  });
-
-  // Asientos, pasillo y ventanas.
-  piso.filas.forEach((fila, i) => {
-    const r = filaInicio + i;
-    for (let j = 0; j < numColumnas; j++) {
-      const c = j + 2;
-      if (esPasillo[j]) {
-        elementos.push(
-          <span key={`p${i}-${j}`} aria-hidden="true" className="kb-pasillo" style={ubicar(r, [c, c + 1])}>
-            {numeroDeFila(fila.celdas, piso, i)}
+  const sillas: React.ReactNode[] = [];
+  g.filas.forEach((fila) => {
+    g.columnas.forEach((col, j) => {
+      if (col.pasillo) {
+        sillas.push(
+          <span key={`n${fila.y}-${j}`} aria-hidden="true" className="kb-plano-fila absolute" style={caja({ x: col.x, y: fila.y, w: col.w, h: PASO_FILA })}>
+            {fila.numero}
           </span>,
         );
-        continue;
+        return;
       }
-      const interpretada = interpretarCelda(fila.celdas[j] ?? null, piso);
-      if (interpretada === null) continue;
-      elementos.push(
+      const it = interpretarCelda(fila.celdas[j] ?? null, piso);
+      if (!it) return;
+      sillas.push(
         <Asiento
-          key={interpretada.numero}
-          numero={interpretada.numero}
+          key={it.numero}
+          numero={it.numero}
           posicion={posicionDelAsiento(fila.celdas, j)}
-          etiquetas={interpretada.etiquetas}
-          estado={props.estadoPorNumero.get(interpretada.numero)}
-          seleccionado={props.seleccionados.includes(interpretada.numero)}
+          etiquetas={it.etiquetas}
+          estado={props.estadoPorNumero.get(it.numero)}
+          seleccionado={props.seleccionados.includes(it.numero)}
           onAlternar={props.onAlternar}
-          r={r}
-          c={c}
+          caja={caja({ x: col.x, y: fila.y + (PASO_FILA - SILLA) / 2, w: SILLA, h: SILLA })}
           acostado={acostado}
           pisoVip={esVipPiso}
         />,
       );
-    }
+    });
   });
 
+  // Letras de las columnas, justo antes de la primera fila.
+  const yLetras = (g.filas[0]?.y ?? g.frente) - 18;
+  const letras = g.columnas
+    .filter((c) => c.letra)
+    .map((c) => etiqueta(c.letra, c.x + c.w / 2, yLetras + 8, "kb-plano-letra"));
+
+  // Puesto del conductor (piso de abajo): silla gris y volante delante.
+  const conductor =
+    indicePiso === 0 ? (
+      <>
+        <span className={`kb-silla kb-silla--plano is-conductor absolute ${acostado ? "mira-izquierda" : "mira-arriba"}`} aria-hidden="true" style={caja({ x: g.izq[0] + 4, y: g.frente - 70, w: SILLA - 4, h: SILLA - 4 })}>
+          <DibujoSilla />
+        </span>
+        <span className="kb-plano-volante absolute" aria-hidden="true" style={caja({ x: g.izq[0] + 9, y: g.frente - 104, w: 30, h: 30 })}>
+          <svg viewBox="0 0 24 24" fill="none" stroke={TINTA} strokeWidth={2.2} strokeLinecap="round">
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="2.5" />
+            <path d="M12 14.5V21M9.6 11.2L3.5 9.5M14.4 11.2l6.1-1.7" />
+          </svg>
+        </span>
+        {acostado
+          ? etiqueta("Conductor", g.izq[0] + SILLA + 30, g.frente - 62, "kb-plano-pequeno")
+          : etiqueta("Conductor", g.izq[0] + SILLA + 34, Math.max(finDelVidrio(modelo, false) + 30, g.frente - 50))}
+      </>
+    ) : (
+      acostado ? null : etiqueta("Frente · vista panorámica", W / 2, 64, "kb-plano-suave")
+    );
+
   return (
-    <div className={`rounded-[24px] bg-kbbg ${acostado ? "overflow-x-auto px-2 py-5" : "px-2 py-6"}`}>
+    <div className={`kb-plano-escenario ${acostado ? "overflow-x-auto" : ""}`}>
+      <div className="kb-plano-barra">
+        <span className="min-w-0">
+          <b className="block truncate text-[13px] font-semibold text-ink md:text-sm">{NOMBRE_MODELO[modelo](props.pisos.length)}</b>
+          {(props.nombreVehiculo || totalAsientos > 0) && (
+            <span className="block truncate text-[11px] text-muted-2 md:text-xs">
+              {[props.nombreVehiculo, `${totalAsientos} asientos`].filter(Boolean).join(" · ")}
+            </span>
+          )}
+        </span>
+        <span className="kb-plano-sentido" aria-label="Sentido de viaje: hacia el frente del vehículo">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: acostado ? "rotate(-90deg)" : undefined }}>
+            <path d="M12 19V5M6 11l6-6 6 6" />
+          </svg>
+          Sentido de viaje
+        </span>
+      </div>
       {esVipPiso && (
         <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[.08em] text-ink">
           <span className="rounded-full bg-kbyellow px-2.5 py-0.5">Zona VIP · asientos amplios</span>
         </p>
       )}
-      <div className={`relative mx-auto ${acostado ? "w-max px-3 py-3" : "max-w-[400px] px-3 pt-3"}`}>
-        {/* Espejos retrovisores con su brazo (piso de abajo). */}
-        {esPrimerPiso &&
-          (acostado ? (
-            <>
-              <Espejo className="left-[26px] -top-[6px] h-[44px] w-6" style={{ transform: "rotate(-90deg) scaleX(-1)" }} />
-              <Espejo className="-bottom-[6px] left-[26px] h-[44px] w-6" style={{ transform: "rotate(-90deg)" }} />
-            </>
-          ) : (
-            <>
-              <Espejo className="-left-[8px] top-[18px] h-[44px] w-6" />
-              <Espejo className="-right-[8px] top-[18px] h-[44px] w-6" style={{ transform: "scaleX(-1)" }} />
-            </>
-          ))}
-        <div className={`kb-carroceria ${acostado ? "pl-5 pr-3 py-2" : "px-2 pb-3 pt-5"}`} style={formaCarroceria}>
-          {/* Parabrisas con el tablero curvo (piso de abajo) o ventanal panorámico (piso de arriba). */}
-          <span
-            aria-hidden="true"
-            className={`kb-parabrisas ${acostado ? "is-acostado inset-y-[7px] left-[7px] w-[24px]" : "inset-x-[7px] top-[7px] h-[24px]"}`}
-            style={
-              acostado
-                ? { borderRadius: `${radioFrente - 6}px 50% 50% ${radioFrente - 6}px / ${radioFrente - 6}px 14px 14px ${radioFrente - 6}px` }
-                : { borderRadius: `${radioFrente - 6}px ${radioFrente - 6}px 50% 50% / ${radioFrente - 6}px ${radioFrente - 6}px 14px 14px` }
-            }
-          />
-          {esPrimerPiso && (
-            <span aria-hidden="true" className={`kb-puerta-hueco ${acostado ? "-bottom-[4px] left-[38px] h-[12px] w-[60px]" : "-right-[4px] top-[44px] h-[60px] w-[12px]"}`} />
-          )}
+      <div
+        className="relative mx-auto"
+        style={{ width: anchoCaja * escala, height: altoCaja * escala, fontSize: Math.max(9, 11 * escala) }}
+        role="group"
+        aria-label={`Asientos, ${piso.nombre || `Piso ${indicePiso + 1}`}`}
+      >
+        <svg
+          className="absolute inset-0 h-full w-full"
+          viewBox={`${-MARGEN} ${-MARGEN} ${anchoCaja} ${altoCaja}`}
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id="kbVidrio" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#DDE1E7" />
+              <stop offset=".55" stopColor="#F3F4F6" />
+              <stop offset="1" stopColor="#E3E6EB" />
+            </linearGradient>
+            <filter id="kbSombra" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#0B0D12" floodOpacity=".14" />
+            </filter>
+            <pattern id="kbRayado" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="8" height="8" fill="#F7F8FA" />
+              <line x1="0" y1="0" x2="0" y2="8" stroke="#EDEFF2" strokeWidth="2" />
+            </pattern>
+          </defs>
+          <g transform={acostado ? `translate(0 ${W}) rotate(-90)` : undefined}>
+            <ArteVehiculo g={g} indicePiso={indicePiso} />
+          </g>
+        </svg>
 
-          <div className="grid justify-center" style={estilo} role="group" aria-label={`Asientos, ${piso.nombre || `Piso ${indicePiso + 1}`}`}>
-            {elementos}
-          </div>
-        </div>
+        {conductor}
+        {g.puerta &&
+          (acostado
+            ? etiqueta("Puerta", g.der[1] - 50, (g.puerta[0] + g.puerta[1]) / 2, "kb-plano-suave")
+            : etiqueta("Puerta", g.der[1] - 18, Math.max(g.puerta[0] - 10, finDelVidrio(modelo, false) + 12), "kb-plano-suave"))}
+        {g.escalera && etiqueta(indicePiso === 0 ? "Sube al piso 2" : "Baja al piso 1", ...pieDe(g.escalera), "kb-plano-chip")}
+        {g.bano && etiqueta("Baño", ...pieDe(g.bano))}
+        {g.equipaje && etiqueta("Equipaje", g.equipaje.x + g.equipaje.w / 2, g.equipaje.y + g.equipaje.h / 2, "kb-plano-suave")}
+        {letras}
+        {sillas}
       </div>
     </div>
   );
 }
 
-/* ------------------------------------------------------------------ mapa */
+/* ================================================================ mapa completo */
 
 function Leyenda({ mostrarVip, hayVip }: { mostrarVip: boolean; hayVip: boolean }) {
-  const item = (clase: string, texto: string, ocupada = false) => (
-    <span className="flex items-center gap-1.5">
+  const item = (clase: string, texto: string) => (
+    <span className="kb-leyenda-pastilla">
       <span className={`kb-silla is-leyenda ${clase}`} aria-hidden="true">
-        <DibujoSilla ocupada={ocupada} />
+        <DibujoSilla />
       </span>
       {texto}
     </span>
   );
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-muted-2 md:text-[13px]">
+    <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-muted-2 md:gap-2 md:text-[13px]">
       {item("", "Libre")}
       {item("is-elegida", "Tu asiento")}
-      {item("is-ocupada", "Ocupado", true)}
+      {item("is-ocupada", "Ocupado")}
       {item("is-mujeres", "Solo mujeres")}
       {(mostrarVip || hayVip) && (
-        <span className="flex items-center gap-1.5">
+        <span className="kb-leyenda-pastilla">
           <span className="relative inline-block h-3 w-3">
             <span className="kb-silla__vip !right-0 !top-0" />
           </span>
@@ -441,16 +683,19 @@ function Leyenda({ mostrarVip, hayVip }: { mostrarVip: boolean; hayVip: boolean 
   );
 }
 
+const SILLA_MIN_RATON = 36; // tamaño mínimo de una silla acostada con mouse (px)
+const SILLA_MIN_TACTIL = 44; // con pantalla táctil las sillas nunca son más pequeñas
+const ESCALA_MAX = 1.25;
+
 export function MapaAsientosBus(props: PropiedadesMapaBus) {
   const total = props.pisos.length;
   const [pisoActivo, setPisoActivo] = useState(0);
   const indice = Math.min(pisoActivo, Math.max(0, total - 1));
   const piso = props.pisos[indice];
+  const modelo = modeloDe(props.categoria);
 
-  // ¿Cabe el bus acostado? Se mide el ancho disponible; si no cabe, va vertical.
   const contenedor = useRef<HTMLDivElement>(null);
   const [ancho, setAncho] = useState(0);
-  // Pantalla táctil (dedo, no mouse): las sillas necesitan más tamaño para tocarlas bien.
   const [tactil, setTactil] = useState(false);
   useLayoutEffect(() => {
     const el = contenedor.current;
@@ -462,11 +707,32 @@ export function MapaAsientosBus(props: PropiedadesMapaBus) {
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-  const filasMax = Math.max(1, ...props.pisos.map((p) => p.filas.length));
-  const tamano = Math.min(ASIENTO_MAX, Math.floor((ancho - ANCHO_EXTRA_ACOSTADO) / (filasMax + 2)));
-  // Acostado desde 640 px de ancho útil; las sillas se achican hasta 36 px con mouse y 44 px con toque. Si no caben, vertical.
-  // La silla dibujada mide 4 px menos que su fila (tamano - 4).
-  const acostado = ancho >= 640 && tamano - 4 >= (tactil ? ASIENTO_MIN_TACTIL : ASIENTO_MIN);
+
+  const posiciones = props.pisos.map((p, i) => ({
+    bano: p.bano ?? (props.tieneBano && i === 0 ? "atras" : "ninguno"),
+    escalera: p.escalera ?? (total > 1 ? "frente" : "ninguno"),
+  }));
+  // Los dos pisos miden lo mismo (como un bus real).
+  const largoComun = Math.max(
+    0,
+    ...props.pisos.map((p, i) => largoNatural(p, i, modelo, posiciones[i].bano, posiciones[i].escalera)),
+  );
+  const g0 = piso ? calcularGeometria(piso, indice, modelo, posiciones[indice].bano, posiciones[indice].escalera, largoComun) : null;
+
+  // Escala: acostado si el vehículo completo cabe a lo ancho con sillas de tamaño suficiente; si no, de pie.
+  const disponible = Math.max(0, ancho - 16);
+  let acostado = false;
+  let escala = 1;
+  if (g0) {
+    const escalaAcostado = Math.min(ESCALA_MAX, disponible / (g0.largo + 2 * MARGEN));
+    const minimo = (tactil ? SILLA_MIN_TACTIL : SILLA_MIN_RATON) / SILLA;
+    if (ancho >= 640 && escalaAcostado >= minimo) {
+      acostado = true;
+      escala = escalaAcostado;
+    } else {
+      escala = Math.min(1.1, disponible / (g0.ancho + 2 * MARGEN));
+    }
+  }
 
   const libresPorPiso = props.pisos.map((p) => {
     let libres = 0;
@@ -516,7 +782,20 @@ export function MapaAsientosBus(props: PropiedadesMapaBus) {
         <Leyenda mostrarVip={!!props.mostrarVip} hayVip={hayVip} />
       </div>
 
-      {piso && <Piso key={indice} piso={piso} indicePiso={indice} totalPisos={total} acostado={acostado} tamano={tamano} props={props} />}
+      {piso && ancho > 0 && (
+        <Piso
+          key={indice}
+          piso={piso}
+          indicePiso={indice}
+          acostado={acostado}
+          escala={escala}
+          largoMinimo={largoComun}
+          posBano={posiciones[indice].bano}
+          posEscalera={posiciones[indice].escalera}
+          modelo={modelo}
+          props={props}
+        />
+      )}
     </div>
   );
 }

@@ -268,6 +268,7 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
               onAlternar={alternarAsiento}
               tieneBano={(mapa.tipoVehiculoAmenidades ?? []).includes("bano_a_bordo")}
               categoria={mapa.tipoVehiculoCategoria}
+              nombreVehiculo={mapa.tipoVehiculoNombre}
             />
           </div>
           {hayMujeres && (
