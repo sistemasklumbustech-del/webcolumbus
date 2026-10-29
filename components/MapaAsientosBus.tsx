@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { interpretarCelda, type Celda, type PisoDistribucionAsientos } from "@/lib/api";
 
 /**
- * Mapa de asientos (rediseño final, oct-2026): sillas dibujadas en SVG, un piso a
- * la vez con pestañas. En celular el bus va vertical (frente arriba); en PC va
- * acostado con el frente a la izquierda. Se eliminó la forma redonda del bus.
- * Mismo contrato de siempre: aquí solo se dibuja; qué asientos están libres,
- * ocupados o elegidos lo decide quien lo usa (pasajero en línea, vendedor en
- * ventanilla o el constructor de buses de la cooperativa).
+ * Mapa de asientos -- plano del bus (oct-2026, elegido por Adrián): el vehículo visto desde arriba,
+ * como un plano real: paredes de doble línea, frente curvo con parabrisas y tablero, espejos, puesto
+ * del conductor con su volante, entrada con escalones, pared de la cabina, escalera y baño (WC) en su
+ * lugar, y el pasillo con el número de fila. Las sillas son las mismas del diseño oficial.
+ *
+ * - Un piso a la vez con pestañas (cada una dice cuántos asientos libres tiene).
+ * - Vertical (frente arriba) en celular; acostado (frente a la izquierda) cuando el bus completo cabe
+ *   a lo ancho. Si no cabe (ej. 15 filas en una pantalla de 1024 px), se queda vertical en vez de
+ *   obligar a desplazarse de lado.
+ * - La forma cambia un poco según el vehículo (bus, buseta, van, auto).
+ *
+ * Mismo contrato de siempre: aquí solo se dibuja; qué asientos están libres, ocupados o elegidos lo
+ * decide quien lo usa (pasajero en línea, vendedor en ventanilla o el constructor de la cooperativa).
  */
 export interface PropiedadesMapaBus {
   pisos: PisoDistribucionAsientos[];
@@ -21,6 +28,8 @@ export interface PropiedadesMapaBus {
   tieneBano: boolean;
   /** Marca con un punto los asientos VIP (útil al configurar el bus o vender en ventanilla). */
   mostrarVip?: boolean;
+  /** Categoría del vehículo (bus, buseta, van, auto): solo cambia un poco la forma de la carrocería. */
+  categoria?: string | null;
 }
 
 export type Posicion = "ventana" | "pasillo" | "centro";
@@ -62,9 +71,44 @@ export function ubicacionDeAsiento(
   return null;
 }
 
-function IconoVolante({ className }: { className?: string }) {
+/** Número de la fila tal como lo lleva el asiento (ej. el piso 2 empieza en la fila 6); si no se puede leer, la posición. */
+function numeroDeFila(celdas: Celda[], piso: PisoDistribucionAsientos, indice: number): number {
+  for (const celda of celdas) {
+    const it = interpretarCelda(celda, piso);
+    const m = it?.numero.match(/^(\d+)/);
+    if (m) return Number(m[1]);
+  }
+  return indice + 1;
+}
+
+/* ------------------------------------------------------------------ dibujos */
+
+/** Silla del diseño (la misma de hoy): respaldo, asiento y dos brazos. viewBox 40×40. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function DibujoSilla(_props: { ocupada?: boolean } = {}) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 40 40" aria-hidden="true" className="kb-silla__svg">
+      <rect className="kb-silla__respaldo" x="7" y="3" width="26" height="11" rx="4" />
+      <rect className="kb-silla__cojin" x="9" y="15" width="22" height="20" rx="6" />
+      <rect className="kb-silla__brazo" x="3" y="16" width="5" height="15" rx="2.5" />
+      <rect className="kb-silla__brazo" x="32" y="16" width="5" height="15" rx="2.5" />
+    </svg>
+  );
+}
+
+/** Espejo retrovisor con su brazo, saliendo de la esquina delantera izquierda (el derecho se refleja). */
+function Espejo({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 24 44" aria-hidden="true" className={`kb-espejo ${className}`} style={style}>
+      <path d="M22 34c-6 0-12-4-14-12" fill="none" stroke="#1A1D24" strokeWidth="2.4" strokeLinecap="round" />
+      <rect x="2" y="4" width="10" height="20" rx="5" fill="#fff" stroke="#1A1D24" strokeWidth="2.2" />
+    </svg>
+  );
+}
+
+function IconoVolante({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
       <circle cx="12" cy="12" r="9" />
       <circle cx="12" cy="12" r="2.5" />
       <path d="M12 14.5V21M9.6 11.2L3.5 9.5M14.4 11.2l6.1-1.7" />
@@ -72,48 +116,19 @@ function IconoVolante({ className }: { className?: string }) {
   );
 }
 
-/** Silla del diseño: respaldo, asiento y dos brazos (viewBox 40×40). */
-function Silla({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 40 40" aria-hidden="true" className={className}>
-      <rect className="kb-seat__shape" x="7" y="3" width="26" height="11" rx="4" />
-      <rect className="kb-seat__shape" x="9" y="15" width="22" height="20" rx="6" />
-      <rect className="kb-seat__shape" x="3" y="16" width="5" height="15" rx="2.5" />
-      <rect className="kb-seat__shape" x="32" y="16" width="5" height="15" rx="2.5" />
-    </svg>
-  );
-}
+/* ------------------------------------------------------------------ asiento */
 
-function SillaLeyenda({ clase, color }: { clase: string; color: string }) {
-  return (
-    <svg viewBox="0 0 40 40" aria-hidden="true" className={`h-[18px] w-[18px] md:h-5 md:w-5 ${clase}`} style={{ color }}>
-      <rect className="kb-seat__shape" x="7" y="3" width="26" height="11" rx="4" />
-      <rect className="kb-seat__shape" x="9" y="15" width="22" height="20" rx="6" />
-      <rect className="kb-seat__shape" x="3" y="16" width="5" height="15" rx="2.5" />
-      <rect className="kb-seat__shape" x="32" y="16" width="5" height="15" rx="2.5" />
-    </svg>
-  );
-}
-
-function BloqueServicio({ icono, texto }: { icono?: React.ReactNode; texto: string }) {
-  return (
-    <span className="flex items-center gap-1.5 text-xs text-muted-2 md:flex-col md:text-center md:text-[11px] md:text-muted-3">
-      {icono}
-      {texto}
-    </span>
-  );
-}
-
-function AsientoBus({
+function Asiento({
   numero,
   posicion,
   etiquetas,
   estado,
   seleccionado,
   onAlternar,
-  fila,
-  columna,
-  mostrarVip,
+  r,
+  c,
+  acostado,
+  pisoVip,
 }: {
   numero: string;
   posicion: Posicion;
@@ -121,9 +136,11 @@ function AsientoBus({
   estado: string | undefined;
   seleccionado: boolean;
   onAlternar: (numero: string) => void;
-  fila: number;
-  columna: number;
-  mostrarVip: boolean;
+  r: number;
+  c: number;
+  acostado: boolean;
+  /** Todo el piso es VIP (ya lo dice la franja "Zona VIP"): no se marca cada asiento. */
+  pisoVip: boolean;
 }) {
   const noDisponible = estado !== undefined && estado !== "disponible";
   const textoEstado = noDisponible
@@ -131,22 +148,18 @@ function AsientoBus({
       ? "reservado (pago pendiente)"
       : "ocupado"
     : seleccionado
-      ? "seleccionado"
-      : "disponible";
+      ? "elegido"
+      : "libre";
   const esMujeres = etiquetas.includes("mujeres");
   const esVip = etiquetas.includes("vip");
-  const notasEtiquetas = [esVip ? "VIP" : null, esMujeres ? "exclusivo mujeres" : null].filter(Boolean) as string[];
-  const descripcion = [`Asiento ${numero}`, ETIQUETA_POSICION[posicion], ...notasEtiquetas].join(" · ");
-  const clases = [
-    "kb-seat",
-    noDisponible ? "is-occupied" : seleccionado ? "is-selected" : esMujeres ? "is-women" : "",
-    "!h-[56px] !w-[52px] md:!h-[50px] md:!w-12",
-  ].join(" ");
+  const notas = [esVip ? "VIP" : null, esMujeres ? "solo mujeres" : null].filter(Boolean) as string[];
+  const descripcion = [`Asiento ${numero}`, ETIQUETA_POSICION[posicion], ...notas].join(" · ");
+  const estadoClase = noDisponible ? "is-ocupada" : seleccionado ? "is-elegida" : esMujeres ? "is-mujeres" : "";
 
   return (
     <div
-      className="group relative flex justify-center [grid-column:var(--c)] [grid-row:var(--r)] md:[grid-column:var(--r)] md:[grid-row:var(--c)]"
-      style={{ "--r": fila, "--c": columna } as React.CSSProperties}
+      className="group relative flex items-center justify-center px-[3px] py-[3px]"
+      style={{ gridRow: acostado ? c : r, gridColumn: acostado ? r : c }}
     >
       <button
         type="button"
@@ -154,20 +167,15 @@ function AsientoBus({
         onClick={() => onAlternar(numero)}
         aria-label={`${descripcion}, ${textoEstado}`}
         aria-pressed={seleccionado}
-        className={clases}
+        className={`kb-silla ${estadoClase} ${acostado ? "is-acostada" : ""}`}
       >
-        <Silla className="h-[46px] w-[46px] md:absolute md:left-0.5 md:top-[3px] md:h-11 md:w-11 md:-rotate-90" />
-        <span className="kb-seat__label md:!inset-0 md:!top-0 md:grid md:place-items-center md:pl-[11px] md:!text-[10px]">
-          {numero}
-        </span>
+        <DibujoSilla />
+        <span className="kb-silla__numero">{numero}</span>
+        {esVip && !pisoVip && !noDisponible && !seleccionado && (
+          <span className="kb-silla__vip" aria-hidden="true" />
+        )}
       </button>
-      {mostrarVip && esVip && !noDisponible && (
-        <span className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full bg-kbyellow ring-2 ring-ink" aria-hidden="true" />
-      )}
-      <span
-        role="tooltip"
-        className="pointer-events-none absolute -top-8 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-float transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
-      >
+      <span role="tooltip" className="kb-silla__tip">
         {descripcion}
         {noDisponible ? ` (${textoEstado})` : ""}
       </span>
@@ -175,122 +183,259 @@ function AsientoBus({
   );
 }
 
-function PisoBus({
+/* ------------------------------------------------------------------ piso */
+
+const ASIENTO_MIN = 46; // px por fila (mínimo) para acostar el bus
+const ASIENTO_MAX = 60; // px por fila (máximo) acostado
+const ANCHO_EXTRA_ACOSTADO = 200; // cabina + pared + letras + bordes (la escalera y el baño cuentan como filas)
+
+function Piso({
   piso,
   indicePiso,
   totalPisos,
+  acostado,
+  tamano,
   props,
 }: {
   piso: PisoDistribucionAsientos;
   indicePiso: number;
   totalPisos: number;
+  acostado: boolean;
+  /** Ancho de cada fila cuando el bus va acostado (px). */
+  tamano: number;
   props: PropiedadesMapaBus;
 }) {
   const esPrimerPiso = indicePiso === 0;
-  const tieneEscalera = totalPisos > 1;
-  // Baño: al fondo del primer piso si el vehículo lo declara (o si el piso lo indica explícitamente).
   const posBano = piso.bano ?? (props.tieneBano && esPrimerPiso ? "atras" : "ninguno");
-  const posEscalera = piso.escalera ?? (tieneEscalera ? "frente" : "ninguno");
-  const etiquetaPiso = piso.nombre || `Piso ${indicePiso + 1}`;
-  const textoEscalera = esPrimerPiso ? "Escalera al piso 2" : "Escalera al piso 1";
+  const posEscalera = piso.escalera ?? (totalPisos > 1 ? "frente" : "ninguno");
+  const textoEscalera = esPrimerPiso ? "Sube al piso 2" : "Baja al piso 1";
+  const categoria = (props.categoria ?? "bus").toLowerCase();
+  const esVipPiso = piso.categoria?.toLowerCase() === "vip";
 
-  const numColumnas = Math.max(0, ...piso.filas.map((f) => f.celdas.length));
+  const numColumnas = Math.max(1, ...piso.filas.map((f) => f.celdas.length));
   const esPasillo = Array.from({ length: numColumnas }, (_, j) => piso.filas.every((f) => f.celdas[j] == null));
   const letras: string[] = [];
   let letra = 0;
   esPasillo.forEach((p) => letras.push(p ? "" : String.fromCharCode(65 + letra++)));
 
-  // Plantillas de la cuadrícula: en celular las filas del bus van hacia abajo; en PC
-  // (bus acostado) cada fila pasa a ser una columna y las posiciones A-B-pasillo-C-D van de arriba a abajo.
-  const columnasCelular = esPasillo.map((p) => (p ? "26px" : "minmax(0,1fr)")).join(" ");
-  const filasPc = esPasillo.map(() => "auto").join(" ");
-  const estiloCuadricula = {
-    "--cols-m": columnasCelular,
-    "--rows-d": filasPc,
-    "--cols-d": `repeat(${piso.filas.length}, 48px)`,
-  } as React.CSSProperties;
+  // Grupos de asientos a cada lado del pasillo (para ubicar conductor, entrada, baño y escalera).
+  const primerPasillo = esPasillo.indexOf(true);
+  const ultimoPasillo = esPasillo.lastIndexOf(true);
+  const hayPasillo = primerPasillo >= 0;
+  const izq: [number, number] = hayPasillo ? [2, primerPasillo + 2] : [2, numColumnas + 2];
+  const der: [number, number] = hayPasillo ? [ultimoPasillo + 3, numColumnas + 2] : [2, numColumnas + 2];
+  const todo: [number, number] = [1, numColumnas + 3];
+
+  // Filas de la cuadrícula (en vertical; acostado se intercambian con las columnas):
+  // 1 cabina · 2 pared · [3 escalera/baño adelante] · letras · asientos · [baño/escalera atrás].
+  const hayAdelante = posEscalera === "frente" || posBano === "frente";
+  const filaCabina = 1;
+  const filaPared = 2;
+  const filaAdelante = 3;
+  const filaLetras = hayAdelante ? 4 : 3;
+  const filaInicio = filaLetras + 1;
+  const hayAtras = posBano === "atras" || posEscalera === "atras";
+  const filaAtras = filaInicio + piso.filas.length;
+
+  const alto = acostado ? tamano : 58;
+  const pistasFilas = [
+    esPrimerPiso ? (acostado ? "96px" : "104px") : acostado ? "64px" : "60px",
+    esPrimerPiso ? "14px" : "4px",
+    ...(hayAdelante ? [`${alto + 8}px`] : []),
+    acostado ? "22px" : "20px",
+    ...piso.filas.map(() => (acostado ? `${tamano}px` : "auto")),
+    ...(hayAtras ? [`${alto + 14}px`] : []),
+  ];
+  const pistaCeldas = esPasillo.map((p) => (p ? (acostado ? "30px" : "minmax(26px,34px)") : acostado ? `${tamano + 2}px` : "minmax(0,64px)"));
+  const pistasColumnas = ["12px", ...pistaCeldas, "12px"];
+  const estilo: React.CSSProperties = acostado
+    ? ({ gridTemplateColumns: pistasFilas.join(" "), gridTemplateRows: pistasColumnas.join(" "), "--tam": `${tamano - 4}px` } as React.CSSProperties)
+    : { gridTemplateColumns: pistasColumnas.join(" "), gridTemplateRows: pistasFilas.join(" ") };
+
+  /** Ubica un elemento: fila (a lo largo del bus) y columnas [desde, hasta) (a lo ancho). */
+  const ubicar = (fila: number, [desde, hasta]: [number, number]): React.CSSProperties =>
+    acostado ? { gridColumn: fila, gridRow: `${desde} / ${hasta}` } : { gridRow: fila, gridColumn: `${desde} / ${hasta}` };
+
+  // Forma según el vehículo: el frente más redondeado en van y auto.
+  const radioFrente = categoria === "auto" ? 72 : categoria === "van" ? 56 : categoria === "buseta" ? 44 : 34;
+  const radioAtras = categoria === "auto" ? 44 : 14;
+  const formaCarroceria: React.CSSProperties = acostado
+    ? { borderRadius: `${radioFrente}px ${radioAtras}px ${radioAtras}px ${radioFrente}px` }
+    : { borderRadius: `${radioFrente}px ${radioFrente}px ${radioAtras}px ${radioAtras}px` };
+
+  const elementos: React.ReactNode[] = [];
+
+  // Cabina: conductor con su volante (izquierda) y la entrada con escalones (derecha). En el piso 2, la vista panorámica.
+  if (esPrimerPiso) {
+    elementos.push(
+      <div key="conductor" className={`kb-plano-conductor ${acostado ? "is-acostado" : ""}`} style={ubicar(filaCabina, izq)}>
+        <span className="kb-plano-volante" aria-hidden="true">
+          <IconoVolante className="h-full w-full" />
+        </span>
+        <span className={`kb-silla is-conductor ${acostado ? "is-acostada" : ""}`} aria-hidden="true" style={acostado ? ({ "--tam": "40px" } as React.CSSProperties) : undefined}>
+          <DibujoSilla />
+        </span>
+        <span className="kb-plano-texto">Conductor</span>
+      </div>,
+      <div key="entrada" className={`kb-plano-entrada ${acostado ? "is-acostado" : ""}`} style={ubicar(filaCabina, der)}>
+        <span className="kb-plano-escalones" aria-hidden="true" />
+        <span className="kb-plano-texto">Entrada</span>
+      </div>,
+    );
+  } else {
+    elementos.push(
+      <div key="panoramica" className="kb-plano-panoramica" style={ubicar(filaCabina, [2, numColumnas + 2])}>
+        <span className="kb-plano-texto">Frente · vista panorámica</span>
+      </div>,
+    );
+  }
+
+  // Pared que separa la cabina (con el paso libre en el pasillo). El piso de arriba no tiene cabina.
+  if (!esPrimerPiso) {
+    // sin pared
+  } else if (hayPasillo) {
+    elementos.push(
+      <span key="pared-i" aria-hidden="true" className={`kb-plano-pared ${acostado ? "is-acostado" : ""}`} style={ubicar(filaPared, [1, izq[1]])} />,
+      <span key="pared-d" aria-hidden="true" className={`kb-plano-pared ${acostado ? "is-acostado" : ""}`} style={ubicar(filaPared, [der[0], numColumnas + 3])} />,
+    );
+  } else {
+    elementos.push(<span key="pared" aria-hidden="true" className={`kb-plano-pared ${acostado ? "is-acostado" : ""}`} style={ubicar(filaPared, todo)} />);
+  }
+
+  const escalera = (fila: number, lado: [number, number]) => (
+    <div key="escalera" className={`kb-plano-escalera ${acostado ? "is-acostado" : ""}`} style={ubicar(fila, lado)}>
+      <span className="kb-plano-texto">{textoEscalera}</span>
+    </div>
+  );
+  const bano = (fila: number, lado: [number, number]) => (
+    <div key="bano" className="kb-plano-bano" style={ubicar(fila, lado)}>
+      <svg viewBox="0 0 40 40" className="h-8 w-8 shrink-0" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="11" y="3" width="18" height="8" rx="2.5" />
+        <path d="M12 11h16v6a8 9 0 0 1-16 0z" />
+        <ellipse cx="20" cy="27" rx="7.5" ry="9" />
+        <ellipse cx="20" cy="27.5" rx="4" ry="5.5" />
+      </svg>
+      <span className="text-[13px] font-bold tracking-wide">WC</span>
+    </div>
+  );
+  if (posEscalera === "frente") elementos.push(escalera(filaAdelante, der));
+  if (posBano === "frente") elementos.push(bano(filaAdelante, izq));
+  if (posBano === "atras") elementos.push(bano(filaAtras, der));
+  if (posEscalera === "atras") elementos.push(escalera(filaAtras, posBano === "atras" && hayPasillo ? izq : der));
+
+  // Letras de las columnas.
+  letras.forEach((l, j) => {
+    if (l)
+      elementos.push(
+        <span key={`l${j}`} aria-hidden="true" className="grid place-items-center text-[11px] font-semibold text-muted-3" style={ubicar(filaLetras, [j + 2, j + 3])}>
+          {l}
+        </span>,
+      );
+  });
+
+  // Asientos, pasillo y ventanas.
+  piso.filas.forEach((fila, i) => {
+    const r = filaInicio + i;
+    for (let j = 0; j < numColumnas; j++) {
+      const c = j + 2;
+      if (esPasillo[j]) {
+        elementos.push(
+          <span key={`p${i}-${j}`} aria-hidden="true" className="kb-pasillo" style={ubicar(r, [c, c + 1])}>
+            {numeroDeFila(fila.celdas, piso, i)}
+          </span>,
+        );
+        continue;
+      }
+      const interpretada = interpretarCelda(fila.celdas[j] ?? null, piso);
+      if (interpretada === null) continue;
+      elementos.push(
+        <Asiento
+          key={interpretada.numero}
+          numero={interpretada.numero}
+          posicion={posicionDelAsiento(fila.celdas, j)}
+          etiquetas={interpretada.etiquetas}
+          estado={props.estadoPorNumero.get(interpretada.numero)}
+          seleccionado={props.seleccionados.includes(interpretada.numero)}
+          onAlternar={props.onAlternar}
+          r={r}
+          c={c}
+          acostado={acostado}
+          pisoVip={esVipPiso}
+        />,
+      );
+    }
+  });
 
   return (
-    <div className="md:overflow-x-auto md:rounded-[26px] md:border-[1.5px] md:border-line md:bg-kbbg md:px-4 md:pb-[18px] md:pt-11">
-    <div className="flex flex-col gap-3 md:mx-auto md:w-max md:flex-row md:items-stretch md:gap-0">
-      {/* Frente del bus: conductor, puerta, escalera. */}
-      <div className="flex items-center justify-between gap-3 border-b-[1.5px] border-dashed border-line pb-3.5 md:w-[62px] md:shrink-0 md:flex-col md:justify-between md:border-b-0 md:border-r-[1.5px] md:border-line-2 md:py-1 md:pb-1 md:pl-0 md:pr-3.5 md:mr-4">
-        <span className="flex items-center gap-2 md:flex-col">
-          {esPrimerPiso ? (
+    <div className={`rounded-[24px] bg-kbbg ${acostado ? "overflow-x-auto px-2 py-5" : "px-2 py-6"}`}>
+      {esVipPiso && (
+        <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[.08em] text-ink">
+          <span className="rounded-full bg-kbyellow px-2.5 py-0.5">Zona VIP · asientos amplios</span>
+        </p>
+      )}
+      <div className={`relative mx-auto ${acostado ? "w-max px-3 py-3" : "max-w-[400px] px-3 pt-3"}`}>
+        {/* Espejos retrovisores con su brazo (piso de abajo). */}
+        {esPrimerPiso &&
+          (acostado ? (
             <>
-              <span className="grid h-[38px] w-[38px] place-items-center rounded-xl bg-kbbg text-[#555B69] md:h-11 md:w-11 md:rounded-[14px] md:bg-white">
-                <IconoVolante className="h-5 w-5" />
-              </span>
-              <BloqueServicio texto="Conductor" />
+              <Espejo className="left-[26px] -top-[6px] h-[44px] w-6" style={{ transform: "rotate(-90deg) scaleX(-1)" }} />
+              <Espejo className="-bottom-[6px] left-[26px] h-[44px] w-6" style={{ transform: "rotate(-90deg)" }} />
             </>
           ) : (
-            <BloqueServicio texto="Frente" />
+            <>
+              <Espejo className="-left-[8px] top-[18px] h-[44px] w-6" />
+              <Espejo className="-right-[8px] top-[18px] h-[44px] w-6" style={{ transform: "scaleX(-1)" }} />
+            </>
+          ))}
+        <div className={`kb-carroceria ${acostado ? "pl-5 pr-3 py-2" : "px-2 pb-3 pt-5"}`} style={formaCarroceria}>
+          {/* Parabrisas con el tablero curvo (piso de abajo) o ventanal panorámico (piso de arriba). */}
+          <span
+            aria-hidden="true"
+            className={`kb-parabrisas ${acostado ? "is-acostado inset-y-[7px] left-[7px] w-[24px]" : "inset-x-[7px] top-[7px] h-[24px]"}`}
+            style={
+              acostado
+                ? { borderRadius: `${radioFrente - 6}px 50% 50% ${radioFrente - 6}px / ${radioFrente - 6}px 14px 14px ${radioFrente - 6}px` }
+                : { borderRadius: `${radioFrente - 6}px ${radioFrente - 6}px 50% 50% / ${radioFrente - 6}px ${radioFrente - 6}px 14px 14px` }
+            }
+          />
+          {esPrimerPiso && (
+            <span aria-hidden="true" className={`kb-puerta-hueco ${acostado ? "-bottom-[4px] left-[38px] h-[12px] w-[60px]" : "-right-[4px] top-[44px] h-[60px] w-[12px]"}`} />
           )}
-        </span>
-        <span className="flex items-center gap-2 md:flex-col">
-          {esPrimerPiso && <BloqueServicio texto="Puerta" />}
-          {posEscalera === "frente" && <BloqueServicio texto={textoEscalera} />}
-          {posBano === "frente" && <BloqueServicio texto="Baño" />}
-        </span>
-      </div>
 
-      {/* Asientos. */}
-      <div className="min-w-0 md:flex md:shrink-0 md:items-center" role="group" aria-label={`Asientos, ${etiquetaPiso}`}>
-        <div>
-          <div className="mb-1.5 grid gap-x-2 text-center text-[11px] font-semibold text-muted-3 md:hidden" style={{ gridTemplateColumns: columnasCelular }} aria-hidden="true">
-            {letras.map((l, j) => (
-              <span key={j}>{l}</span>
-            ))}
-          </div>
-          <div
-            className="grid items-center justify-items-center gap-x-2 gap-y-1.5 [grid-template-columns:var(--cols-m)] md:gap-x-1.5 md:gap-y-1 md:[grid-template-columns:var(--cols-d)] md:[grid-template-rows:var(--rows-d)]"
-            style={estiloCuadricula}
-          >
-            {piso.filas.map((fila, i) =>
-              Array.from({ length: numColumnas }, (_, j) => {
-                if (esPasillo[j]) {
-                  return (
-                    <span
-                      key={`${i}-${j}`}
-                      className="py-1 text-[11px] font-medium text-muted-3 [grid-column:var(--c)] [grid-row:var(--r)] md:[grid-column:var(--r)] md:[grid-row:var(--c)]"
-                      style={{ "--r": i + 1, "--c": j + 1 } as React.CSSProperties}
-                      aria-hidden="true"
-                    >
-                      {i + 1}
-                    </span>
-                  );
-                }
-                const interpretada = interpretarCelda(fila.celdas[j] ?? null, piso);
-                if (interpretada === null) return null;
-                return (
-                  <AsientoBus
-                    key={interpretada.numero}
-                    numero={interpretada.numero}
-                    posicion={posicionDelAsiento(fila.celdas, j)}
-                    etiquetas={interpretada.etiquetas}
-                    estado={props.estadoPorNumero.get(interpretada.numero)}
-                    seleccionado={props.seleccionados.includes(interpretada.numero)}
-                    onAlternar={props.onAlternar}
-                    fila={i + 1}
-                    columna={j + 1}
-                    mostrarVip={!!props.mostrarVip}
-                  />
-                );
-              }),
-            )}
+          <div className="grid justify-center" style={estilo} role="group" aria-label={`Asientos, ${piso.nombre || `Piso ${indicePiso + 1}`}`}>
+            {elementos}
           </div>
         </div>
       </div>
-
-      {/* Fondo: baño / escalera (si van atrás) y la parte trasera. */}
-      <div className="flex items-center justify-between gap-3 border-t-[1.5px] border-dashed border-line pt-3 text-xs text-muted-3 md:ml-3 md:min-w-[34px] md:shrink-0 md:flex-col md:justify-center md:gap-4 md:border-l-[1.5px] md:border-t-0 md:border-line-2 md:py-0 md:pl-2.5 md:pt-0">
-        <span className="flex items-center gap-2 md:flex-col">
-          {posBano === "atras" && <BloqueServicio texto="Baño" />}
-          {posEscalera === "atras" && <BloqueServicio texto={textoEscalera} />}
-        </span>
-        <span className="md:[writing-mode:vertical-rl] md:rotate-180 md:text-[11px]">Parte trasera</span>
-      </div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ mapa */
+
+function Leyenda({ mostrarVip, hayVip }: { mostrarVip: boolean; hayVip: boolean }) {
+  const item = (clase: string, texto: string, ocupada = false) => (
+    <span className="flex items-center gap-1.5">
+      <span className={`kb-silla is-leyenda ${clase}`} aria-hidden="true">
+        <DibujoSilla ocupada={ocupada} />
+      </span>
+      {texto}
+    </span>
+  );
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-muted-2 md:text-[13px]">
+      {item("", "Libre")}
+      {item("is-elegida", "Tu asiento")}
+      {item("is-ocupada", "Ocupado", true)}
+      {item("is-mujeres", "Solo mujeres")}
+      {(mostrarVip || hayVip) && (
+        <span className="flex items-center gap-1.5">
+          <span className="relative inline-block h-3 w-3">
+            <span className="kb-silla__vip !right-0 !top-0" />
+          </span>
+          VIP
+        </span>
+      )}
     </div>
   );
 }
@@ -301,9 +446,44 @@ export function MapaAsientosBus(props: PropiedadesMapaBus) {
   const indice = Math.min(pisoActivo, Math.max(0, total - 1));
   const piso = props.pisos[indice];
 
+  // ¿Cabe el bus acostado? Se mide el ancho disponible; si no cabe, va vertical.
+  const contenedor = useRef<HTMLDivElement>(null);
+  const [ancho, setAncho] = useState(0);
+  useLayoutEffect(() => {
+    const el = contenedor.current;
+    if (!el) return;
+    const medir = () => setAncho(el.clientWidth);
+    medir();
+    const obs = new ResizeObserver(medir);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  const filasMax = Math.max(1, ...props.pisos.map((p) => p.filas.length));
+  const tamano = Math.min(ASIENTO_MAX, Math.floor((ancho - ANCHO_EXTRA_ACOSTADO) / (filasMax + 2)));
+  const acostado = ancho >= 700 && tamano >= ASIENTO_MIN;
+
+  const libresPorPiso = props.pisos.map((p) => {
+    let libres = 0;
+    for (const f of p.filas)
+      for (const celda of f.celdas) {
+        const it = interpretarCelda(celda, p);
+        if (it) {
+          const e = props.estadoPorNumero.get(it.numero);
+          if (e === undefined || e === "disponible") libres++;
+        }
+      }
+    return libres;
+  });
+  // El punto VIP de la leyenda solo hace falta si hay asientos VIP sueltos (un piso VIP completo ya lleva su franja).
+  const hayVip = props.pisos.some(
+    (p) =>
+      p.categoria?.toLowerCase() !== "vip" &&
+      p.filas.some((f) => f.celdas.some((c) => interpretarCelda(c, p)?.etiquetas.includes("vip"))),
+  );
+
   return (
-    <div className="flex flex-col gap-4 md:gap-5">
-      <div className="flex flex-col gap-3.5 md:flex-row md:items-center md:justify-between">
+    <div ref={contenedor} className="flex flex-col gap-4 md:gap-5">
+      <div className="flex flex-col gap-3.5 xl:flex-row xl:items-center xl:justify-between">
         {total > 1 ? (
           <div role="tablist" aria-label="Piso del bus" className="kb-tabs w-full md:w-auto">
             {props.pisos.map((p, i) => (
@@ -313,46 +493,24 @@ export function MapaAsientosBus(props: PropiedadesMapaBus) {
                 role="tab"
                 aria-selected={i === indice}
                 onClick={() => setPisoActivo(i)}
-                className={`flex-1 whitespace-nowrap md:flex-none ${i === indice ? "is-active" : ""}`}
+                className={`flex min-w-0 flex-1 flex-col items-center !py-2 text-center leading-tight md:flex-none ${i === indice ? "is-active" : ""}`}
               >
-                {p.nombre || `Piso ${i + 1}`} · {i === 0 ? "abajo" : "arriba"}
+                <span>
+                  {p.nombre || `Piso ${i + 1}`} · {i === 0 ? "abajo" : "arriba"}
+                </span>
+                <small className={`text-[11px] font-normal ${i === indice ? "text-ondark" : "text-muted-2"}`}>
+                  {libresPorPiso[i]} {libresPorPiso[i] === 1 ? "libre" : "libres"}
+                </small>
               </button>
             ))}
           </div>
         ) : (
           <span />
         )}
-        <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2 text-[11px] text-muted-2 md:justify-start md:gap-x-[22px] md:text-[13px]">
-          <span className="flex items-center gap-1.5">
-            <SillaLeyenda clase="" color="#D6D9E0" />
-            Libre
-          </span>
-          <span className="flex items-center gap-1.5">
-            <SillaLeyenda clase="[&_.kb-seat__shape]:fill-kbyellow" color="#0B0D12" />
-            Tu asiento
-          </span>
-          <span className="flex items-center gap-1.5">
-            <SillaLeyenda clase="[&_.kb-seat__shape]:fill-occupied" color="#DDE0E6" />
-            Ocupado
-          </span>
-          <span className="flex items-center gap-1.5">
-            <SillaLeyenda clase="[&_.kb-seat__shape]:fill-women-bg" color="#B8336A" />
-            Solo mujeres
-          </span>
-          {props.mostrarVip && (
-            <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-kbyellow ring-2 ring-ink" aria-hidden="true" />
-              VIP
-            </span>
-          )}
-        </div>
+        <Leyenda mostrarVip={!!props.mostrarVip} hayVip={hayVip} />
       </div>
 
-      {piso && <PisoBus key={indice} piso={piso} indicePiso={indice} totalPisos={total} props={props} />}
-
-      <p className="text-[13px] text-muted-2">
-        Pasa el cursor (o toca) un asiento para ver si es de ventana o de pasillo.
-      </p>
+      {piso && <Piso key={indice} piso={piso} indicePiso={indice} totalPisos={total} acostado={acostado} tamano={tamano} props={props} />}
     </div>
   );
 }
