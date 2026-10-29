@@ -10,7 +10,7 @@ import {
   type MapaAsientos,
 } from "@/lib/api";
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
-import { MapaAsientosBus, ubicacionDeAsiento } from "@/components/MapaAsientosBus";
+import { DibujoSilla, MapaAsientosBus, ubicacionDeAsiento } from "@/components/MapaAsientosBus";
 import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
 import { leerResumenViaje, parametrosDeResumen } from "@/lib/resumen-viaje";
 
@@ -210,7 +210,13 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
   const textoBotonCorto = bloqueando ? "Reservando..." : seleccionados.length === 0 ? "Elige asiento" : "Continuar";
   const resumenSeleccion = seleccionados.map((n) => {
     const u = ubicacionDeAsiento(pisos, n);
-    return { numero: n, ubicacion: u ? `${u.posicion}${pisos.length > 1 ? ` · piso ${u.piso}` : ""}` : "" };
+    const fila = n.match(/^(\d+)/)?.[1];
+    return {
+      numero: n,
+      ubicacion: u ? `${u.posicion}${pisos.length > 1 ? ` · piso ${u.piso}` : ""}` : "",
+      detalle: [u?.posicion, fila ? `Fila ${fila}` : null, u && pisos.length > 1 ? `Piso ${u.piso}` : null].filter(Boolean).join(" · "),
+      mujeres: esAsientoSoloMujeres(mapa, n),
+    };
   });
   const hayMujeres = seleccionados.some((n) => esAsientoSoloMujeres(mapa, n));
 
@@ -261,6 +267,7 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
               seleccionados={seleccionados}
               onAlternar={alternarAsiento}
               tieneBano={(mapa.tipoVehiculoAmenidades ?? []).includes("bano_a_bordo")}
+              categoria={mapa.tipoVehiculoCategoria}
             />
           </div>
           {hayMujeres && (
@@ -292,17 +299,39 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
             )}
             <hr className="h-px border-0 bg-ink-3" />
             {resumenSeleccion.length === 0 ? (
-              <p className="text-sm text-ondark">Elige uno o más asientos en el mapa.</p>
+              <div className="flex items-center gap-3.5 rounded-[18px] border border-dashed border-ink-3 px-4 py-3.5">
+                <span className="kb-silla is-mini !text-[#4A505C] [&_.kb-silla__cojin]:!fill-transparent [&_.kb-silla__respaldo]:!fill-transparent [&_.kb-silla__brazo]:!fill-transparent" aria-hidden="true">
+                  <DibujoSilla />
+                </span>
+                <p className="text-sm text-ondark">Toca un asiento libre en el mapa para elegirlo.</p>
+              </div>
             ) : (
-              resumenSeleccion.map((r) => (
-                <div key={r.numero} className="flex justify-between gap-3 text-sm">
-                  <span className="text-ondark">Asiento</span>
-                  <b className="text-right font-semibold">
-                    {r.numero}
-                    {r.ubicacion && <span className="block text-xs font-normal text-ondark">{r.ubicacion}</span>}
-                  </b>
-                </div>
-              ))
+              <ul className="flex flex-col gap-2" aria-label="Asientos elegidos">
+                {resumenSeleccion.map((r) => (
+                  <li key={r.numero} className="flex items-center gap-3.5 rounded-[18px] bg-ink-2 px-3.5 py-3">
+                    <span className={`kb-silla is-mini is-elegida ${r.mujeres ? "" : ""}`} aria-hidden="true">
+                      <DibujoSilla />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <b className="block text-lg font-semibold leading-tight">Asiento {r.numero}</b>
+                      <span className="block text-xs text-ondark">
+                        {r.detalle}
+                        {r.mujeres ? " · Solo mujeres" : ""}
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => alternarAsiento(r.numero)}
+                      aria-label={`Quitar asiento ${r.numero}`}
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-ondark transition hover:bg-ink-3 hover:text-white"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6L6 18" />
+                      </svg>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
             {rPrecio !== null && (
               <div className="flex items-center justify-between gap-3 text-sm">
@@ -327,6 +356,18 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
 
       {/* Celular: barra blanca fija abajo. */}
       <div className="kb-sheet z-40 mt-auto">
+        {resumenSeleccion.length > 0 && (
+          <span className="relative shrink-0" aria-hidden="true">
+            <span className="kb-silla is-mini is-elegida">
+              <DibujoSilla />
+            </span>
+            {resumenSeleccion.length > 1 && (
+              <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[11px] font-semibold text-white">
+                {resumenSeleccion.length}
+              </span>
+            )}
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <span className="block truncate text-xs text-muted-2">
             {resumenSeleccion.length === 0
