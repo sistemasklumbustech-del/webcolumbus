@@ -309,3 +309,9 @@ html {
 .kb-plano-fila{display:flex;align-items:center;justify-content:center;font-size:.9em;font-weight:600;color:#9AA0AC;pointer-events:none}
 .kb-plano-pequeno{font-size:.8em}
 @media (prefers-reduced-motion:reduce){.kb-silla--plano:not(:disabled):hover{transform:none}}
+
+/* Celular: los campos con letra menor a 16 px hacen que el navegador acerque (zoom) la página al
+   tocarlos y la deje corrida de lado. Con 16 px no pasa (estándar de iOS y Android). */
+@media (max-width: 767px) {
+  .kb-input, input.kb-input, select.kb-input, textarea.kb-input { font-size: 16px; }
+}
