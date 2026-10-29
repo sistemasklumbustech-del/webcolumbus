@@ -587,7 +587,7 @@ function Piso({
     );
 
   return (
-    <div className={`kb-plano-escenario ${acostado ? "overflow-x-auto" : ""}`}>
+    <div className="kb-plano-escenario overflow-hidden">
       <div className="kb-plano-barra">
         <span className="min-w-0">
           <b className="block truncate text-[13px] font-semibold text-ink md:text-sm">{NOMBRE_MODELO[modelo](props.pisos.length)}</b>
@@ -720,7 +720,8 @@ export function MapaAsientosBus(props: PropiedadesMapaBus) {
   const g0 = piso ? calcularGeometria(piso, indice, modelo, posiciones[indice].bano, posiciones[indice].escalera, largoComun) : null;
 
   // Escala: acostado si el vehículo completo cabe a lo ancho con sillas de tamaño suficiente; si no, de pie.
-  const disponible = Math.max(0, ancho - 16);
+  // Ancho útil dentro del escenario (relleno y borde), con un pequeño margen para que nunca aparezca barra de desplazamiento.
+  const disponible = Math.max(0, ancho - 28);
   let acostado = false;
   let escala = 1;
   if (g0) {
