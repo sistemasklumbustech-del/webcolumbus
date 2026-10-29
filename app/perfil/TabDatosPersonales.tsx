@@ -180,6 +180,7 @@ export function TabDatosPersonales({
           </label>
           <input
 id="perfil-nombre"
+            autoComplete="name"
             type="text"
             value={nombreIdentidad}
             onChange={(e) => setNombreIdentidad(e.target.value)}
@@ -193,6 +194,7 @@ id="perfil-nombre"
           </label>
           <input
 id="perfil-cedula"
+            autoComplete="off"
             type="text"
             value={cedulaIdentidad}
             onChange={(e) => setCedulaIdentidad(e.target.value)}
@@ -222,6 +224,7 @@ id="perfil-cedula"
           </label>
           <input
 id="perfil-correo"
+            autoComplete="email"
             type="text"
             value={perfil.correo}
             disabled
@@ -234,6 +237,7 @@ id="perfil-correo"
           </label>
           <input
 id="perfil-whatsapp"
+            autoComplete="tel"
             type="text"
             inputMode="numeric"
             value={telefono}
@@ -294,13 +298,13 @@ id="perfil-foto"
           <label htmlFor="perfil-password-actual" className="kb-label">
             Contraseña actual
           </label>
-          <CampoPassword id="perfil-password-actual" value={passwordActual} onChange={setPasswordActual} />
+          <CampoPassword id="perfil-password-actual" autoComplete="current-password" value={passwordActual} onChange={setPasswordActual} />
         </div>
         <div>
           <label htmlFor="perfil-password-nueva" className="kb-label">
             Nueva contraseña
           </label>
-          <CampoPassword id="perfil-password-nueva" value={passwordNueva} onChange={setPasswordNueva} placeholder="Mínimo 8 caracteres" />
+          <CampoPassword id="perfil-password-nueva" autoComplete="new-password" value={passwordNueva} onChange={setPasswordNueva} placeholder="Mínimo 8 caracteres" />
         </div>
         {errorPassword && <p className="text-sm font-medium text-kberror">{errorPassword}</p>}
         <button
@@ -334,6 +338,7 @@ id="perfil-foto"
               </label>
               <input
 id="perfil-correo-nuevo"
+            autoComplete="email"
                 type="email"
                 value={correoNuevo}
                 onChange={(e) => setCorreoNuevo(e.target.value)}
@@ -344,7 +349,7 @@ id="perfil-correo-nuevo"
               <label htmlFor="perfil-password-correo" className="kb-label">
                 Tu contraseña actual (para confirmar que eres tú)
               </label>
-              <CampoPassword id="perfil-password-correo" value={passwordParaCorreo} onChange={setPasswordParaCorreo} />
+              <CampoPassword id="perfil-password-correo" autoComplete="current-password" value={passwordParaCorreo} onChange={setPasswordParaCorreo} />
             </div>
             {errorCambioCorreo && (
               <p className="text-sm font-medium text-kberror">{errorCambioCorreo}</p>
