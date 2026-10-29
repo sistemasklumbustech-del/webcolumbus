@@ -272,6 +272,7 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
           onAlternar={alternarAsiento}
           tieneBano={(mapa.tipoVehiculoAmenidades ?? []).includes("bano_a_bordo")}
           categoria={mapa.tipoVehiculoCategoria}
+          nombreVehiculo={mapa.tipoVehiculoNombre}
         />
       </div>
 

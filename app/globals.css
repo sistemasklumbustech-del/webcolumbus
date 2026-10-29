@@ -240,7 +240,9 @@ html {
 .kb-silla__numero{position:absolute;left:0;right:0;top:56%;transform:translateY(-50%);text-align:center;font-size:11px;font-weight:600;color:#3D4250;pointer-events:none}
 .kb-silla.is-acostada .kb-silla__numero{top:50%;left:22%;right:0;font-size:10px}
 .kb-silla:not(:disabled):hover{color:#0B0D12}
-.kb-silla:not(:disabled):hover .kb-silla__cojin{fill:#FFFBE6}
+.kb-silla:not(:disabled):not(.is-elegida):not(.is-mujeres):hover .kb-silla__cojin,.kb-silla:not(:disabled):not(.is-elegida):not(.is-mujeres):hover .kb-silla__respaldo{fill:#FFF6C2}
+.kb-silla--plano:not(:disabled):hover{transform:scale(1.07)}
+.kb-silla--plano.is-elegida{filter:drop-shadow(0 4px 8px rgba(253,213,20,.55))}
 .kb-silla:focus-visible{outline:3px solid #FDD514;outline-offset:2px;border-radius:12px}
 .kb-silla.is-elegida{color:#0B0D12}
 .kb-silla.is-elegida .kb-silla__cojin,.kb-silla.is-elegida .kb-silla__respaldo,.kb-silla.is-elegida .kb-silla__brazo{fill:#FDD514}
@@ -284,3 +286,26 @@ html {
 .kb-plano-escalera.is-acostado{background:repeating-linear-gradient(90deg,#F4F5F7 0 9px,#DDE1E7 9px 11px)}
 .kb-plano-escalera .kb-plano-texto{background:#FBFBFC;border-radius:6px;padding:1px 6px}
 .kb-plano-bano{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;margin:4px;border-radius:10px;border:2px solid #1A1D24;background:#fff;color:#1A1D24}
+
+/* ---------- Modelos de vehículo (propuesta oct-2026) ---------- */
+.kb-plano-escenario{border-radius:24px;background:radial-gradient(120% 90% at 50% 0%,#FAFAFB 0%,#EEF0F3 100%);padding:14px 8px 22px;box-shadow:inset 0 0 0 1px #E9EBF0}
+.kb-plano-barra{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 6px 14px;padding:10px 14px;border-radius:16px;background:#fff;box-shadow:0 1px 2px rgba(11,13,18,.06)}
+.kb-plano-sentido{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;border-radius:999px;background:#0B0D12;color:#fff;padding:5px 11px 5px 9px;font-size:11px;font-weight:600}
+.kb-plano-sentido svg{color:#FDD514}
+.kb-leyenda-pastilla{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#fff;padding:5px 11px 5px 8px;box-shadow:inset 0 0 0 1px #E9EBF0}
+.kb-silla--plano{position:absolute;inset:0;width:100%;height:100%;max-width:none;aspect-ratio:auto}
+.kb-silla--plano .kb-silla__svg{position:absolute;inset:0;width:100%;height:100%;margin:0}
+.kb-silla--plano.mira-arriba .kb-silla__svg{transform:rotate(180deg)}
+.kb-silla--plano.mira-izquierda .kb-silla__svg{transform:rotate(90deg)}
+.kb-silla--plano .kb-silla__numero{font-size:1em;top:62%}
+.kb-silla--plano.mira-arriba .kb-silla__numero{top:38%}
+.kb-silla--plano.mira-izquierda .kb-silla__numero{top:50%;left:0;right:25%}
+.kb-silla--plano.is-conductor{pointer-events:none}
+.kb-plano-volante svg{width:100%;height:100%}
+.kb-plano-rotulo{transform:translate(-50%,-50%);white-space:nowrap;font-size:.95em;font-weight:600;color:#6B7180;line-height:1.1;pointer-events:none}
+.kb-plano-letra{font-size:.9em;color:#9AA0AC}
+.kb-plano-suave{color:#8A909C;font-weight:500}
+.kb-plano-chip{background:#fff;border-radius:6px;padding:1px 6px;font-size:.85em}
+.kb-plano-fila{display:flex;align-items:center;justify-content:center;font-size:.9em;font-weight:600;color:#9AA0AC;pointer-events:none}
+.kb-plano-pequeno{font-size:.8em}
+@media (prefers-reduced-motion:reduce){.kb-silla--plano:not(:disabled):hover{transform:none}}
