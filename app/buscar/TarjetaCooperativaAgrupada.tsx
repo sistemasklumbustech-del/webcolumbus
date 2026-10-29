@@ -281,7 +281,7 @@ export function TarjetaCooperativaAgrupada({
               href={hrefsPorViaje[activo.viajeId]}
               className="kb-btn kb-btn--primary absolute inset-0 z-[1] h-auto bg-transparent p-0 md:static md:mt-1 md:h-12 md:w-full whitespace-nowrap md:bg-kbyellow md:px-4 xl:px-7"
             >
-              <span className="sr-only md:not-sr-only">Elegir asiento</span>
+              <span className="sr-only md:not-sr-only md:whitespace-nowrap">Elegir asiento</span>
             </Link>
           </div>
         </div>
