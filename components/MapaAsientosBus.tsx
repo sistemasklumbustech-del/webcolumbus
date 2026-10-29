@@ -185,7 +185,8 @@ function Asiento({
 
 /* ------------------------------------------------------------------ piso */
 
-const ASIENTO_MIN = 36; // px por fila (mínimo) para acostar el bus
+const ASIENTO_MIN = 36; // px por fila (mínimo) para acostar el bus, con mouse
+const ASIENTO_MIN_TACTIL = 44; // con pantalla táctil (tablet) las sillas nunca son más pequeñas
 const ASIENTO_MAX = 60; // px por fila (máximo) acostado
 const ANCHO_EXTRA_ACOSTADO = 180; // cabina + pared + letras + bordes (la escalera y el baño cuentan como filas)
 
@@ -449,9 +450,12 @@ export function MapaAsientosBus(props: PropiedadesMapaBus) {
   // ¿Cabe el bus acostado? Se mide el ancho disponible; si no cabe, va vertical.
   const contenedor = useRef<HTMLDivElement>(null);
   const [ancho, setAncho] = useState(0);
+  // Pantalla táctil (dedo, no mouse): las sillas necesitan más tamaño para tocarlas bien.
+  const [tactil, setTactil] = useState(false);
   useLayoutEffect(() => {
     const el = contenedor.current;
     if (!el) return;
+    setTactil(window.matchMedia("(pointer: coarse)").matches);
     const medir = () => setAncho(el.clientWidth);
     medir();
     const obs = new ResizeObserver(medir);
@@ -460,8 +464,9 @@ export function MapaAsientosBus(props: PropiedadesMapaBus) {
   }, []);
   const filasMax = Math.max(1, ...props.pisos.map((p) => p.filas.length));
   const tamano = Math.min(ASIENTO_MAX, Math.floor((ancho - ANCHO_EXTRA_ACOSTADO) / (filasMax + 2)));
-  // En PC (desde 640 px de ancho útil) el bus va acostado; las sillas se achican hasta 36 px si hace falta.
-  const acostado = ancho >= 640 && tamano >= ASIENTO_MIN;
+  // Acostado desde 640 px de ancho útil; las sillas se achican hasta 36 px con mouse y 44 px con toque. Si no caben, vertical.
+  // La silla dibujada mide 4 px menos que su fila (tamano - 4).
+  const acostado = ancho >= 640 && tamano - 4 >= (tactil ? ASIENTO_MIN_TACTIL : ASIENTO_MIN);
 
   const libresPorPiso = props.pisos.map((p) => {
     let libres = 0;
