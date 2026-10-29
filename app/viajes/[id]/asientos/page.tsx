@@ -12,7 +12,7 @@ import {
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
 import { DibujoSilla, MapaAsientosBus, ubicacionDeAsiento } from "@/components/MapaAsientosBus";
 import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
-import { leerResumenViaje, parametrosDeResumen } from "@/lib/resumen-viaje";
+import { leerResumenViaje, parametrosDeResumen, parametrosDeResumenComoIda } from "@/lib/resumen-viaje";
 
 /**
  * Vacío real de diseño encontrado el 29-jul-2026: hasta ahora esta
@@ -159,6 +159,8 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
           params.set("horaDesde", vueltaHoraDesde);
           params.set("horaHasta", vueltaHoraHasta);
         }
+        // Solo informativo: el resumen de la ida viaja hasta el pago para mostrar las dos rutas.
+        parametrosDeResumenComoIda(searchParams).forEach((valor, clave) => params.set(clave, valor));
         router.push(`/buscar?${params.toString()}`);
         return;
       }
