@@ -12,7 +12,7 @@ import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
 import { leerResumenViaje } from "@/lib/resumen-viaje";
 import { LogoKlumbus } from "@/components/LogoKlumbus";
 import { BoletoAcciones } from "@/components/BoletoAcciones";
-import { numeroBoleto } from "@/lib/boleto";
+import { fechaBoleto, numeroBoleto } from "@/lib/boleto";
 import { useMarcarBoletoEmitido } from "@/lib/paso-compra";
 
 /**
@@ -510,9 +510,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           {gruposConfirmados.map((grupo, indiceGrupo) => {
             const viaje = grupo.boletos[0];
             const salida = new Date(viaje.horaSalidaProgramada);
-            const diaCorto = salida
-              .toLocaleDateString("es-EC", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Guayaquil" })
-              .replace(".", "");
+            const diaCorto = fechaBoleto(viaje.horaSalidaProgramada);
             const horaSalida = salida.toLocaleTimeString("es-EC", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Guayaquil" });
             return (
               <section key={grupo.clave} className="flex w-full flex-col items-center gap-4 lg:max-w-[980px]">
@@ -540,7 +538,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                             <div className="kb-timeline__city !text-ondark">{viaje.rutaOrigenCiudad}</div>
                           </div>
                           <div className="flex flex-col items-center gap-[3px] text-[11px] text-ondark lg:text-xs">
-                            <span className="capitalize">{diaCorto}</span>
+                            <span className="whitespace-nowrap">{diaCorto}</span>
                             <div className="kb-timeline__line w-full [&::after]:!border-[#4A4F5C] [&::before]:!border-[#4A4F5C]">
                               <span className="kb-timeline__bus shrink-0 !bg-kbyellow">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B0D12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

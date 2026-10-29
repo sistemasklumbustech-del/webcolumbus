@@ -11,18 +11,22 @@ export function numeroBoleto(boletoId: string): string {
   return `KLB-${boletoId.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 }
 
-/** "Vie, 30 Oct" (o con año: "Vie, 30 Oct 2026"). */
-export function fechaBoleto(iso: string, conAnio = false): string {
-  const texto = new Date(iso)
-    .toLocaleDateString("es-EC", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      ...(conAnio ? { year: "numeric" as const } : {}),
-      timeZone: ZONA,
-    })
-    .replace(/\./g, "");
-  return texto.replace(/(^|\s)(\p{L})/gu, (_, espacio: string, letra: string) => espacio + letra.toUpperCase());
+/**
+ * "Vie 30 oct 2026" (aprobado por el director): día de la semana con mayúscula, mes en minúscula,
+ * sin coma ni puntos. Igual en pantalla, impresión y texto compartido.
+ */
+export function fechaBoleto(iso: string): string {
+  const partes = new Intl.DateTimeFormat("es-EC", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: ZONA,
+  }).formatToParts(new Date(iso));
+  const parte = (tipo: Intl.DateTimeFormatPartTypes) =>
+    (partes.find((p) => p.type === tipo)?.value ?? "").replace(/\./g, "").trim();
+  const dia = parte("weekday");
+  return `${dia.charAt(0).toUpperCase()}${dia.slice(1)} ${parte("day")} ${parte("month").toLowerCase()} ${parte("year")}`;
 }
 
 /** "16:00" en hora de Ecuador. */

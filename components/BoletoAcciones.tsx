@@ -185,7 +185,7 @@ function HojaImpresion({ grupos, codigosAnden }: { grupos: GrupoBoletos[]; codig
               <div className="kb-hoja-boleto__salida">
                 <div>
                   <span>Fecha</span>
-                  <b>{fechaBoleto(boleto.horaSalidaProgramada, true)}</b>
+                  <b>{fechaBoleto(boleto.horaSalidaProgramada)}</b>
                 </div>
                 <div>
                   <span>Hora de salida</span>
