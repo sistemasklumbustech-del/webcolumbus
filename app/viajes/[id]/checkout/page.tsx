@@ -111,6 +111,14 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
       ]
     : numerosAsiento.map((n) => ({ viajeId, numeroAsiento: n, tramo: null }));
 
+  // Ida y vuelta con la misma cantidad de asientos en cada tramo: un solo formulario por persona
+  // (persona 1 = 1er asiento de ida + 1er asiento de vuelta, y así). Por dentro se siguen guardando
+  // los datos por asiento, igual que siempre: lo que se escribe en la persona se copia a su boleto de
+  // vuelta, así la API recibe exactamente lo mismo de antes. Si las cantidades no coinciden, queda el
+  // formulario por asiento.
+  const cantidadIda = paresAsiento.filter((p) => p.tramo === "ida").length;
+  const agruparPorPersona = esIdaYVuelta && cantidadIda > 0 && cantidadIda * 2 === paresAsiento.length;
+
   const [pasajerosData, setPasajerosData] = useState<DatosPasajero[]>(() =>
     paresAsiento.map((p) => datosPasajeroVacio(p.viajeId, p.numeroAsiento)),
   );
@@ -201,8 +209,13 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   }, []);
 
   function actualizarPasajero(indice: number, cambios: Partial<DatosPasajero>) {
+    // Por persona: el mismo cambio va a su boleto de vuelta (nunca el viaje ni el asiento).
+    const { viajeId: _v, numeroAsiento: _n, ...datos } = cambios;
+    void _v;
+    void _n;
+    const gemelo = agruparPorPersona && indice < cantidadIda ? indice + cantidadIda : -1;
     setPasajerosData((actual) =>
-      actual.map((p, i) => (i === indice ? { ...p, ...cambios } : p)),
+      actual.map((p, i) => (i === indice ? { ...p, ...cambios } : i === gemelo ? { ...p, ...datos } : p)),
     );
   }
 
@@ -741,6 +754,8 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
     payphone: "PP",
   };
 
+  // Los pasos se numeran seguidos: un círculo por pasajero (1, 2, 3...) y después pago y contacto.
+  const numeroPasoPago = (agruparPorPersona ? cantidadIda : pasajerosData.length) + 1;
   const claseTarjetaPaso = "kb-card kb-on-white flex flex-col gap-4 p-5 md:p-6";
   const claseNumeroPaso = "kb-step-num !h-[34px] !w-[34px] shrink-0 not-italic";
 
@@ -768,20 +783,41 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
             <span className="text-[11px] font-semibold uppercase tracking-[.08em] text-muted-2">Tu viaje</span>
             {listaTramos(false)}
           </section>
-          {pasajerosData.map((p, indice) => (
-            <div key={p.numeroAsiento} className={claseTarjetaPaso}>
+          {(agruparPorPersona ? pasajerosData.slice(0, cantidadIda) : pasajerosData).map((p, indice) => {
+            const vuelta = agruparPorPersona ? pasajerosData[indice + cantidadIda] : null;
+            // Asiento solo mujeres en cualquiera de los dos tramos: se pide el sexo una vez.
+            const asientoMujeres = [p, vuelta]
+              .filter((x): x is DatosPasajero => !!x)
+              .find((x) => esAsientoSoloMujeres(mapasPorViaje[x.viajeId], x.numeroAsiento));
+            return (
+            <div key={`${p.viajeId}-${p.numeroAsiento}`} className={claseTarjetaPaso}>
               <div className="flex items-center gap-3">
-                <i className={claseNumeroPaso}>{indice === 0 ? "1" : "+"}</i>
+                <i className={claseNumeroPaso}>{indice + 1}</i>
                 <div>
                   <b className="block text-base font-semibold md:text-[17px]">
-                    {pasajerosData.length > 1 ? `Pasajero ${indice + 1} — Asiento ${p.numeroAsiento}` : "Pasajero"}
-                    {esIdaYVuelta && (
-                      <span className="kb-tag kb-tag--yellow ml-2 align-middle">
-                        {paresAsiento[indice]?.tramo === "ida" ? "Ida" : "Vuelta"}
+                    {agruparPorPersona
+                      ? cantidadIda > 1
+                        ? `Pasajero ${indice + 1}`
+                        : "Pasajero"
+                      : pasajerosData.length > 1
+                        ? `Pasajero ${indice + 1} — Asiento ${p.numeroAsiento}`
+                        : "Pasajero"}
+                    {agruparPorPersona && vuelta ? (
+                      <span className="ml-2 inline-flex flex-wrap gap-1.5 align-middle">
+                        <span className="kb-tag kb-tag--yellow">Ida {p.numeroAsiento}</span>
+                        <span className="kb-tag kb-tag--yellow">Vuelta {vuelta.numeroAsiento}</span>
                       </span>
+                    ) : (
+                      esIdaYVuelta && (
+                        <span className="kb-tag kb-tag--yellow ml-2 align-middle">
+                          {paresAsiento[indice]?.tramo === "ida" ? "Ida" : "Vuelta"}
+                        </span>
+                      )
                     )}
                   </b>
-                  <span className="block text-xs text-muted-2">Como aparece en el documento</span>
+                  <span className="block text-xs text-muted-2">
+                    {agruparPorPersona ? "Como aparece en el documento · se usa en los dos boletos" : "Como aparece en el documento"}
+                  </span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -873,10 +909,10 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
               <p className="-mt-1 text-xs text-muted-2">
                 Cédula solo para números ecuatorianos. Turistas y extranjeros: elige Pasaporte.
               </p>
-              {esAsientoSoloMujeres(mapasPorViaje[p.viajeId], p.numeroAsiento) && (
+              {asientoMujeres && (
                 <CampoSexoAsientoMujeres
                   id={`checkout-sexo-${indice}`}
-                  numeroAsiento={p.numeroAsiento}
+                  numeroAsiento={asientoMujeres.numeroAsiento}
                   valor={p.sexo}
                   onCambio={(sexo) => actualizarPasajero(indice, { sexo })}
                 />
@@ -954,7 +990,8 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
 
           {mapa && (!mapa.permiteCancelacion || !mapa.permiteReprogramacion) && (
             <div className="kb-alert kb-alert--info flex-col !gap-1">
@@ -976,7 +1013,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           <fieldset className={claseTarjetaPaso}>
             <legend className="sr-only">Cómo quieres pagar</legend>
             <div className="flex items-center gap-3">
-              <i className={claseNumeroPaso} aria-hidden="true">2</i>
+              <i className={claseNumeroPaso} aria-hidden="true">{numeroPasoPago}</i>
               <div>
                 <b className="block text-base font-semibold md:text-[17px]">Método de pago</b>
                 <span className="block text-xs text-muted-2">Elige cómo pagar</span>
@@ -1137,7 +1174,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           {hayTercerPaso && (
             <div className={claseTarjetaPaso}>
               <div className="flex items-center gap-3">
-                <i className={claseNumeroPaso} aria-hidden="true">3</i>
+                <i className={claseNumeroPaso} aria-hidden="true">{numeroPasoPago + 1}</i>
                 <div>
                   <b className="block text-base font-semibold md:text-[17px]">¿A dónde enviamos tu boleto?</b>
                   <span className="block text-xs text-muted-2">Compras sin crear cuenta: solo necesitamos dónde enviarte tu boleto</span>
