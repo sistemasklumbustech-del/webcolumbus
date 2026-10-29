@@ -296,7 +296,7 @@ function ContenidoFiltros({
           <legend className={claseTitulo}>Precio</legend>
           <p className="mb-2 text-sm font-medium tabular-nums">
             {/* El texto muestra el filtro tal cual (ej. un enlace con un máximo por debajo del rango). */}
-            {dinero(filtros.precioMin ?? desde)} – {dinero(filtros.precioMax ?? hasta)}
+            {dinero(Math.min(filtros.precioMin ?? desde, filtros.precioMax ?? hasta))} – {dinero(filtros.precioMax ?? hasta)}
           </p>
           <div className="kb-rango">
             <span className="kb-rango__pista" />
