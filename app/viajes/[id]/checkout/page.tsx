@@ -754,6 +754,8 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
     payphone: "PP",
   };
 
+  // Los pasos se numeran seguidos: un círculo por pasajero (1, 2, 3...) y después pago y contacto.
+  const numeroPasoPago = (agruparPorPersona ? cantidadIda : pasajerosData.length) + 1;
   const claseTarjetaPaso = "kb-card kb-on-white flex flex-col gap-4 p-5 md:p-6";
   const claseNumeroPaso = "kb-step-num !h-[34px] !w-[34px] shrink-0 not-italic";
 
@@ -790,7 +792,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
             return (
             <div key={`${p.viajeId}-${p.numeroAsiento}`} className={claseTarjetaPaso}>
               <div className="flex items-center gap-3">
-                <i className={claseNumeroPaso}>{indice === 0 ? "1" : "+"}</i>
+                <i className={claseNumeroPaso}>{indice + 1}</i>
                 <div>
                   <b className="block text-base font-semibold md:text-[17px]">
                     {agruparPorPersona
@@ -1011,7 +1013,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           <fieldset className={claseTarjetaPaso}>
             <legend className="sr-only">Cómo quieres pagar</legend>
             <div className="flex items-center gap-3">
-              <i className={claseNumeroPaso} aria-hidden="true">2</i>
+              <i className={claseNumeroPaso} aria-hidden="true">{numeroPasoPago}</i>
               <div>
                 <b className="block text-base font-semibold md:text-[17px]">Método de pago</b>
                 <span className="block text-xs text-muted-2">Elige cómo pagar</span>
@@ -1172,7 +1174,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           {hayTercerPaso && (
             <div className={claseTarjetaPaso}>
               <div className="flex items-center gap-3">
-                <i className={claseNumeroPaso} aria-hidden="true">3</i>
+                <i className={claseNumeroPaso} aria-hidden="true">{numeroPasoPago + 1}</i>
                 <div>
                   <b className="block text-base font-semibold md:text-[17px]">¿A dónde enviamos tu boleto?</b>
                   <span className="block text-xs text-muted-2">Compras sin crear cuenta: solo necesitamos dónde enviarte tu boleto</span>
