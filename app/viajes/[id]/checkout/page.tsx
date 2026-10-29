@@ -626,8 +626,65 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   // Resumen informativo que manda la pantalla de asientos (ruta, salida, cooperativa y
   // tarifa de referencia). El total exacto lo cotiza el servidor en "Revisa antes de pagar".
   const resumen = leerResumenViaje(searchParams);
-  const tarifaEstimada =
-    resumen.precio !== null && !esIdaYVuelta ? resumen.precio * paresAsiento.length : null;
+  // Ida y vuelta: el resumen de la ida llega con el prefijo "i" (solo informativo).
+  const resumenIda = esIdaYVuelta ? leerResumenViaje(searchParams, "i") : null;
+  const asientosIda = paresAsiento.filter((p) => p.tramo === "ida").map((p) => p.numeroAsiento);
+  const asientosVuelta = paresAsiento.filter((p) => p.tramo !== "ida").map((p) => p.numeroAsiento);
+  const tramos: { etiqueta: string | null; r: typeof resumen; asientos: string[] }[] = esIdaYVuelta
+    ? [
+        { etiqueta: "Ida", r: resumenIda!, asientos: asientosIda },
+        { etiqueta: "Vuelta", r: resumen, asientos: asientosVuelta },
+      ]
+    : [{ etiqueta: null, r: resumen, asientos: numerosAsiento }];
+  // Tarifa de referencia (solo informativa; el total exacto lo cotiza el servidor al revisar).
+  const tarifaEstimada = esIdaYVuelta
+    ? resumenIda?.precio != null && resumen.precio !== null
+      ? resumenIda.precio * asientosIda.length + resumen.precio * asientosVuelta.length
+      : null
+    : resumen.precio !== null
+      ? resumen.precio * paresAsiento.length
+      : null;
+  const rutaTitulo = esIdaYVuelta
+    ? resumenIda?.origen && resumenIda.destino
+      ? `${resumenIda.origen} ⇄ ${resumenIda.destino}`
+      : "Ida y vuelta"
+    : resumen.origen && resumen.destino
+      ? `${resumen.origen} → ${resumen.destino}`
+      : null;
+  const textoSillas = (lista: string[]) => (lista.length === 1 ? `Asiento ${lista[0]}` : `Asientos ${lista.join(", ")}`);
+
+  /** Resumen de cada tramo (ruta, salida, cooperativa y asientos), para la tarjeta negra, el celular y la revisión. */
+  const listaTramos = (oscuro: boolean) => (
+    <ul className="flex flex-col gap-3">
+      {tramos.map((t) => (
+        <li key={t.etiqueta ?? "unico"} className={`flex gap-3 ${tramos.length > 1 ? `rounded-[16px] p-3 ${oscuro ? "bg-ink-2" : "bg-kbbg"}` : ""}`}>
+          <span
+            aria-hidden="true"
+            className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full ${oscuro ? "bg-kbyellow text-ink" : "bg-ink text-kbyellow"}`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="4" y="3" width="16" height="15" rx="3" />
+              <path d="M4 11h16M8 21v-3M16 21v-3" />
+            </svg>
+          </span>
+          <span className="min-w-0 flex-1">
+            {t.etiqueta && (
+              <span className={`text-[11px] font-semibold uppercase tracking-[.08em] ${oscuro ? "text-kbyellow" : "text-muted-2"}`}>{t.etiqueta}</span>
+            )}
+            {t.r.origen && t.r.destino && (
+              <b className="block text-[15px] font-semibold leading-snug">
+                {t.r.origen} → {t.r.destino}
+              </b>
+            )}
+            <span className={`block text-[13px] ${oscuro ? "text-ondark" : "text-muted-2"}`}>
+              {[t.r.lineaSalida, t.r.cooperativa].filter(Boolean).join(" · ")}
+            </span>
+            <span className={`mt-0.5 block text-[13px] font-medium ${oscuro ? "text-white" : "text-ink"}`}>{textoSillas(t.asientos)}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
   const textoAsientos = esIdaYVuelta
     ? `Ida y vuelta · ${paresAsiento.length} asientos en total`
     : numerosAsiento.length === 1
@@ -699,13 +756,18 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           </button>
           <div className="min-w-0 flex-1">
             <h1 className="text-base font-semibold md:text-xl">Datos y pago</h1>
-            <p className="text-xs text-muted-2 md:text-[13px]">{textoAsientos}</p>
+            <p className="text-xs text-muted-2 md:text-[13px]">{[rutaTitulo, textoAsientos].filter(Boolean).join(" · ")}</p>
           </div>
         </div>
       </div>
 
       <div className="mx-auto grid w-full max-w-[1280px] flex-1 items-start gap-6 px-5 py-5 md:px-16 md:py-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]">
         <form id="checkout-form" onSubmit={revisarCompra} className="flex min-w-0 flex-col gap-4">
+          {/* Celular: el resumen del viaje arriba (en PC va en la tarjeta negra). */}
+          <section aria-label="Tu viaje" className="kb-card kb-on-white flex flex-col gap-3 p-4 md:hidden">
+            <span className="text-[11px] font-semibold uppercase tracking-[.08em] text-muted-2">Tu viaje</span>
+            {listaTramos(false)}
+          </section>
           {pasajerosData.map((p, indice) => (
             <div key={p.numeroAsiento} className={claseTarjetaPaso}>
               <div className="flex items-center gap-3">
@@ -1078,13 +1140,13 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                 <i className={claseNumeroPaso} aria-hidden="true">3</i>
                 <div>
                   <b className="block text-base font-semibold md:text-[17px]">¿A dónde enviamos tu boleto?</b>
-                  <span className="block text-xs text-muted-2">Compras sin crear cuenta -- solo necesitamos donde enviarte tu boleto</span>
+                  <span className="block text-xs text-muted-2">Compras sin crear cuenta: solo necesitamos dónde enviarte tu boleto</span>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
                   <label htmlFor="checkout-invitado-telefono" className="kb-label">
-                    Telefono (para WhatsApp)
+                    Teléfono (para WhatsApp)
                   </label>
                   <input
                     id="checkout-invitado-telefono"
@@ -1098,7 +1160,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                 </div>
                 <div>
                   <label htmlFor="checkout-invitado-correo" className="kb-label">
-                    Correo (opcional si ya diste telefono)
+                    Correo (opcional si ya diste teléfono)
                   </label>
                   <input
                     id="checkout-invitado-correo"
@@ -1144,29 +1206,13 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
         <aside className="hidden md:block lg:sticky lg:top-24">
           <div className="flex flex-col gap-3.5 rounded-card bg-ink p-6 text-white">
             <span className="text-xs font-semibold uppercase tracking-[.08em] text-kbyellow">Resumen</span>
-            <b className="text-[22px] font-semibold leading-tight">
-              {resumen.origen && resumen.destino && !esIdaYVuelta ? `${resumen.origen} → ${resumen.destino}` : "Tu compra"}
-            </b>
-            <span className="text-[13px] text-ondark">
-              {!esIdaYVuelta && resumen.lineaSalida && (
-                <>
-                  {resumen.lineaSalida}
-                  <br />
-                </>
-              )}
-              {!esIdaYVuelta && resumen.cooperativa && (
-                <>
-                  {resumen.cooperativa}
-                  <br />
-                </>
-              )}
-              {textoAsientos}
-            </span>
+            <b className="text-[22px] font-semibold leading-tight">{rutaTitulo ?? "Tu compra"}</b>
+            {listaTramos(true)}
             {tarifaEstimada !== null && (
               <>
                 <hr className="h-px border-0 bg-ink-3" />
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="text-ondark">Tarifa</span>
+                  <span className="text-ondark">{esIdaYVuelta || paresAsiento.length > 1 ? "Tarifa estimada" : "Tarifa"}</span>
                   <b className="text-[26px] font-bold tabular-nums">${tarifaEstimada.toFixed(2)}</b>
                 </div>
                 <span className="-mt-2 text-xs text-ondark">El total exacto, con tasas y descuentos, lo ves al revisar.</span>
@@ -1203,7 +1249,8 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
             <h2 id="checkout-revision-titulo" className="text-lg font-semibold">
               Revisa antes de pagar
             </h2>
-            <p className="-mt-2 text-sm text-muted-2">
+            <div className="max-h-[38vh] overflow-y-auto">{listaTramos(false)}</div>
+            <p className="text-sm text-muted-2">
               Método: {metodoElegido === "tarjeta" ? "Tarjeta de crédito o débito" : metodoElegido === "deuna_en_linea" ? "DeUna" : metodoElegido === "transferencia_bancaria" ? "Transferencia" : metodoElegido === "efectivo" ? "Efectivo" : metodoElegido === "deuna" ? "DeUna (pago directo a la cooperativa)" : "PayPhone"}
             </p>
             <div className="flex flex-col gap-2 rounded-ctrl bg-kbbg px-4 py-3.5 text-sm">

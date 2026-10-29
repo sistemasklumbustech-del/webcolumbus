@@ -292,6 +292,10 @@ export default async function ResultadosBusquedaPage({
       idaAsientos: idaAsientos ?? "",
     });
     datosResumen(r).forEach((valor, clave) => params.set(clave, valor));
+    // Resumen de la ida (solo informativo), para mostrar las dos rutas en el pago.
+    for (const [clave, valor] of Object.entries(sp)) {
+      if (valor && /^i(Origen|Destino|Salida|Llegada|Coop|Precio)$/.test(clave)) params.set(clave, valor);
+    }
     return `/viajes/${viajeId}/asientos?${params.toString()}`;
   }
 

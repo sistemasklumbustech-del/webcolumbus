@@ -19,6 +19,9 @@ export interface ResumenViaje {
 }
 
 const CLAVES = ["rOrigen", "rDestino", "rSalida", "rLlegada", "rCoop", "rPrecio"] as const;
+// Ida y vuelta: el resumen de la IDA viaja con el prefijo "i" (iOrigen, iSalida...) hasta el pago,
+// para mostrar las dos rutas. Solo informativo, igual que el resto del resumen.
+const CLAVES_IDA = CLAVES.map((c) => `i${c.slice(1)}`);
 const ZONA = "America/Guayaquil";
 
 function horaCorta(d: Date): string {
@@ -31,18 +34,19 @@ function fechaValida(texto: string | null): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-export function leerResumenViaje(sp: LectorParametros): ResumenViaje {
-  const precioTexto = sp.get("rPrecio");
+export function leerResumenViaje(sp: LectorParametros, prefijo: "r" | "i" = "r"): ResumenViaje {
+  const get = (c: string) => sp.get(`${prefijo}${c}`);
+  const precioTexto = get("Precio");
   const precio = precioTexto && Number.isFinite(Number(precioTexto)) ? Number(precioTexto) : null;
-  const salida = fechaValida(sp.get("rSalida"));
-  const llegada = fechaValida(sp.get("rLlegada"));
+  const salida = fechaValida(get("Salida"));
+  const llegada = fechaValida(get("Llegada"));
   const dia = salida
     ? salida.toLocaleDateString("es-EC", { weekday: "short", day: "numeric", month: "short", timeZone: ZONA }).replace(".", "")
     : null;
   return {
-    origen: sp.get("rOrigen"),
-    destino: sp.get("rDestino"),
-    cooperativa: sp.get("rCoop"),
+    origen: get("Origen"),
+    destino: get("Destino"),
+    cooperativa: get("Coop"),
     precio,
     lineaSalida: salida ? `${dia} · sale ${horaCorta(salida)}${llegada ? `, llega ${horaCorta(llegada)}` : ""}` : null,
   };
@@ -51,9 +55,19 @@ export function leerResumenViaje(sp: LectorParametros): ResumenViaje {
 /** Los parámetros del resumen presentes en la URL actual, para pasarlos a la pantalla siguiente. */
 export function parametrosDeResumen(sp: LectorParametros): URLSearchParams {
   const salida = new URLSearchParams();
-  for (const clave of CLAVES) {
+  for (const clave of [...CLAVES, ...CLAVES_IDA]) {
     const valor = sp.get(clave);
     if (valor) salida.set(clave, valor);
+  }
+  return salida;
+}
+
+/** El resumen actual (r...) convertido en resumen de la IDA (i...), al pasar a buscar la vuelta. */
+export function parametrosDeResumenComoIda(sp: LectorParametros): URLSearchParams {
+  const salida = new URLSearchParams();
+  for (const clave of CLAVES) {
+    const valor = sp.get(clave);
+    if (valor) salida.set(`i${clave.slice(1)}`, valor);
   }
   return salida;
 }
