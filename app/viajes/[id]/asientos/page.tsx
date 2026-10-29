@@ -387,7 +387,7 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
           type="button"
           disabled={seleccionados.length === 0 || bloqueando}
           onClick={continuar}
-          className="kb-btn kb-btn--dark shrink-0 px-6"
+          className="kb-btn kb-btn--primary shrink-0 px-6"
         >
           {textoBotonCorto}
         </button>
