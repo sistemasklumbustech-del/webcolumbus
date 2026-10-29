@@ -82,6 +82,7 @@ function FormularioRegistro() {
             </label>
             <input
               id="registro-nombres"
+              autoComplete="given-name"
               type="text"
               required
               minLength={2}
@@ -97,6 +98,7 @@ function FormularioRegistro() {
             </label>
             <input
               id="registro-apellidos"
+              autoComplete="family-name"
               type="text"
               required
               minLength={2}
@@ -115,6 +117,7 @@ function FormularioRegistro() {
             </label>
             <input
               id="registro-cedula"
+              autoComplete="off"
               type="text"
               inputMode="numeric"
               required
@@ -133,6 +136,7 @@ function FormularioRegistro() {
             </label>
             <input
               id="registro-whatsapp"
+              autoComplete="tel"
               type="text"
               inputMode="numeric"
               required
@@ -153,6 +157,7 @@ function FormularioRegistro() {
           </label>
           <input
             id="registro-correo"
+            autoComplete="email"
             type="email"
             required
             value={correo}
@@ -165,7 +170,7 @@ function FormularioRegistro() {
           <label htmlFor="registro-password" className="kb-label">
             Contraseña
           </label>
-          <CampoPassword id="registro-password" value={password} onChange={setPassword} placeholder="Mínimo 8 caracteres" />
+          <CampoPassword id="registro-password" autoComplete="new-password" value={password} onChange={setPassword} placeholder="Mínimo 8 caracteres" />
         </div>
 
         <label htmlFor="registro-terminos" className="flex cursor-pointer items-center gap-2.5 text-[13px]">

@@ -852,6 +852,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   </label>
                   <input
                     id={`checkout-nombres-${indice}`}
+                    autoComplete="given-name"
                     type="text"
                     required
                     minLength={2}
@@ -866,6 +867,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   </label>
                   <input
                     id={`checkout-apellidos-${indice}`}
+                    autoComplete="family-name"
                     type="text"
                     required
                     minLength={2}
@@ -900,6 +902,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   </label>
                   <input
                     id={`checkout-documento-${indice}`}
+                    autoComplete="off"
                     type="text"
                     required
                     minLength={5}
@@ -959,6 +962,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   </label>
                   <input
                     id={`checkout-fecha-nacimiento-${indice}`}
+                    autoComplete="off"
                     type="date"
                     value={p.fechaNacimiento}
                     onChange={(e) => actualizarPasajero(indice, { fechaNacimiento: e.target.value })}
@@ -981,6 +985,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                       </label>
                       <input
                         id={`checkout-adulto-nombre-${indice}`}
+                        autoComplete="name"
                         type="text"
                         value={p.adultoResponsableNombre}
                         onChange={(e) => actualizarPasajero(indice, { adultoResponsableNombre: e.target.value })}
@@ -993,6 +998,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                       </label>
                       <input
                         id={`checkout-adulto-documento-${indice}`}
+                        autoComplete="off"
                         type="text"
                         value={p.adultoResponsableDocumento}
                         onChange={(e) => actualizarPasajero(indice, { adultoResponsableDocumento: e.target.value })}
@@ -1005,6 +1011,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                       </label>
                       <input
                         id={`checkout-adulto-telefono-${indice}`}
+                        autoComplete="tel"
                         type="text"
                         value={p.adultoResponsableTelefono}
                         onChange={(e) => actualizarPasajero(indice, { adultoResponsableTelefono: e.target.value })}
@@ -1151,6 +1158,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     </label>
                     <input
                       id="checkout-factura-identificacion"
+                      autoComplete="off"
                       value={facturaIdentificacion}
                       onChange={(e) => setFacturaIdentificacion(e.target.value)}
                       className="kb-input"
@@ -1162,6 +1170,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     </label>
                     <input
                       id="checkout-factura-razon"
+                      autoComplete="off"
                       value={facturaRazonSocial}
                       onChange={(e) => setFacturaRazonSocial(e.target.value)}
                       className="kb-input"
@@ -1173,6 +1182,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     </label>
                     <input
                       id="checkout-factura-direccion"
+                      autoComplete="street-address"
                       value={facturaDireccion}
                       onChange={(e) => setFacturaDireccion(e.target.value)}
                       className="kb-input"
@@ -1186,6 +1196,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                 </label>
                 <input
                   id="checkout-factura-correo"
+                  autoComplete="email"
                   type="email"
                   value={facturaCorreo}
                   onChange={(e) => setFacturaCorreo(e.target.value)}
@@ -1212,6 +1223,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   </label>
                   <input
                     id="checkout-invitado-telefono"
+                    autoComplete="tel"
                     type="tel"
                     maxLength={10}
                     value={telefonoContacto}
@@ -1226,6 +1238,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   </label>
                   <input
                     id="checkout-invitado-correo"
+                    autoComplete="email"
                     type="email"
                     value={correoContacto}
                     onChange={(e) => setCorreoContacto(e.target.value)}

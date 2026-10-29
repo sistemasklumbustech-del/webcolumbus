@@ -162,64 +162,66 @@ function HojaImpresion({ grupos, codigosAnden }: { grupos: GrupoBoletos[]; codig
           ];
           return (
             <section key={boleto.id} className="kb-hoja-boleto">
-              <header className="kb-hoja-boleto__cabecera">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/img/klumbus-logo-fondo-claro.svg" alt="Klumbus" className="kb-hoja-boleto__logo" />
-                <div className="kb-hoja-boleto__numero">
-                  <span>Boleto electrónico · N.º</span>
-                  <b>{numeroBoleto(boleto.id)}</b>
-                </div>
-              </header>
-              {grupo.tramo && <p className="kb-hoja-boleto__tramo">{grupo.tramo}</p>}
-              <div className="kb-hoja-boleto__ruta">
-                <div>
-                  <span>Origen</span>
-                  <b>{boleto.rutaOrigenCiudad}</b>
-                </div>
-                <i aria-hidden="true">→</i>
-                <div>
-                  <span>Destino</span>
-                  <b>{boleto.rutaDestinoCiudad}</b>
-                </div>
-              </div>
-              <div className="kb-hoja-boleto__salida">
-                <div>
-                  <span>Fecha</span>
-                  <b>{fechaBoleto(boleto.horaSalidaProgramada)}</b>
-                </div>
-                <div>
-                  <span>Hora de salida</span>
-                  <b>{horaBoleto(boleto.horaSalidaProgramada)}</b>
-                </div>
-              </div>
-              <dl className="kb-hoja-boleto__datos">
-                {datos.map(([etiqueta, valor]) => (
-                  <div key={etiqueta}>
-                    <dt>{etiqueta}</dt>
-                    <dd>{valor}</dd>
+              <div className="kb-hoja-boleto__marco">
+                <header className="kb-hoja-boleto__cabecera">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/img/klumbus-logo-fondo-claro.svg" alt="Klumbus" className="kb-hoja-boleto__logo" />
+                  <div className="kb-hoja-boleto__numero">
+                    <span>Boleto electrónico · N.º</span>
+                    <b>{numeroBoleto(boleto.id)}</b>
                   </div>
-                ))}
-              </dl>
-              <div className="kb-hoja-boleto__codigos">
-                <figure>
-                  <QrImpresion valor={boleto.codigoQr} className="kb-hoja-boleto__qr" />
-                  <figcaption>
-                    <b>Muestra este código al abordar</b>
-                    {textoCodigo && <span>{textoCodigo}</span>}
-                  </figcaption>
-                </figure>
-                {andenListo && (
+                </header>
+                {grupo.tramo && <p className="kb-hoja-boleto__tramo">{grupo.tramo}</p>}
+                <div className="kb-hoja-boleto__ruta">
+                  <div>
+                    <span>Origen</span>
+                    <b>{boleto.rutaOrigenCiudad}</b>
+                  </div>
+                  <i aria-hidden="true">→</i>
+                  <div>
+                    <span>Destino</span>
+                    <b>{boleto.rutaDestinoCiudad}</b>
+                  </div>
+                </div>
+                <div className="kb-hoja-boleto__salida">
+                  <div>
+                    <span>Fecha</span>
+                    <b>{fechaBoleto(boleto.horaSalidaProgramada)}</b>
+                  </div>
+                  <div>
+                    <span>Hora de salida</span>
+                    <b>{horaBoleto(boleto.horaSalidaProgramada)}</b>
+                  </div>
+                </div>
+                <dl className="kb-hoja-boleto__datos">
+                  {datos.map(([etiqueta, valor]) => (
+                    <div key={etiqueta}>
+                      <dt>{etiqueta}</dt>
+                      <dd>{valor}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <div className="kb-hoja-boleto__codigos">
                   <figure>
-                    <QrImpresion valor={anden.codigoTasa as string} className="kb-hoja-boleto__qr kb-hoja-boleto__qr--anden" />
+                    <QrImpresion valor={boleto.codigoQr} className="kb-hoja-boleto__qr" />
                     <figcaption>
-                      <b>Acceso al andén</b>
-                      <span>Preséntalo en el torniquete del terminal.</span>
-                      <span>{anden.codigoTasa}</span>
+                      <b>Muestra este código al abordar</b>
+                      {textoCodigo && <span>{textoCodigo}</span>}
                     </figcaption>
                   </figure>
-                )}
+                  {andenListo && (
+                    <figure>
+                      <QrImpresion valor={anden.codigoTasa as string} className="kb-hoja-boleto__qr kb-hoja-boleto__qr--anden" />
+                      <figcaption>
+                        <b>Acceso al andén</b>
+                        <span>Preséntalo en el torniquete del terminal.</span>
+                        <span>{anden.codigoTasa}</span>
+                      </figcaption>
+                    </figure>
+                  )}
+                </div>
+                <footer className="kb-hoja-boleto__pie">klumbustech.com</footer>
               </div>
-              <footer className="kb-hoja-boleto__pie">klumbustech.com</footer>
             </section>
           );
         }),

@@ -324,13 +324,18 @@ html {
 .kb-hoja-boletos { display: none; }
 
 @media print {
-  @page { margin: 12mm; }
+  /* Márgenes de la página en 0: así el navegador no imprime su encabezado ni su pie
+     (fecha, título, dirección web). El margen lo pone cada hoja por dentro. */
+  @page { size: A4; margin: 0; }
   body:has(> .kb-hoja-boletos) { background: #fff !important; }
   body:has(> .kb-hoja-boletos) > :not(.kb-hoja-boletos) { display: none !important; }
   .kb-hoja-boletos { display: block; color: #000; font-family: inherit; }
   .kb-hoja-boleto {
     break-inside: avoid;
     break-after: page;
+    padding: 14mm 15mm;
+  }
+  .kb-hoja-boleto__marco {
     max-width: 175mm;
     margin: 0 auto;
     border: 1.5px solid #000;
