@@ -185,9 +185,9 @@ function Asiento({
 
 /* ------------------------------------------------------------------ piso */
 
-const ASIENTO_MIN = 46; // px por fila (mínimo) para acostar el bus
+const ASIENTO_MIN = 36; // px por fila (mínimo) para acostar el bus
 const ASIENTO_MAX = 60; // px por fila (máximo) acostado
-const ANCHO_EXTRA_ACOSTADO = 200; // cabina + pared + letras + bordes (la escalera y el baño cuentan como filas)
+const ANCHO_EXTRA_ACOSTADO = 180; // cabina + pared + letras + bordes (la escalera y el baño cuentan como filas)
 
 function Piso({
   piso,
@@ -239,7 +239,7 @@ function Piso({
 
   const alto = acostado ? tamano : 58;
   const pistasFilas = [
-    esPrimerPiso ? (acostado ? "96px" : "104px") : acostado ? "64px" : "60px",
+    esPrimerPiso ? (acostado ? "84px" : "104px") : acostado ? "64px" : "60px",
     esPrimerPiso ? "14px" : "4px",
     ...(hayAdelante ? [`${alto + 8}px`] : []),
     acostado ? "22px" : "20px",
@@ -285,7 +285,7 @@ function Piso({
   } else {
     elementos.push(
       <div key="panoramica" className="kb-plano-panoramica" style={ubicar(filaCabina, [2, numColumnas + 2])}>
-        <span className="kb-plano-texto">Frente · vista panorámica</span>
+        <span className="kb-plano-texto">{acostado ? "Frente" : "Frente · vista panorámica"}</span>
       </div>,
     );
   }
@@ -460,7 +460,8 @@ export function MapaAsientosBus(props: PropiedadesMapaBus) {
   }, []);
   const filasMax = Math.max(1, ...props.pisos.map((p) => p.filas.length));
   const tamano = Math.min(ASIENTO_MAX, Math.floor((ancho - ANCHO_EXTRA_ACOSTADO) / (filasMax + 2)));
-  const acostado = ancho >= 700 && tamano >= ASIENTO_MIN;
+  // En PC (desde 640 px de ancho útil) el bus va acostado; las sillas se achican hasta 36 px si hace falta.
+  const acostado = ancho >= 640 && tamano >= ASIENTO_MIN;
 
   const libresPorPiso = props.pisos.map((p) => {
     let libres = 0;
