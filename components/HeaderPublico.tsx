@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { LogoKlumbus } from "./LogoKlumbus";
 import { MenuSitio } from "./MenuSitio";
+import { useBoletoEmitido } from "@/lib/paso-compra";
 
 
 /**
@@ -19,6 +20,7 @@ import { MenuSitio } from "./MenuSitio";
  */
 export function HeaderPublico() {
   const pathname = usePathname();
+  const boletoEmitido = useBoletoEmitido();
 
   // Se desactiva en el panel de cooperativa y el panel de admin
   // (tienen su propio header con su propia navegación) -- y en la
@@ -37,7 +39,9 @@ export function HeaderPublico() {
   const pasoActual = /^\/viajes\/[^/]+\/asientos/.test(pathname)
     ? 2
     : /^\/viajes\/[^/]+\/checkout/.test(pathname)
-      ? 3
+      ? boletoEmitido
+        ? 4
+        : 3
       : null;
 
   return (

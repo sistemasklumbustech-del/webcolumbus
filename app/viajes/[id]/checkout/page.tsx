@@ -11,6 +11,9 @@ import { CampoSexoAsientoMujeres, type SexoPasajero } from "@/components/CampoSe
 import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
 import { leerResumenViaje } from "@/lib/resumen-viaje";
 import { LogoKlumbus } from "@/components/LogoKlumbus";
+import { BoletoAcciones } from "@/components/BoletoAcciones";
+import { numeroBoleto } from "@/lib/boleto";
+import { useMarcarBoletoEmitido } from "@/lib/paso-compra";
 
 /**
  * Los datos de factura se capturan ya (06-oct-2026) pero la emisión real de
@@ -127,6 +130,8 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   const [resultado, setResultado] = useState<ResultadoCompra | null>(null);
   // Código de acceso al andén (tasa del terminal): llega después del pago, así que se consulta aparte.
   const codigosAnden = useCodigosAnden(resultado?.estado === "aprobado" ? resultado.compraId : null);
+  // Barra de pasos: con el boleto emitido se resalta "4 Boleto".
+  useMarcarBoletoEmitido(resultado?.estado === "aprobado" && !!resultado.boletos?.length);
   const [creditos, setCreditos] = useState<MiCredito[]>([]);
   const [creditoElegidoId, setCreditoElegidoId] = useState("");
   const [mapa, setMapa] = useState<MapaAsientos | null>(null);
@@ -469,6 +474,11 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
         new Date(a.boletos[0].horaSalidaProgramada).getTime() - new Date(b.boletos[0].horaSalidaProgramada).getTime(),
     );
     const esIdaYVueltaConfirmada = gruposConfirmados.length === 2;
+    const gruposParaAcciones = gruposConfirmados.map((g, i) => ({
+      clave: g.clave,
+      tramo: esIdaYVueltaConfirmada ? (i === 0 ? ("IDA" as const) : ("VUELTA" as const)) : null,
+      boletos: g.boletos,
+    }));
     const totalTarifa = resultado.boletos.reduce((suma, b) => suma + b.precioPagado, 0);
     const totalTasa = resultado.boletos.reduce((suma, b) => suma + b.tasaTerminal, 0);
     const totalCargo = resultado.boletos.reduce((suma, b) => suma + b.cargoPlataforma, 0);
@@ -517,11 +527,11 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   return (
                     <article key={boleto.codigoQr} className="kb-ticket w-full max-w-[520px] lg:max-w-none lg:grid lg:grid-cols-[1fr_1fr_250px]">
                       <div className="kb-ticket__top flex flex-col gap-4 lg:justify-between lg:gap-5 lg:p-[26px]">
-                        <div className="flex items-center justify-between">
-                          <LogoKlumbus className="h-[22px] lg:h-6" />
-                          <span className="text-xs font-semibold text-kbyellow">
+                        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+                          <LogoKlumbus className="h-[22px] shrink-0 lg:h-6" />
+                          <span className="min-w-0 text-right text-xs font-semibold text-kbyellow">
+                            {/* El disco de la unidad ahora va rotulado en los datos del boleto. */}
                             {viaje.cooperativaNombre}
-                            {viaje.unidadIdentificador ? ` · ${viaje.unidadIdentificador}` : ""}
                           </span>
                         </div>
                         <div className="kb-timeline">
@@ -549,40 +559,56 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-x-2.5 gap-y-3.5 p-5 lg:grid-cols-2 lg:content-center lg:gap-x-3.5 lg:gap-y-4 lg:p-[26px]">
-                        <div className="col-span-2 min-w-0 lg:col-span-2">
-                          <span className="block text-[11px] text-muted-3">Pasajero</span>
-                          <b className="text-sm font-semibold lg:text-[15px]">{boleto.compradorNombre}</b>
+                      <dl className="grid grid-cols-2 gap-x-3.5 gap-y-3.5 p-5 lg:content-center lg:gap-y-4 lg:p-[26px]">
+                        <div className="col-span-2 min-w-0">
+                          <dt className="text-[11px] text-muted-3">Pasajero</dt>
+                          <dd className="text-sm font-semibold lg:text-[15px]">{boleto.compradorNombre}</dd>
                         </div>
-                        <div className="min-w-0 lg:order-3">
-                          <span className="block text-[11px] text-muted-3">Asiento</span>
-                          <b className="text-sm font-semibold lg:text-[15px]">
+                        <div className="min-w-0">
+                          <dt className="text-[11px] text-muted-3">Documento</dt>
+                          <dd className="break-words text-sm font-semibold tabular-nums lg:text-[15px]">{boleto.compradorDocumento ?? "—"}</dd>
+                        </div>
+                        <div className="min-w-0">
+                          <dt className="text-[11px] text-muted-3">Asiento</dt>
+                          <dd className="text-sm font-semibold lg:text-[15px]">
                             {boleto.numeroAsiento}
                             {boleto.esVip && <span className="kb-tag kb-tag--yellow ml-1.5 align-middle">VIP</span>}
-                          </b>
+                          </dd>
                         </div>
-                        <div className="col-span-2 min-w-0 lg:col-span-1 lg:order-2">
-                          <span className="block text-[11px] text-muted-3">Documento</span>
-                          <b className="text-sm font-semibold tabular-nums lg:text-[15px]">{boleto.compradorDocumento ?? "—"}</b>
-                        </div>
-                        <div className="min-w-0 lg:order-4">
-                          <span className="block text-[11px] text-muted-3">Tarifa</span>
-                          <b className="text-sm font-semibold tabular-nums lg:text-[15px]">${boleto.precioPagado.toFixed(2)}</b>
-                        </div>
-                        {boleto.tasaTerminal > 0 && (
-                          <div className="col-span-2 min-w-0 lg:order-5 lg:col-span-1">
-                            <span className="block text-[11px] text-muted-3">Tasa de terminal</span>
-                            <b className="text-sm font-semibold tabular-nums lg:text-[15px]">${boleto.tasaTerminal.toFixed(2)}</b>
+                        {viaje.unidadIdentificador && (
+                          <div className="min-w-0">
+                            <dt className="text-[11px] text-muted-3">Disco</dt>
+                            <dd className="break-words text-sm font-semibold lg:text-[15px]">{viaje.unidadIdentificador}</dd>
                           </div>
                         )}
-                      </div>
+                        {viaje.unidadPlaca && (
+                          <div className="min-w-0">
+                            <dt className="text-[11px] text-muted-3">Placa</dt>
+                            <dd className="break-words text-sm font-semibold uppercase lg:text-[15px]">{viaje.unidadPlaca}</dd>
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <dt className="text-[11px] text-muted-3">Tarifa</dt>
+                          <dd className="text-sm font-semibold tabular-nums lg:text-[15px]">${boleto.precioPagado.toFixed(2)}</dd>
+                        </div>
+                        {boleto.tasaTerminal > 0 && (
+                          <div className="min-w-0">
+                            <dt className="text-[11px] text-muted-3">Tasa de terminal</dt>
+                            <dd className="text-sm font-semibold tabular-nums lg:text-[15px]">${boleto.tasaTerminal.toFixed(2)}</dd>
+                          </div>
+                        )}
+                      </dl>
 
                       <div className="kb-ticket__cut lg:hidden" />
                       <div className="relative flex flex-col items-center gap-2 px-5 pb-5 pt-1 lg:justify-center lg:gap-2.5 lg:border-l-2 lg:border-dashed lg:border-line-2 lg:p-[22px]">
                         <span className="absolute -left-[13px] -top-3 hidden h-6 w-6 rounded-full bg-kbbg lg:block" aria-hidden="true" />
                         <span className="absolute -bottom-3 -left-[13px] hidden h-6 w-6 rounded-full bg-kbbg lg:block" aria-hidden="true" />
                         <CodigoQr valor={boleto.codigoQr} />
-                        {textoCodigo && <span className="text-[13px] font-semibold tracking-[.18em]">{textoCodigo}</span>}
+                        <span className="text-[13px] font-semibold tracking-[.14em] tabular-nums">
+                          <span className="sr-only">Boleto número </span>
+                          {numeroBoleto(boleto.id)}
+                        </span>
+                        {textoCodigo && <span className="text-xs tracking-[.12em] text-muted-2">{textoCodigo}</span>}
                         <span className="text-xs text-muted-2">
                           {infoAnden && infoAnden.estadoTasa !== "no_aplica" ? "Tu boleto · se valida al abordar" : "Muéstralo al subir"}
                         </span>
@@ -612,7 +638,8 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-2.5 md:w-auto md:flex-row md:gap-3">
+        <div className="flex w-full max-w-[520px] flex-col gap-2.5 md:w-auto md:max-w-[980px] md:flex-row md:flex-wrap md:justify-center md:gap-3">
+          <BoletoAcciones grupos={gruposParaAcciones} codigosAnden={codigosAnden} />
           <Link href="/perfil?tab=boletos" className="kb-btn kb-btn--outline">
             Ver mis boletos
           </Link>
