@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AMENIDADES_CATALOGO, listarParadasDeViaje, type ResultadoViaje, type ParadaTrayecto } from "@/lib/api";
+import { listarParadasDeViaje, type ResultadoViaje, type ParadaTrayecto } from "@/lib/api";
 import { ResenasCooperativa } from "./ResenasCooperativa";
+import { IconosAmenidades } from "./IconosAmenidades";
 import { estimarTrayecto, formatearDuracion, urlMapaTrayecto } from "@/lib/trayecto";
 
 function formatearHora(iso: string): string {
@@ -123,10 +124,11 @@ export function TarjetaCooperativaAgrupada({
           🎁 Invita a un amigo y gana ${beneficiosReferidos.creditoReferidor.toFixed(2)} de crédito
         </div>
       )}
-      <div className="flex flex-col gap-3.5 p-4 md:grid md:grid-cols-[140px_1fr_150px] md:items-center md:gap-5 md:px-6 md:py-5 xl:grid-cols-[200px_1fr_190px] xl:gap-7">
-        {/* Cooperativa */}
-        <div className="min-w-0">
-          <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3.5 p-4 md:grid md:grid-cols-[minmax(0,1fr)_150px] md:items-center md:gap-x-6 md:gap-y-3 md:px-6 md:py-5 xl:grid-cols-[200px_minmax(0,1fr)_190px] xl:gap-x-7">
+        {/* Cooperativa: en PC mediana va arriba de la línea de tiempo (con las comodidades a la derecha);
+            desde 1280 px es la primera de tres columnas. */}
+        <div className="min-w-0 md:col-start-1 md:row-start-1 md:flex md:items-center md:justify-between md:gap-4 xl:block">
+          <div className="flex min-w-0 items-center gap-3">
             {activo.cooperativaLogoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- URL externa dinámica (Cloudinary u otro), no un asset local
               <img
@@ -155,19 +157,14 @@ export function TarjetaCooperativaAgrupada({
               <p className="text-xs text-muted-2">{activo.tipoVehiculoNombre}</p>
             </div>
           </div>
-          {activo.tipoVehiculoAmenidades.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {activo.tipoVehiculoAmenidades.map((a) => (
-                <span key={a} className="rounded-[10px] bg-kbbg px-2 py-1 text-[11px] text-muted-2">
-                  {AMENIDADES_CATALOGO.find((cat) => cat.valor === a)?.etiqueta ?? a}
-                </span>
-              ))}
-            </div>
-          )}
+          <IconosAmenidades
+            amenidades={activo.tipoVehiculoAmenidades}
+            className="mt-3 md:relative md:z-[2] md:mt-0 md:shrink-0 md:justify-end xl:mt-3 xl:justify-start"
+          />
         </div>
 
         {/* Línea de tiempo */}
-        <div className="min-w-0">
+        <div className="min-w-0 md:col-start-1 md:row-start-2 xl:col-start-2 xl:row-start-1">
           <div className="kb-timeline !grid-cols-[auto_minmax(72px,1fr)_auto] md:gap-3.5">
             <div>
               <div className="whitespace-nowrap text-lg font-semibold tabular-nums md:text-[22px]">{formatearHora(activo.horaSalidaProgramada)}</div>
@@ -232,14 +229,19 @@ export function TarjetaCooperativaAgrupada({
           </div>
 
           {/* Por dónde pasa esta ruta -- RF-COOP-002, Fase 1 (20-ago-2026). */}
-          <div className="relative z-[2] mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-2">
+          <div className="relative z-[2] mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-2">
               <a
                 href={urlMapaTrayecto(activo)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold text-ink underline decoration-dotted underline-offset-2"
+                className="inline-flex min-h-8 items-center gap-1 font-medium text-muted-2 underline-offset-2 transition hover:text-ink hover:underline"
               >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" />
+                  <circle cx="12" cy="9.5" r="2.5" />
+                </svg>
                 Ver trayecto en el mapa
+                <span className="sr-only">(se abre en otra pestaña)</span>
               </a>
               {paradas.length > 0 && <span>Vía {paradas.map((p) => p.ciudad).join(", ")}</span>}
           </div>
@@ -255,7 +257,7 @@ export function TarjetaCooperativaAgrupada({
         </div>
 
         {/* Precio y acción */}
-        <div className="flex items-center justify-between gap-3 border-t border-dashed border-line pt-3 md:flex-col md:items-end md:justify-center md:gap-1.5 md:border-l-[1.5px] md:border-t-0 md:pl-6 md:pt-0">
+        <div className="flex items-center justify-between gap-3 border-t border-dashed border-line pt-3 md:col-start-2 md:row-span-2 md:row-start-1 md:flex-col xl:col-start-3 xl:row-span-1 md:items-end md:justify-center md:gap-1.5 md:border-l-[1.5px] md:border-t-0 md:pl-6 md:pt-0">
           <div className="flex flex-col items-start gap-1.5 md:items-end">
             <div className="flex flex-wrap gap-1.5 md:justify-end">
               {esMejorPrecio && <span className="kb-tag kb-tag--yellow">Mejor precio</span>}

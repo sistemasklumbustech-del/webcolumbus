@@ -3,12 +3,12 @@ import {
   buscarViajes,
   buscarAlternativas,
   obtenerBeneficiosReferidos,
-  type Amenidad,
   type ResultadoViaje,
 } from "@/lib/api";
 import { FiltrosBusqueda } from "./FiltrosBusqueda";
 import { OrdenarPor } from "./OrdenarPor";
-import { FiltroCooperativaPills } from "./FiltroCooperativaPills";
+import { CambiarBusqueda } from "./CambiarBusqueda";
+import { aFiltrable, cumpleFiltros, leerFiltros } from "@/lib/filtrar-resultados";
 import { TarjetaCooperativaAgrupada } from "./TarjetaCooperativaAgrupada";
 import { SinResultadosAlternativas } from "./SinResultadosAlternativas";
 import { TiraFechas } from "./TiraFechas";
@@ -31,14 +31,14 @@ export default async function ResultadosBusquedaPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const { origenId, destinoId, origenCiudad, destinoCiudad, fecha, pasajeros, horaDesde, horaHasta, amenidades } = sp;
+  const { origenId, destinoId, origenCiudad, destinoCiudad, fecha, pasajeros, horaDesde, horaHasta } = sp;
   const { vueltaOrigenId, vueltaOrigenCiudad, vueltaDestinoId, vueltaDestinoCiudad, horaVueltaDesde, horaVueltaHasta } = sp;
   // Fase 7-idayvuelta (11-ago-2026) -- fechaVuelta viene del buscador
   // solo si el pasajero activo el interruptor "Ida y vuelta". idaViajeId
   // y idaAsiento llegan cuando ya se eligio el tramo de ida y se esta
   // viendo la busqueda del tramo de vuelta (ver TarjetaResultado, que
   // arma ese link al elegir "Elegir asiento" en el tramo de ida).
-  const { fechaVuelta, idaViajeId, idaAsientos, ordenarPor, cooperativaId, precioMin, precioMax } = sp;
+  const { fechaVuelta, idaViajeId, idaAsientos, ordenarPor } = sp;
   // Segundo paso de una compra de ida y vuelta: ya se eligió el viaje de
   // ida (idaViajeId) y esta misma página busca el tramo de VUELTA -- la
   // URL trae ya el origen/destino/fecha de la vuelta, no hace falta
@@ -65,7 +65,11 @@ export default async function ResultadosBusquedaPage({
     );
   }
 
-  const amenidadesArr = amenidades ? (amenidades.split(",") as Amenidad[]) : undefined;
+  // Etapa 2 (aprobado por el director, 28-oct-2026): la API trae todas las salidas del día en una
+  // sola respuesta; los filtros (hora, comodidades, cooperativa, precio) se aplican sobre esa lista
+  // con lib/filtrar-resultados.ts -- la misma función que usa la hoja de filtros del celular para
+  // contar "Ver X salidas" en vivo. Mismas reglas que la API.
+  const filtros = leerFiltros((clave) => sp[clave]);
 
   // Fase 5-buscador (16-ago-2026) -- en paralelo con la búsqueda de
   // viajes, no en secuencia (no debe agregar latencia extra). Si
@@ -90,9 +94,6 @@ export default async function ResultadosBusquedaPage({
         destinoId,
         fecha,
         pasajeros: Number(pasajeros ?? 1),
-        horaDesde,
-        horaHasta,
-        amenidades: amenidadesArr,
       }),
     ];
     // Solo en el paso de la ida: se consulta también la vuelta, para
@@ -121,24 +122,21 @@ export default async function ResultadosBusquedaPage({
   // viajes en otros horarios, se muestran directamente (con venta
   // habilitada) y se avisa -- antes la persona veía "no hay viajes" y
   // tenía que adivinar que el filtro de hora era la causa.
+  // Todas las salidas del día (sin filtros): de aquí salen las opciones y los conteos de los filtros.
+  const todasLasSalidasIda = resultadosIda;
+  const filtradasIda = resultadosIda.filter((r) => cumpleFiltros(aFiltrable(r), filtros));
   let ordenFueraDeFranja = false;
   let vueltaFueraDeFranja = false;
-  if (!error && resultadosIda.length === 0 && horaDesde && horaHasta) {
-    try {
-      const sinFiltroHora = await buscarViajes({
-        origenId,
-        destinoId,
-        fecha,
-        pasajeros: Number(pasajeros ?? 1),
-        amenidades: amenidadesArr,
-      });
-      if (sinFiltroHora.length > 0) {
-        resultadosIda = sinFiltroHora;
-        ordenFueraDeFranja = true;
-      }
-    } catch {
-      /* si falla, se sigue con el aviso normal de "sin viajes" */
+  if (!error && filtradasIda.length === 0 && filtros.horaDesde) {
+    const sinFiltroHora = resultadosIda.filter((r) => cumpleFiltros(aFiltrable(r), filtros, { hora: true }));
+    if (sinFiltroHora.length > 0) {
+      resultadosIda = sinFiltroHora;
+      ordenFueraDeFranja = true;
+    } else {
+      resultadosIda = filtradasIda;
     }
+  } else {
+    resultadosIda = filtradasIda;
   }
   if (
     !error &&
@@ -176,7 +174,7 @@ export default async function ResultadosBusquedaPage({
   // se piden las alternativas reales -- otras fechas, otros destinos
   // desde el mismo origen y qué cooperativas cubren la ruta.
   const alternativas =
-    !error && resultadosIda.length === 0
+    !error && todasLasSalidasIda.length === 0
       ? await buscarAlternativas({ origenId, destinoId, fecha, pasajeros: Number(pasajeros ?? 1) })
       : null;
 
@@ -298,7 +296,7 @@ export default async function ResultadosBusquedaPage({
   }
 
   const mostrandoVuelta = esTramoVuelta;
-  let resultadosAMostrar = resultadosIda;
+  const resultadosAMostrar = resultadosIda;
 
   // Corrección real de un bug de producción (17-ago-2026, reportado
   // por el director con evidencia -- "This page couldn't load"):
@@ -320,27 +318,9 @@ export default async function ResultadosBusquedaPage({
   // directora) -- lista de cooperativas ÚNICAS reales presentes en
   // los resultados de ESTA búsqueda (nunca un catálogo fijo -- si una
   // cooperativa no tiene viajes en esta ruta/fecha, no aparece).
-  const cooperativasUnicas = Array.from(
-    new Map(resultadosAMostrar.map((r) => [r.cooperativaId, { id: r.cooperativaId, nombre: r.cooperativaNombre }])).values(),
-  );
-
-  if (cooperativaId) {
-    resultadosAMostrar = resultadosAMostrar.filter((r) => r.cooperativaId === cooperativaId);
-  }
-
-  // Fase 8-buscador (24-ago-2026) -- filtro de precio real, sobre
-  // datos ya obtenidos -- mismo patrón que el filtro de cooperativa de
-  // arriba. `Number(precioMin)` con NaN (campo vacío o inválido) no
-  // filtra nada en ese extremo, mismo criterio real que ya usa el
-  // input HTML de precio (sin mínimo/máximo si no se especifica).
-  const precioMinNum = precioMin ? Number(precioMin) : null;
-  const precioMaxNum = precioMax ? Number(precioMax) : null;
-  if (precioMinNum !== null && !Number.isNaN(precioMinNum)) {
-    resultadosAMostrar = resultadosAMostrar.filter((r) => Number(r.precioBase) >= precioMinNum);
-  }
-  if (precioMaxNum !== null && !Number.isNaN(precioMaxNum)) {
-    resultadosAMostrar = resultadosAMostrar.filter((r) => Number(r.precioBase) <= precioMaxNum);
-  }
+  // (El filtro de cooperativa y el de precio ya se aplicaron arriba, junto con los demás.)
+  // Datos mínimos de todas las salidas del día para los filtros (opciones, rango de precio, conteo en vivo).
+  const salidasParaFiltros = mostrandoVuelta ? [] : todasLasSalidasIda.map(aFiltrable);
 
   // "Ver horarios" agrupado por cooperativa (17-ago-2026, orden real
   // del director): se agrupan los viajes reales de esta ruta/fecha
@@ -371,13 +351,13 @@ export default async function ResultadosBusquedaPage({
     (a, b) => resultadosAMostrar.indexOf(a[0]) - resultadosAMostrar.indexOf(b[0]),
   );
 
-  // Fase 5-buscador (16-ago-2026) -- "Mejor precio" real, calculado
-  // una sola vez sobre TODOS los GRUPOS que se van a mostrar (el
-  // precio más bajo dentro de cada grupo es el representativo), no
-  // una insignia fija ni inventada por tarjeta.
-  const precioMinimo =
-    grupos.length > 0
-      ? Math.min(...grupos.map((g) => Math.min(...g.map((r) => Number(r.precioBase)))))
+  // "Mejor precio" (decisión del director, 28-oct-2026): solo cuando UNA salida es estrictamente más
+  // barata que todas las demás. Si el precio más bajo lo comparten dos o más, no se muestra en ninguna.
+  const preciosMostrados = resultadosAMostrar.map((r) => Number(r.precioBase));
+  const precioMinimo = preciosMostrados.length > 1 ? Math.min(...preciosMostrados) : null;
+  const viajeMejorPrecio =
+    precioMinimo !== null && preciosMostrados.filter((p) => p === precioMinimo).length === 1
+      ? resultadosAMostrar.find((r) => Number(r.precioBase) === precioMinimo)?.viajeId ?? null
       : null;
 
   // Orden de la directora (16-ago-2026) -- agregado al medir la
@@ -419,9 +399,31 @@ export default async function ResultadosBusquedaPage({
               </p>
             )}
           </div>
-          <Link href="/" className="kb-btn kb-btn--outline hidden h-[46px] md:inline-flex">
-            Cambiar búsqueda
-          </Link>
+          <CambiarBusqueda
+            inicial={{
+              origenId,
+              origenCiudad: origenCiudad ?? "",
+              destinoId,
+              destinoCiudad: destinoCiudad ?? "",
+              fecha,
+              pasajeros: Number(pasajeros ?? 1),
+              horaDesde: horaDesde ?? null,
+              horaHasta: horaHasta ?? null,
+              ...(fechaVuelta && !esTramoVuelta && vOrigenId && vDestinoId
+                ? {
+                    vuelta: {
+                      fecha: fechaVuelta,
+                      origenId: vOrigenId,
+                      origenCiudad: vOrigenCiudad ?? "",
+                      destinoId: vDestinoId,
+                      destinoCiudad: vDestinoCiudad ?? "",
+                      horaDesde: horaVueltaDesde ?? null,
+                      horaHasta: horaVueltaHasta ?? null,
+                    },
+                  }
+                : {}),
+            }}
+          />
 
           {esIdaYVuelta && (
             <div className="flex basis-full items-center gap-2 text-sm font-semibold">
@@ -439,6 +441,7 @@ export default async function ResultadosBusquedaPage({
         <TiraFechas
           fecha={fecha}
           precios={preciosPorDia}
+          hayDatos={fechasConPrecio !== null}
           hrefFecha={(f) =>
             hrefBuscar({
               fecha: f,
@@ -454,10 +457,10 @@ export default async function ResultadosBusquedaPage({
           {!mostrandoVuelta && (
             <>
               <div className="lg:hidden">
-                <FiltrosBusqueda />
+                <FiltrosBusqueda salidas={salidasParaFiltros} />
               </div>
-              <div className="hidden lg:sticky lg:top-6 lg:block">
-                <FiltrosBusqueda variante="panel" />
+              <div className="hidden lg:sticky lg:top-24 lg:block">
+                <FiltrosBusqueda variante="panel" salidas={salidasParaFiltros} />
               </div>
             </>
           )}
@@ -469,8 +472,6 @@ export default async function ResultadosBusquedaPage({
               </p>
               {grupos.length > 0 && <OrdenarPor />}
             </div>
-
-            {!mostrandoVuelta && <FiltroCooperativaPills cooperativas={cooperativasUnicas} />}
 
             {ordenFueraDeFranja && (
               <div className="kb-alert kb-alert--info mb-4 flex-col !gap-1">
@@ -591,9 +592,7 @@ export default async function ResultadosBusquedaPage({
                   key={`${grupo[0].cooperativaId}::${grupo[0].tipoVehiculoId}`}
                   viajes={grupo}
                   hrefsPorViaje={hrefsPorViaje}
-                  esMejorPrecio={
-                    grupos.length > 1 && precioMinimo !== null && grupo.some((r) => Number(r.precioBase) === precioMinimo)
-                  }
+                  esMejorPrecio={viajeMejorPrecio !== null && grupo.some((r) => r.viajeId === viajeMejorPrecio)}
                   esTopCalificado={
                     grupos.length > 1 &&
                     calificacionMaxima !== null &&

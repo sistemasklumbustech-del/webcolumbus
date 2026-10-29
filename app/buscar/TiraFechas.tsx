@@ -6,6 +6,8 @@ import Link from "next/link";
  * bajo "desde" si hay viajes, o "—" si no hay. Los precios salen de la consulta de alternativas de la
  * API (`/viajes/alternativas?completo=true`), la misma que ya usa "Ver todas las fechas": no hay
  * cálculo nuevo. Tocar un día repite la misma búsqueda con esa fecha.
+ * Etapa 2: los días sin salidas se ven apagados, dicen "Sin salidas" y no se pueden tocar. Solo cuando
+ * la consulta de precios respondió (`hayDatos`); si falló, todos los días quedan tocables con "—".
  */
 const DIAS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -24,9 +26,11 @@ export function TiraFechas({
   fecha,
   precios,
   hrefFecha,
+  hayDatos,
 }: {
   fecha: string;
   precios: Map<string, number>;
+  hayDatos: boolean;
   hrefFecha: (f: string) => string;
 }) {
   const hoy = hoyEcuador();
@@ -42,6 +46,20 @@ export function TiraFechas({
           const diaSemana = DIAS[new Date(Date.UTC(a, m - 1, dd)).getUTCDay()];
           const precio = precios.get(d);
           const actual = d === fecha;
+          const fecha_ = `${diaSemana} ${dd} ${MESES[m - 1]}`;
+          if (hayDatos && precio === undefined && !actual) {
+            return (
+              <li key={d} className="min-w-[92px] flex-1">
+                <span
+                  aria-disabled="true"
+                  className="flex h-full cursor-not-allowed flex-col items-center rounded-tab bg-kbbg px-2 py-2 text-center"
+                >
+                  <span className="text-xs text-muted-3">{fecha_}</span>
+                  <span className="text-[13px] font-medium leading-[22px] text-muted-3">Sin salidas</span>
+                </span>
+              </li>
+            );
+          }
           return (
             <li key={d} className="min-w-[92px] flex-1">
               <Link
@@ -52,7 +70,7 @@ export function TiraFechas({
                 }`}
               >
                 <span className={`text-xs ${actual ? "text-ondark" : "text-muted-2"}`}>
-                  {diaSemana} {dd} {MESES[m - 1]}
+                  {fecha_}
                 </span>
                 <span className={`text-[15px] font-semibold tabular-nums ${precio === undefined ? (actual ? "text-ondark" : "text-muted-3") : actual ? "text-kbyellow" : ""}`}>
                   {precio === undefined ? "—" : `$${precio.toFixed(2)}`}
