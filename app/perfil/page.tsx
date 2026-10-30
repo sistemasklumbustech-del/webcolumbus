@@ -411,7 +411,7 @@ function MiCuenta() {
               )}
               {pestanaActiva === "boletos" && <TabMisBoletos onExito={setMensajeExito} />}
               {pestanaActiva === "reclamos" && <TabMisReclamos />}
-              {pestanaActiva === "wallet" && <TabWallet />}
+              {pestanaActiva === "wallet" && <TabWallet perfil={perfil} />}
               {pestanaActiva === "referidos" && <TabReferidos perfil={perfil} />}
               {pestanaActiva === "creditos" && <TabMisCreditos />}
             </div>
