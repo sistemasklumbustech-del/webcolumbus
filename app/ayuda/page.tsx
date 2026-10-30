@@ -125,7 +125,7 @@ export default function AyudaPage() {
               <p className="text-sm text-ondark">
                 {conSesion
                   ? "Todos tus boletos, con su QR, están en Mis boletos."
-                  : "Si compraste sin cuenta, revisa tu WhatsApp o tu correo. Con cuenta, están en Mis boletos."}
+                  : "Si compraste sin cuenta, revisa tu correo (y la carpeta de spam). Con cuenta, están en Mis boletos."}
               </p>
               <Link href="/perfil?tab=boletos" className="kb-btn kb-btn--primary mt-auto !h-11 self-start !px-5 !text-sm">
                 Ir a Mis boletos
@@ -268,7 +268,7 @@ export default function AyudaPage() {
                 onChange={(e) => setCooperativaId(e.target.value)}
                 className={claseCampo}
               >
-                <option value="">No, es sobre Klumbus en general</option>
+                <option value="">No, es sobre Klumbus</option>
                 {cooperativas.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nombre}
@@ -277,8 +277,7 @@ export default function AyudaPage() {
               </select>
               {cooperativasCargadas && cooperativas.length === 0 && (
                 <p className="mt-1.5 text-xs text-muted-2">
-                  No pudimos cargar la lista de cooperativas. Puedes enviar tu consulta a Klumbus en general y la hacemos
-                  llegar.
+                  No pudimos cargar la lista de cooperativas. Puedes enviar tu consulta a Klumbus y la hacemos llegar.
                 </p>
               )}
               {cooperativaElegida && (

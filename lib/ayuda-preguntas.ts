@@ -42,12 +42,12 @@ export const TEMAS_AYUDA: TemaPreguntas[] = [
     preguntas: [
       {
         p: "¿Dónde encuentro mi boleto?",
-        r: "Al terminar la compra ves tu boleto con su QR: puedes descargarlo, compartirlo o tomarle una captura. Si dejaste tu correo, también te llega por correo con el boleto en PDF. Si tienes cuenta, siempre está en Mi cuenta → Mis boletos.",
+        r: "Al terminar la compra ves tu boleto con su QR: puedes descargarlo, compartirlo o tomarle una captura. También te llega a tu correo con el boleto en PDF (revisa la carpeta de spam). Si tienes cuenta, siempre está en Mi cuenta → Mis boletos.",
         enlace: { texto: "Ir a Mis boletos", href: "/perfil?tab=boletos" },
       },
       {
         p: "Compré sin cuenta y no encuentro mi boleto",
-        r: "Busca el correo de Klumbus (revisa también spam) si lo dejaste al comprar. Si no lo encuentras, escríbenos por WhatsApp con el nombre del pasajero, la ruta y la fecha del viaje.",
+        r: "Busca el correo de Klumbus en el correo que dejaste al comprar (revisa también la carpeta de spam). Si no lo encuentras, escríbenos por WhatsApp con el nombre del pasajero, la ruta y la fecha del viaje.",
         enlace: { texto: "Escríbenos por WhatsApp", href: "whatsapp" },
       },
       {
