@@ -160,7 +160,7 @@ export default function ValidarQrPage() {
       try {
         const texto = await decodificarQrDeImagen(archivo);
         if (!texto) {
-          setErrorImagen("No se encontró ningún código QR en esa imagen. Probá con una foto más nítida.");
+          setErrorImagen("No se encontró ningún código QR en esa imagen. Prueba con una foto más nítida.");
           return;
         }
         await ejecutarValidacion(texto);
@@ -210,7 +210,7 @@ export default function ValidarQrPage() {
     setArrastrando(false);
     const archivo = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith("image/"));
     if (archivo) void procesarImagen(archivo);
-    else setErrorImagen("Eso no es una imagen. Arrastrá una foto o captura del código QR.");
+    else setErrorImagen("Eso no es una imagen. Arrastra una foto o captura del código QR.");
   }
 
   function alSeleccionarArchivo(e: React.ChangeEvent<HTMLInputElement>) {
@@ -271,7 +271,7 @@ export default function ValidarQrPage() {
       setCamaraActiva(true);
       cuadroAnimacionRef.current = requestAnimationFrame(escanearCuadroDeVideo);
     } catch {
-      setErrorCamara("No se pudo acceder a la cámara. Revisá los permisos del navegador para este sitio.");
+      setErrorCamara("No se pudo acceder a la cámara. Revisa los permisos del navegador para este sitio.");
     }
   }
 
@@ -315,7 +315,7 @@ export default function ValidarQrPage() {
 
       <div className="kb-card kb-on-white p-6">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-2">
-          ¿No tenés un escáner a mano?
+          ¿No tienes un escáner a mano?
         </p>
 
         {camaraActiva ? (
@@ -324,7 +324,7 @@ export default function ValidarQrPage() {
               <video ref={videoRef} muted playsInline className="h-full w-full object-cover" />
               <div className="pointer-events-none absolute inset-6 rounded-ctrl border-2 border-kbyellow" />
             </div>
-            <p className="text-center text-xs text-muted-2">Apuntá al código QR del boleto...</p>
+            <p className="text-center text-xs text-muted-2">Apunta al código QR del boleto...</p>
             <button
               type="button"
               onClick={detenerCamara}
@@ -349,7 +349,7 @@ export default function ValidarQrPage() {
               <p className="text-sm text-muted-2">
                 {decodificando
                   ? "Leyendo la imagen..."
-                  : "Arrastrá una foto o captura del QR aquí, pegala (Ctrl+V), o:"}
+                  : "Arrastra una foto o captura del QR aquí, pégala (Ctrl+V), o:"}
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 <button

@@ -3,18 +3,39 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { verificarCorreo } from "@/lib/api";
+import { reenviarVerificacionCorreo, verificarCorreo } from "@/lib/api";
+import { tokenValido } from "@/lib/auth";
+import { AccesoLayout, EstadoAcceso } from "@/components/AccesoLayout";
+import { BotonReenviar } from "@/components/BotonReenviar";
+import { MARCO_CUENTA } from "@/lib/marco-acceso";
 
-type Estado = "verificando" | "listo" | "error";
+type Estado = "verificando" | "listo" | "error" | "pedir";
 
+/** Después de iniciar sesión, vuelve aquí para pedir el enlace nuevo (no al inicio). */
+const VOLVER_PARA_PEDIR = `/ingresar?volverA=${encodeURIComponent("/verificar-correo?reenviar=1")}`;
+
+/**
+ * Verificación de correo (RF-AUTH-001). Rediseño 30-oct-2026: mismo marco que Ingresar y, si el
+ * enlace no sirve, una salida clara: con sesión se pide uno nuevo ahí mismo
+ * (POST /auth/reenviar-verificacion, ya existente); sin sesión, se inicia sesión y se vuelve aquí.
+ */
 function VerificacionCorreo() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
+  const quiereReenviar = searchParams.get("reenviar") === "1";
   const [estado, setEstado] = useState<Estado>("verificando");
   const [error, setError] = useState<string | null>(null);
+  const [conSesion, setConSesion] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
+    setConSesion(!!tokenValido());
     if (!token) {
+      if (quiereReenviar) {
+        setEstado("pedir");
+        return;
+      }
       setEstado("error");
       setError("Este enlace no es válido.");
       return;
@@ -25,28 +46,92 @@ function VerificacionCorreo() {
         setEstado("error");
         setError(err instanceof Error ? err.message : "No se pudo verificar el correo.");
       });
-  }, [token]);
+  }, [token, quiereReenviar]);
 
+  async function pedirEnlace() {
+    const sesion = tokenValido();
+    if (!sesion) throw new Error("Tu sesión venció. Inicia sesión de nuevo.");
+    await reenviarVerificacionCorreo(sesion);
+  }
+
+  async function pedirPrimeraVez() {
+    setEnviando(true);
+    setError(null);
+    try {
+      await pedirEnlace();
+      setEnviado(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo enviar el enlace.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  if (estado === "verificando") {
+    return (
+      <AccesoLayout {...MARCO_CUENTA}>
+        <EstadoAcceso icono="cargando" titulo="Verificando tu correo…">
+          Esto toma solo un momento.
+        </EstadoAcceso>
+      </AccesoLayout>
+    );
+  }
+
+  if (estado === "listo") {
+    return (
+      <AccesoLayout {...MARCO_CUENTA}>
+        <EstadoAcceso icono="ok" titulo="¡Correo verificado!">
+          Ya puedes usar todas las funciones de tu cuenta.
+        </EstadoAcceso>
+        <Link href="/perfil" className="kb-btn kb-btn--primary w-full">
+          Ir a mi cuenta
+        </Link>
+      </AccesoLayout>
+    );
+  }
+
+  // Enlace vencido o sin enlace: pedir uno nuevo.
+  const titulo = estado === "pedir" ? "Verifica tu correo" : "No pudimos verificar tu correo";
   return (
-    <main className="kb-on-white flex flex-1 items-center justify-center bg-kbbg px-4 py-16">
-      <div className="w-full max-w-sm kb-card kb-on-white p-8 text-center shadow-lg ring-1 ring-line">
-        <h1 className="text-2xl font-bold text-brand-dark">Verificación de correo</h1>
-
-        {estado === "verificando" && <p className="mt-4 text-sm text-muted-2">Verificando...</p>}
-        {estado === "listo" && (
-          <p className="mt-4 text-sm text-muted-2">
-            Tu correo quedó verificado. Ya podés usar todas las funciones de tu cuenta.
-          </p>
+    <AccesoLayout {...MARCO_CUENTA}>
+      <EstadoAcceso icono={enviado ? "correo" : estado === "pedir" ? "correo" : "alerta"} titulo={enviado ? "Revisa tu correo" : titulo}>
+        {enviado ? (
+          "Te enviamos un enlace nuevo. Ábrelo desde tu correo para verificar tu cuenta (revisa también la carpeta de spam)."
+        ) : estado === "pedir" ? (
+          "Te enviaremos un enlace nuevo a tu correo."
+        ) : (
+          <>
+            {error && <span className="block text-[#FF9B9B]">{error}</span>}
+            <span className="mt-1 block">El enlace puede haber vencido o ya se usó. Pide uno nuevo.</span>
+          </>
         )}
-        {estado === "error" && <p className="mt-4 text-sm font-medium text-kberror">{error}</p>}
+      </EstadoAcceso>
 
-        <p className="mt-6">
-          <Link href="/" className="font-semibold text-brand hover:underline">
-            Ir al inicio
+      {enviado ? (
+        <>
+          <Link href="/perfil" className="kb-btn kb-btn--primary w-full">
+            Ir a mi cuenta
           </Link>
-        </p>
-      </div>
-    </main>
+          <div className="mt-4">
+            <BotonReenviar onReenviar={pedirEnlace} />
+          </div>
+        </>
+      ) : conSesion ? (
+        <>
+          {estado === "pedir" && error && <p className="kb-alert kb-alert--error mb-3.5">{error}</p>}
+          <button type="button" onClick={pedirPrimeraVez} disabled={enviando} className="kb-btn kb-btn--primary w-full">
+            {enviando ? "Enviando..." : "Enviar un enlace nuevo"}
+          </button>
+        </>
+      ) : (
+        <>
+          <Link href={VOLVER_PARA_PEDIR} className="kb-btn kb-btn--primary w-full">
+            Inicia sesión para pedir uno nuevo
+          </Link>
+          <p className="mt-3 text-center text-[13px] text-ondark">Después de entrar, vuelves aquí para pedirlo.</p>
+        </>
+      )}
+    </AccesoLayout>
   );
 }
 

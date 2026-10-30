@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { esRutaAcceso } from "@/lib/rutas-acceso";
 import { usePathname } from "next/navigation";
 import { LogoKlumbus } from "./LogoKlumbus";
 import { obtenerContactoSoporte, type ContactoSoporte } from "@/lib/api";
@@ -85,8 +86,7 @@ export function Footer() {
   if (
     pathname.startsWith("/panel-empresa") ||
     pathname.startsWith("/admin") ||
-    pathname === "/ingresar" ||
-    pathname === "/registro" ||
+    esRutaAcceso(pathname) ||
     /^\/viajes\/[^/]+\/(asientos|checkout)/.test(pathname)
   ) {
     return null;
