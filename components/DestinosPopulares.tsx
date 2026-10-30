@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ImagenDiferida } from "./ImagenDiferida";
 import { listarRutasDisponibles, type RutaDisponible } from "@/lib/api";
 import { claveCiudad, REFERENCIA, rutasReales } from "@/lib/portada-datos";
 import { IlustracionDestino, type ClaveIlustracion } from "./IlustracionDestino";
@@ -91,7 +91,7 @@ export async function DestinosPopulares() {
           >
             <div className="relative aspect-[4/3] overflow-hidden bg-ink-2">
               {d.foto ? (
-                <Image
+                <ImagenDiferida
                   src={d.foto}
                   alt={`Foto de ${d.ciudad}, destino desde ${modoReferencia ? REFERENCIA.terminal.ciudad : "la terminal"}`}
                   loading="lazy"

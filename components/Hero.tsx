@@ -8,6 +8,7 @@ import { listarTerminalesAliadas } from "@/lib/api";
 import { REFERENCIA, terminalesReales } from "@/lib/portada-datos";
 import { BotonBuscarFlotante } from "./BotonBuscarFlotante";
 import { MenuSitio } from "./MenuSitio";
+import { FOTOS, srcHorizontal, srcVertical } from "@/lib/hero-fotos";
 
 
 /**
@@ -19,21 +20,24 @@ import { MenuSitio } from "./MenuSitio";
  * dos fotos reales con su cambio automático y toda la lógica (sesión,
  * menú móvil y buscador).
  */
-const FOTOS = [
-  {
-    vertical: "/img/hero-tarde-v.webp",
-    horizontal: "/img/hero-tarde-h.webp",
-    alt: "Bus de dos pisos de Klumbus en la terminal al atardecer",
-  },
-  {
-    vertical: "/img/hero-noche-v.webp",
-    horizontal: "/img/hero-noche-h.webp",
-    alt: "Bus de Klumbus de frente, de noche, en el andén",
-  },
-];
-
 export function Hero() {
   const [indiceActivo, setIndiceActivo] = useState(0);
+  // La segunda foto se pide recién cuando la página terminó de cargar: así no le quita ancho de banda
+  // a la primera (que es lo más grande que se pinta al entrar). El cambio de foto sigue a los 6 s.
+  const [segundaLista, setSegundaLista] = useState(false);
+
+  useEffect(() => {
+    let temporizador: ReturnType<typeof setTimeout>;
+    const preparar = () => {
+      temporizador = setTimeout(() => setSegundaLista(true), 1500);
+    };
+    if (document.readyState === "complete") preparar();
+    else window.addEventListener("load", preparar, { once: true });
+    return () => {
+      clearTimeout(temporizador);
+      window.removeEventListener("load", preparar);
+    };
+  }, []);
   // El encabezado queda fijo arriba y se vuelve de vidrio oscuro al bajar la página.
   const [conFondo, setConFondo] = useState(false);
   // Nombre real de la terminal aliada (Machala primero), para la insignia del hero.
@@ -42,11 +46,12 @@ export function Hero() {
   useEffect(() => {
     // Con "reducir movimiento" activado la foto no cambia sola.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!segundaLista) return;
     const temporizador = setInterval(() => {
       setIndiceActivo((i) => (i + 1) % FOTOS.length);
     }, 6000);
     return () => clearInterval(temporizador);
-  }, []);
+  }, [segundaLista]);
 
   useEffect(() => {
     function alDesplazar() {
@@ -82,17 +87,35 @@ export function Hero() {
                 }`}
                 aria-hidden={i !== indiceActivo}
               >
-                {/* Celular: foto vertical; PC: horizontal. Solo se descarga una de las dos. */}
-                <picture>
-                  <source media="(min-width: 768px)" srcSet={foto.horizontal} />
-                  <img
-                    src={foto.vertical}
-                    alt={foto.alt}
-                    fetchPriority={i === 0 ? "high" : "auto"}
-                    loading={i === 0 ? "eager" : "lazy"}
-                    className="h-full w-full object-cover object-[50%_0%] md:object-center"
-                  />
-                </picture>
+                {/* Celular: foto vertical; PC: horizontal. Solo se descarga una de las dos, del tamaño justo. */}
+                {(i === 0 || segundaLista) && (
+                  <picture>
+                    <source
+                      media="(min-width: 768px)"
+                      type="image/avif"
+                      srcSet={srcHorizontal(foto.horizontal, "avif")}
+                      sizes="(min-width: 1280px) 560px, 36vw"
+                    />
+                    <source
+                      media="(min-width: 768px)"
+                      srcSet={srcHorizontal(foto.horizontal)}
+                      sizes="(min-width: 1280px) 560px, 36vw"
+                    />
+                    <source type="image/avif" srcSet={srcVertical(foto.vertical, "avif")} sizes="100vw" />
+                    <img
+                      src={`${foto.vertical}-720.webp`}
+                      srcSet={srcVertical(foto.vertical)}
+                      sizes="100vw"
+                      width={720}
+                      height={1066}
+                      alt={foto.alt}
+                      fetchPriority={i === 0 ? "high" : "low"}
+                      loading={i === 0 ? "eager" : "lazy"}
+                      decoding={i === 0 ? "sync" : "async"}
+                      className="h-full w-full object-cover object-[50%_0%] md:object-center"
+                    />
+                  </picture>
+                )}
               </div>
             ))}
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,13,18,.8)_0%,rgba(11,13,18,.15)_30%,rgba(11,13,18,.35)_55%,#0B0D12_92%)] md:hidden" />

@@ -2,8 +2,15 @@
 
 import { useEffect, useId, useRef, useState, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { DayPicker } from "react-day-picker";
-import { es } from "react-day-picker/locale";
+import dynamic from "next/dynamic";
+
+// El calendario (react-day-picker) se descarga recién al abrirlo, no al cargar la portada
+// (portada-velocidad, 30-oct-2026). Se ve igual; se pide antes con el mouse encima o al enfocar.
+const cargarCalendario = () => import("./CalendarioFecha");
+const CalendarioFecha = dynamic(() => cargarCalendario().then((m) => m.CalendarioFecha), {
+  ssr: false,
+  loading: () => <div className="h-[296px] w-[266px]" aria-hidden="true" />,
+});
 
 interface Props {
   etiqueta: string;
@@ -126,6 +133,8 @@ export function CampoFecha({ etiqueta, valor, minimo, onCambio }: Props) {
         ref={botonRef}
         type="button"
         onClick={() => setAbierto((a) => !a)}
+        onPointerEnter={() => void cargarCalendario()}
+        onFocus={() => void cargarCalendario()}
         aria-haspopup="dialog"
         aria-expanded={abierto}
         className="block w-full p-0 text-left text-sm font-semibold text-ink focus:outline-none md:text-[15px]"
@@ -143,38 +152,12 @@ export function CampoFecha({ etiqueta, valor, minimo, onCambio }: Props) {
             style={{ position: "fixed", top: posicion.top + 14, left: posicion.left }}
             className="z-[100] rounded-card border border-line bg-white p-3 shadow-float"
           >
-            <DayPicker
-              mode="single"
-              locale={es}
-              selected={isoAFecha(valor)}
-              defaultMonth={isoAFecha(valor)}
-              disabled={minimo ? { before: isoAFecha(minimo) } : undefined}
-              onSelect={(fecha) => {
-                if (!fecha) return;
+            <CalendarioFecha
+              valor={isoAFecha(valor)}
+              minimo={minimo ? isoAFecha(minimo) : undefined}
+              onElegir={(fecha) => {
                 onCambio(fechaAIso(fecha));
                 setAbierto(false);
-              }}
-              classNames={{
-                root: "text-ink",
-                months: "flex gap-4",
-                month: "space-y-2",
-                month_caption: "flex items-center justify-center py-1 text-sm font-semibold text-ink capitalize",
-                nav: "flex items-center justify-between absolute inset-x-0 top-0 px-1",
-                button_previous:
-                  "flex h-8 w-8 items-center justify-center rounded-ctrl text-muted-2 hover:bg-kbbg hover:text-ink disabled:opacity-30",
-                button_next:
-                  "flex h-8 w-8 items-center justify-center rounded-ctrl text-muted-2 hover:bg-kbbg hover:text-ink disabled:opacity-30",
-                chevron: "fill-current",
-                weekdays: "flex",
-                weekday: "w-9 text-center text-[11px] font-semibold uppercase text-muted-3",
-                week: "flex",
-                day: "p-0.5",
-                day_button:
-                  "flex h-9 w-9 items-center justify-center rounded-ctrl text-sm text-ink transition hover:bg-kbbg",
-                today: "font-bold underline decoration-kbyellow decoration-2 underline-offset-4",
-                selected: "[&>button]:bg-kbyellow [&>button]:text-ink [&>button]:font-bold [&>button]:hover:bg-kbyellow",
-                outside: "text-muted-3",
-                disabled: "text-line-2 hover:bg-transparent cursor-not-allowed",
               }}
             />
           </div>,
