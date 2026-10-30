@@ -55,11 +55,9 @@ export function TabWallet() {
       <div className="relative overflow-hidden rounded-card bg-ink px-6 py-6 sm:px-8 sm:py-8">
         <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-kbyellow/10" />
         <div className="pointer-events-none absolute -bottom-16 -left-8 h-36 w-36 rounded-full bg-white/5" />
+        {/* Sin la etiqueta "WALLET" (decisión del director, 30-oct-2026): "Saldo disponible" ya lo dice abajo. */}
         <div className="relative flex items-start justify-between">
           <span className="text-sm font-bold tracking-[0.2em] text-ondark">KLUMBUS</span>
-          <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-kbyellow">
-            Wallet
-          </span>
         </div>
         <div className="relative mt-8">
           <p className="text-xs font-semibold uppercase tracking-wide text-ondark">Saldo disponible</p>
