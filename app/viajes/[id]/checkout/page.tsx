@@ -238,8 +238,10 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
     // un telefono o correo de contacto (el backend tambien lo valida,
     // esto solo evita el viaje redondo al servidor para avisarlo antes).
     const token = tokenValido();
-    if (!token && !telefonoContacto.trim() && !correoContacto.trim()) {
-      setError("Ingresa un telefono o correo de contacto para recibir tu boleto.");
+    // Correo obligatorio sin cuenta (30-oct-2026, decisión del director): hoy el boleto solo se envía
+    // por correo; con solo teléfono la persona no recibía su boleto. Con cuenta se usa el correo de la cuenta.
+    if (!token && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoContacto.trim())) {
+      setError("Ingresa tu correo: ahí te enviamos tu boleto en PDF.");
       return;
     }
     const sesionInvitadoId = token ? undefined : obtenerOCrearSesionInvitado();
@@ -495,9 +497,14 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
           {hayVarios ? "¡Listo, tus boletos están confirmados!" : "¡Listo, tu boleto está confirmado!"}
         </h1>
         <p className="-mt-2 text-center text-sm text-muted-2 md:mb-1.5">
-          {!tokenValido() && telefonoContacto
-            ? `Te lo enviamos por WhatsApp al ${telefonoContacto}. `
-            : ""}
+          {/* El boleto se envía por correo (la API no lo envía por WhatsApp; por WhatsApp solo va el
+              recordatorio antes del viaje). */}
+          {tokenValido()
+            ? "Te lo enviamos al correo de tu cuenta. "
+            : correoContacto.trim()
+              ? `Te lo enviamos a tu correo ${correoContacto.trim()}. `
+              : ""}
+          {!tokenValido() && telefonoContacto.trim() ? "Te recordaremos por WhatsApp antes del viaje. " : ""}
           Muestra estos códigos al abordar. También puedes tomarles una captura de pantalla.
         </p>
 
@@ -1115,13 +1122,32 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                 <i className={claseNumeroPaso} aria-hidden="true">{numeroPasoPago + 1}</i>
                 <div>
                   <b className="block text-base font-semibold md:text-[17px]">¿A dónde enviamos tu boleto?</b>
-                  <span className="block text-xs text-muted-2">Compras sin crear cuenta: solo necesitamos dónde enviarte tu boleto</span>
+                  <span className="block text-xs text-muted-2">Compras sin crear cuenta: te enviamos tu boleto a tu correo</span>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
+                  <label htmlFor="checkout-invitado-correo" className="kb-label">
+                    Correo
+                  </label>
+                  <input
+                    id="checkout-invitado-correo"
+                    autoComplete="email"
+                    type="email"
+                    required
+                    aria-describedby="checkout-invitado-correo-ayuda"
+                    value={correoContacto}
+                    onChange={(e) => setCorreoContacto(e.target.value)}
+                    className="kb-input"
+                    placeholder="tu@correo.com"
+                  />
+                  <span id="checkout-invitado-correo-ayuda" className="mt-1.5 block text-xs text-muted-2">
+                    Aquí te enviamos tu boleto en PDF.
+                  </span>
+                </div>
+                <div>
                   <label htmlFor="checkout-invitado-telefono" className="kb-label">
-                    Teléfono (para WhatsApp)
+                    WhatsApp (opcional)
                   </label>
                   <input
                     id="checkout-invitado-telefono"
@@ -1132,21 +1158,11 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     onChange={(e) => setTelefonoContacto(e.target.value.replace(/\D/g, ""))}
                     className="kb-input tabular-nums"
                     placeholder="0991234567"
+                    aria-describedby="checkout-invitado-telefono-ayuda"
                   />
-                </div>
-                <div>
-                  <label htmlFor="checkout-invitado-correo" className="kb-label">
-                    Correo (opcional si ya diste teléfono)
-                  </label>
-                  <input
-                    id="checkout-invitado-correo"
-                    autoComplete="email"
-                    type="email"
-                    value={correoContacto}
-                    onChange={(e) => setCorreoContacto(e.target.value)}
-                    className="kb-input"
-                    placeholder="tu@correo.com"
-                  />
+                  <span id="checkout-invitado-telefono-ayuda" className="mt-1.5 block text-xs text-muted-2">
+                    Para recordarte tu viaje.
+                  </span>
                 </div>
               </div>
               <label htmlFor="checkout-invitado-terminos" className="flex cursor-pointer items-center gap-2.5 text-[13px]">
