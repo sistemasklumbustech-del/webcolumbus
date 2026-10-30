@@ -372,7 +372,7 @@ export default function VenderVentanillaViajePage({ params }: { params: Promise<
             {tipoMetodoPago === "transferencia_bancaria" && (
               <div className="mt-3 space-y-2 rounded-lg bg-kbbg p-3">
                 <p className="text-xs text-muted-2">
-                  Opcional: dejá un respaldo de la transferencia para poder revisarla después.
+                  Opcional: deja un respaldo de la transferencia para poder revisarla después.
                 </p>
                 <input
                   type="text"

@@ -4,6 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { confirmarCambioCorreo } from "@/lib/api";
+import { AccesoLayout, EstadoAcceso } from "@/components/AccesoLayout";
+import { MARCO_CUENTA, esEnlaceVencido } from "@/lib/marco-acceso";
 
 /**
  * Cambio de correo (29-jul-2026, hallazgo real del usuario) — pantalla
@@ -31,48 +33,43 @@ function ConfirmacionCambioCorreo() {
       });
   }, [token]);
 
+  if (estado === "cargando") {
+    return (
+      <AccesoLayout {...MARCO_CUENTA}>
+        <EstadoAcceso icono="cargando" titulo="Confirmando tu correo nuevo…">
+          Esto toma solo un momento.
+        </EstadoAcceso>
+      </AccesoLayout>
+    );
+  }
+
+  if (estado === "exito") {
+    return (
+      <AccesoLayout {...MARCO_CUENTA}>
+        <EstadoAcceso icono="ok" titulo="¡Listo! Tu correo quedó actualizado">
+          Desde ahora, inicia sesión con tu correo nuevo.
+        </EstadoAcceso>
+        <Link href="/ingresar" className="kb-btn kb-btn--primary w-full">
+          Iniciar sesión
+        </Link>
+      </AccesoLayout>
+    );
+  }
+
   return (
-    <main className="kb-on-white flex flex-1 items-center justify-center bg-kbbg px-4 py-16">
-      <div className="w-full max-w-sm kb-card kb-on-white p-8 text-center shadow-lg ring-1 ring-line">
-        {estado === "cargando" && (
-          <p className="text-muted-2">Confirmando tu correo nuevo...</p>
+    <AccesoLayout {...MARCO_CUENTA}>
+      <EstadoAcceso icono="alerta" titulo="No pudimos confirmar tu correo">
+        {/* Enlace vencido o no válido: solo nuestro texto. Otro error: el mensaje de la API. */}
+        {esEnlaceVencido(error) || !error ? (
+          "Este enlace ya no es válido: dura 24 horas y se puede usar una sola vez. Vuelve a solicitar el cambio desde tu perfil."
+        ) : (
+          <span className="text-[#FF9B9B]">{error}</span>
         )}
-        {estado === "exito" && (
-          <>
-            <h1 className="text-xl font-bold text-brand-dark">
-              ¡Listo! Tu correo quedó actualizado
-            </h1>
-            <p className="mt-2 text-sm text-muted-2">
-              Desde ahora, inicia sesión con tu correo nuevo.
-            </p>
-            <Link
-              href="/ingresar"
-              className="kb-btn kb-btn--dark mt-6"
-            >
-              Iniciar sesión
-            </Link>
-          </>
-        )}
-        {estado === "error" && (
-          <>
-            <h1 className="text-xl font-bold text-brand-dark">
-              No pudimos confirmar tu correo
-            </h1>
-            <p className="mt-2 text-sm text-kberror">{error}</p>
-            <p className="mt-2 text-sm text-muted-2">
-              El enlace puede haber expirado (dura 24 horas) o ya haberse usado antes. Vuelve a
-              solicitar el cambio desde tu perfil.
-            </p>
-            <Link
-              href="/perfil"
-              className="kb-btn kb-btn--dark mt-6"
-            >
-              Ir a mi perfil
-            </Link>
-          </>
-        )}
-      </div>
-    </main>
+      </EstadoAcceso>
+      <Link href="/perfil?tab=datos" className="kb-btn kb-btn--primary w-full">
+        Ir a mi perfil
+      </Link>
+    </AccesoLayout>
   );
 }
 

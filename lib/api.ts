@@ -1770,6 +1770,19 @@ export async function restablecerPassword(token: string, passwordNueva: string):
   return cuerpo;
 }
 
+/** Pide un enlace nuevo de verificación de correo (POST /auth/reenviar-verificacion; requiere sesión). */
+export async function reenviarVerificacionCorreo(tokenSesion: string): Promise<void> {
+  const res = await fetch(`${API_URL}/auth/reenviar-verificacion`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${tokenSesion}` },
+  });
+  const cuerpo = await res.json().catch(() => null);
+  if (!res.ok) {
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message.join(" ") : cuerpo?.message;
+    throw new Error(mensaje ?? "No se pudo enviar el enlace.");
+  }
+}
+
 export async function verificarCorreo(token: string): Promise<{ ok: true }> {
   const res = await fetch(`${API_URL}/auth/verificar-correo`, {
     method: "POST",

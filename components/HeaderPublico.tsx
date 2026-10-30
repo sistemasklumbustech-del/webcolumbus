@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LogoKlumbus } from "./LogoKlumbus";
 import { MenuSitio } from "./MenuSitio";
 import { useBoletoEmitido } from "@/lib/paso-compra";
+import { esRutaAcceso } from "@/lib/rutas-acceso";
 
 
 /**
@@ -29,7 +30,7 @@ export function HeaderPublico() {
   // sobre la foto, más "Iniciar sesión" -- tenerlos los dos duplicaba
   // el nombre "Columbus" y el botón de sesión en la misma pantalla).
   // Ingresar y Crear cuenta llevan su propio encabezado mínimo (logo + "Volver al inicio").
-  if (pathname.startsWith("/panel-empresa") || pathname.startsWith("/admin") || pathname === "/" || pathname === "/ingresar" || pathname === "/registro") {
+  if (pathname.startsWith("/panel-empresa") || pathname.startsWith("/admin") || pathname === "/" || esRutaAcceso(pathname)) {
     return null;
   }
 

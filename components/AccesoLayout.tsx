@@ -38,8 +38,9 @@ export function AccesoLayout({
 }: {
   titulo: string;
   destacado: string;
-  puntos: string[];
-  pestana: "ingresar" | "registro";
+  puntos: readonly string[];
+  /** Sin pestañas (null) en recuperar/restablecer contraseña y verificar o cambiar correo. */
+  pestana: "ingresar" | "registro" | null;
   volverA?: string | null;
   children: React.ReactNode;
 }) {
@@ -88,6 +89,7 @@ export function AccesoLayout({
           <Volver />
         </div>
         <div className="mx-auto flex w-full max-w-[440px] flex-1 flex-col md:pt-[6vh]">
+          {pestana && (
           <nav aria-label="Iniciar sesión o crear cuenta" className="mb-6 flex gap-1 rounded-[16px] bg-ink-2 p-1 shadow-[inset_0_0_0_1px_#262A35]">
             <Link href={`/ingresar${sufijo}`} aria-current={pestana === "ingresar" ? "page" : undefined} className={clasePestana(pestana === "ingresar")}>
               Iniciar sesión
@@ -96,6 +98,7 @@ export function AccesoLayout({
               Crear cuenta
             </Link>
           </nav>
+          )}
           {children}
         </div>
         <div className="mt-6 flex justify-center md:hidden">
@@ -120,5 +123,56 @@ export function TarjetaAccesoCentrada({ children }: { children: React.ReactNode 
         <div className="kb-dark w-full max-w-md rounded-[32px] bg-[#12151C] p-7 shadow-[inset_0_0_0_1px_#262A35] md:p-10">{children}</div>
       </div>
     </main>
+  );
+}
+
+type IconoEstado = "correo" | "candado" | "ok" | "alerta" | "cargando";
+
+/**
+ * Cabecera de las pantallas de cuenta (rediseño, 30-oct-2026): ícono de estado en un círculo, título
+ * y texto corto. Mismo lenguaje que Ingresar.
+ */
+export function EstadoAcceso({ icono, titulo, children }: { icono: IconoEstado; titulo: string; children?: React.ReactNode }) {
+  const tono =
+    icono === "ok" ? "bg-ok/15 text-[#5FD39A]" : icono === "alerta" ? "bg-kberror/15 text-[#FF9B9B]" : "bg-kbyellow/15 text-kbyellow";
+  return (
+    <div className="mb-6">
+      <span className={`grid h-14 w-14 place-items-center rounded-full ${tono}`} aria-hidden="true">
+        <svg
+          width="26"
+          height="26"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={icono === "cargando" ? "animate-spin motion-reduce:animate-none" : ""}
+        >
+          {icono === "correo" && (
+            <>
+              <rect x="3" y="5" width="18" height="14" rx="2.5" />
+              <path d="M3.5 7l8.5 6 8.5-6" />
+            </>
+          )}
+          {icono === "candado" && (
+            <>
+              <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
+              <path d="M8 10.5V7.5a4 4 0 018 0v3M12 14.5v2.5" />
+            </>
+          )}
+          {icono === "ok" && <path d="M5 12.5l4.5 4.5L19 7.5" />}
+          {icono === "alerta" && (
+            <>
+              <path d="M12 3.5l9.5 16.5h-19z" />
+              <path d="M12 10v4.5M12 17.5h.01" />
+            </>
+          )}
+          {icono === "cargando" && <path d="M12 3a9 9 0 109 9" />}
+        </svg>
+      </span>
+      <h1 className="mt-5 text-[26px] font-semibold leading-tight md:text-[30px]">{titulo}</h1>
+      {children && <div className="mt-2 text-sm leading-relaxed text-ondark">{children}</div>}
+    </div>
   );
 }
