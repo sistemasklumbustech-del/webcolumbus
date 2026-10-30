@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PantallaAviso } from "@/components/PantallaAviso";
 import {
   buscarViajes,
   buscarAlternativas,
@@ -56,12 +57,14 @@ export default async function ResultadosBusquedaPage({
 
   if (!origenId || !destinoId || !fecha) {
     return (
-      <main className="mx-auto max-w-3xl flex-1 px-4 py-16 text-center">
-        <p>Faltan datos de búsqueda. Vuelve al inicio e intenta de nuevo.</p>
-        <Link href="/" className="mt-4 inline-block font-semibold text-ink underline">
-          Volver al inicio
+      <PantallaAviso
+        titulo="Falta un dato de tu búsqueda"
+        texto="Elige origen, destino y fecha para ver las salidas disponibles."
+      >
+        <Link href="/" className="kb-btn kb-btn--primary">
+          Buscar pasajes
         </Link>
-      </main>
+      </PantallaAviso>
     );
   }
 
