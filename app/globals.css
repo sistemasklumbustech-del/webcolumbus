@@ -387,3 +387,14 @@ html {
   .kb-hoja-boleto__codigos figcaption span { display: block; margin-top: 1mm; font-size: 9pt; letter-spacing: .06em; }
   .kb-hoja-boleto__pie { margin-top: 5mm; text-align: center; font-size: 8pt; color: #333; }
 }
+
+/* Errores sobre los paneles negros (Ingresar, Crear cuenta y pantallas de cuenta, 30-oct-2026):
+   en vez de la caja rosada clara, un rojo oscuro translúcido con texto claro. */
+.kb-dark .kb-alert--error {
+  background: rgba(211, 47, 47, 0.14);
+  color: #FF9B9B;
+  box-shadow: inset 0 0 0 1px rgba(211, 47, 47, 0.38);
+}
+.kb-dark .kb-alert--error a {
+  color: #fff;
+}

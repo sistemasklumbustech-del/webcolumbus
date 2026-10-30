@@ -6,7 +6,7 @@ import Link from "next/link";
 import { restablecerPassword } from "@/lib/api";
 import { CampoPassword } from "@/components/CampoPassword";
 import { AccesoLayout, EstadoAcceso } from "@/components/AccesoLayout";
-import { MARCO_CUENTA } from "@/lib/marco-acceso";
+import { MARCO_CUENTA, esEnlaceVencido } from "@/lib/marco-acceso";
 
 /** Una regla de la contraseña que se marca en verde al cumplirse (solo ayuda visual). */
 function Regla({ cumple, children }: { cumple: boolean; children: React.ReactNode }) {
@@ -30,6 +30,7 @@ function FormularioRestablecer() {
   const [listo, setListo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
+  const [vencido, setVencido] = useState(false);
 
   // Mismas validaciones de siempre (mínimo 8 y que coincidan); ahora además se ven mientras se escribe.
   async function enviar(e: React.FormEvent) {
@@ -49,16 +50,19 @@ function FormularioRestablecer() {
       setListo(true);
       setTimeout(() => router.replace("/ingresar"), 2500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo restablecer la contraseña.");
+      const mensaje = err instanceof Error ? err.message : "No se pudo restablecer la contraseña.";
+      // Enlace vencido o ya usado: se cambia a la pantalla de "enlace no válido" (sin formulario).
+      if (esEnlaceVencido(mensaje)) setVencido(true);
+      else setError(mensaje);
     } finally {
       setCargando(false);
     }
   }
 
-  if (!token) {
+  if (!token || vencido) {
     return (
       <AccesoLayout {...MARCO_CUENTA}>
-        <EstadoAcceso icono="alerta" titulo="Este enlace no es válido">
+        <EstadoAcceso icono="alerta" titulo={vencido ? "Este enlace ya no es válido" : "Este enlace no es válido"}>
           Puede que haya vencido o que ya se haya usado. Pide uno nuevo y te lo enviamos a tu correo.
         </EstadoAcceso>
         <Link href="/recuperar-password" className="kb-btn kb-btn--primary w-full">

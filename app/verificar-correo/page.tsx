@@ -7,7 +7,7 @@ import { reenviarVerificacionCorreo, verificarCorreo } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
 import { AccesoLayout, EstadoAcceso } from "@/components/AccesoLayout";
 import { BotonReenviar } from "@/components/BotonReenviar";
-import { MARCO_CUENTA } from "@/lib/marco-acceso";
+import { MARCO_CUENTA, esEnlaceVencido } from "@/lib/marco-acceso";
 
 type Estado = "verificando" | "listo" | "error" | "pedir";
 
@@ -100,10 +100,12 @@ function VerificacionCorreo() {
         ) : estado === "pedir" ? (
           "Te enviaremos un enlace nuevo a tu correo."
         ) : (
-          <>
-            {error && <span className="block text-[#FF9B9B]">{error}</span>}
-            <span className="mt-1 block">El enlace puede haber vencido o ya se usó. Pide uno nuevo.</span>
-          </>
+          // Enlace vencido o no válido: solo nuestro texto. Otro error: el mensaje de la API.
+          esEnlaceVencido(error) || !error ? (
+            "Este enlace ya no es válido: puede haber vencido o ya se usó. Pide uno nuevo y te lo enviamos a tu correo."
+          ) : (
+            <span className="text-[#FF9B9B]">{error}</span>
+          )
         )}
       </EstadoAcceso>
 

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { confirmarCambioCorreo } from "@/lib/api";
 import { AccesoLayout, EstadoAcceso } from "@/components/AccesoLayout";
-import { MARCO_CUENTA } from "@/lib/marco-acceso";
+import { MARCO_CUENTA, esEnlaceVencido } from "@/lib/marco-acceso";
 
 /**
  * Cambio de correo (29-jul-2026, hallazgo real del usuario) — pantalla
@@ -59,11 +59,12 @@ function ConfirmacionCambioCorreo() {
   return (
     <AccesoLayout {...MARCO_CUENTA}>
       <EstadoAcceso icono="alerta" titulo="No pudimos confirmar tu correo">
-        {error && <span className="block text-[#FF9B9B]">{error}</span>}
-        <span className="mt-1 block">
-          El enlace puede haber expirado (dura 24 horas) o ya haberse usado antes. Vuelve a solicitar el cambio desde tu
-          perfil.
-        </span>
+        {/* Enlace vencido o no válido: solo nuestro texto. Otro error: el mensaje de la API. */}
+        {esEnlaceVencido(error) || !error ? (
+          "Este enlace ya no es válido: dura 24 horas y se puede usar una sola vez. Vuelve a solicitar el cambio desde tu perfil."
+        ) : (
+          <span className="text-[#FF9B9B]">{error}</span>
+        )}
       </EstadoAcceso>
       <Link href="/perfil?tab=datos" className="kb-btn kb-btn--primary w-full">
         Ir a mi perfil
