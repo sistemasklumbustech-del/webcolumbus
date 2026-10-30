@@ -396,7 +396,14 @@ function TarjetaCorta({
             {boleto.numeroAsiento ? ` · Asiento ${boleto.numeroAsiento}` : ""}
           </p>
         </div>
-        {modo === "proximo" ? <Etiqueta {...etiqueta} /> : <EstadoBoleto estado={boleto.estado} />}
+        {modo === "proximo" ? (
+          <Etiqueta {...etiqueta} />
+        ) : boleto.estado === "vigente" && !futuro ? (
+          // Solo etiqueta en pantalla: el estado del boleto no cambia (sigue "vigente" en la base).
+          <Etiqueta texto={`Salió ${fechaBoleto(boleto.horaSalidaProgramada).split(" ").slice(1, 3).join(" ")}`} tono="salio" />
+        ) : (
+          <EstadoBoleto estado={boleto.estado} />
+        )}
       </div>
 
       {modo === "historial" && (
