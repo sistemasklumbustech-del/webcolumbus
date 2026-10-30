@@ -12,6 +12,8 @@ import {
   type TemaAyuda,
 } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
+import { TEMAS_AYUDA } from "@/lib/ayuda-preguntas";
+import { enlaceWhatsappSoporte, formatearTelefono } from "@/lib/contacto";
 
 const TEMAS: Array<{ valor: TemaAyuda; etiqueta: string }> = [
   { valor: "compra", etiqueta: "Mi compra o pago" },
@@ -24,32 +26,16 @@ const TEMAS: Array<{ valor: TemaAyuda; etiqueta: string }> = [
   { valor: "otro", etiqueta: "Otro tema" },
 ];
 
-const PREGUNTAS = [
-  {
-    p: "¿Cómo recibo mi boleto?",
-    r: "Al pagar te llega un correo con tu boleto en PDF y su código QR. Si tienes cuenta, también lo encuentras en Mi cuenta → Mis boletos. Revisa la carpeta de spam si no lo ves.",
-  },
-  {
-    p: "¿Puedo cancelar o reprogramar mi boleto?",
-    r: "Depende de la política de cada cooperativa; antes de pagar te avisamos si permite cancelar o reprogramar. Si lo permite, lo haces desde Mi cuenta → Mis boletos.",
-  },
-  {
-    p: "¿Cómo pido mi factura?",
-    r: "Desde Mi cuenta → Mis boletos, en el boleto que quieres facturar, pulsa “Solicitar factura” y llena tus datos.",
-  },
-  {
-    p: "Tuve un problema con mi viaje o mi cobro",
-    r: "En Mi cuenta → Mis boletos, pulsa “Reportar un problema” en el boleto. La cooperativa recibe tu reclamo y te responde por correo. Sigues el estado en Mis reclamos.",
-  },
-  {
-    p: "Mi pago fue rechazado",
-    r: "Revisa que los datos de la tarjeta sean correctos y que tenga saldo o cupo. Si el problema sigue, escríbenos con el formulario de abajo y cuéntanos qué mensaje te apareció.",
-  },
-];
-
-const claseCampo =
-  "w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-brand-dark placeholder:text-muted-3 focus:outline-none focus:ring-2 focus:ring-brand-medium";
+const claseCampo = "kb-input";
 const claseEtiqueta = "kb-label";
+
+function IconoWhatsapp({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 18.2a8.2 8.2 0 01-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1112 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 01-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 00-.7.3 3 3 0 00-.9 2.2 5.2 5.2 0 001.1 2.8 12 12 0 004.6 4c1.7.7 2.4.8 3.2.7a2.8 2.8 0 001.8-1.3 2.3 2.3 0 00.2-1.3c-.1-.1-.3-.2-.5-.3z" />
+    </svg>
+  );
+}
 
 export default function AyudaPage() {
   const [nombre, setNombre] = useState("");
@@ -66,16 +52,23 @@ export default function AyudaPage() {
   // Consulta dirigida a una cooperativa (01-oct-2026): para quien no tiene cuenta ni boleto y
   // no puede usar un reclamo. Llega al correo de contacto de esa cooperativa, no al de soporte.
   const [cooperativas, setCooperativas] = useState<CooperativaPublica[]>([]);
+  // La lista vacía después de cargar = no se pudo traer (siempre hay cooperativas publicadas).
+  const [cooperativasCargadas, setCooperativasCargadas] = useState(false);
+  const [conSesion, setConSesion] = useState(false);
   const [cooperativaId, setCooperativaId] = useState("");
 
   useEffect(() => {
     obtenerContactoSoporte().then(setContacto);
-    obtenerCooperativasPublicas().then(setCooperativas);
+    obtenerCooperativasPublicas().then((lista) => {
+      setCooperativas(lista);
+      setCooperativasCargadas(true);
+    });
     // Desde la tarjeta de una cooperativa en /cooperativas: ?cooperativa=ID abre el formulario ya dirigido a ella.
     const idCoop = new URLSearchParams(window.location.search).get("cooperativa");
     if (idCoop) setCooperativaId(idCoop);
     // Si ya tiene sesión, se adelantan su nombre y su correo.
     const token = tokenValido();
+    setConSesion(!!token);
     if (!token) return;
     obtenerMiPerfil(token)
       .then((p) => {
@@ -113,44 +106,109 @@ export default function AyudaPage() {
     }
   }
 
+  const telefono = formatearTelefono(contacto.telefono);
+  const whatsapp = enlaceWhatsappSoporte();
+  const hrefRespuesta = (href: string) => (href === "whatsapp" ? whatsapp : href);
+
   return (
-    <main className="kb-on-white mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
-      <h1 className="text-3xl font-bold text-brand-dark">Ayuda</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted-2">
-        Encuentra respuesta a lo más común o escríbenos: te respondemos por correo.
-      </p>
-
-      <section className="mt-8" aria-labelledby="ayuda-frecuentes">
-        <h2 id="ayuda-frecuentes" className="text-lg font-bold text-brand-dark">
-          Preguntas frecuentes
-        </h2>
-        <div className="mt-3 divide-y divide-black/5 overflow-hidden kb-card kb-on-white">
-          {PREGUNTAS.map((q) => (
-            <details key={q.p} className="group px-5 py-4">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-brand-dark">
-                {q.p}
-                <span aria-hidden="true" className="text-muted-3 transition group-open:rotate-45">
-                  +
-                </span>
-              </summary>
-              <p className="mt-2 text-sm leading-relaxed text-muted-2">{q.r}</p>
-            </details>
-          ))}
+    <main className="flex-1">
+      {/* Encabezado con los 3 accesos (rediseño 30-oct-2026). */}
+      <div className="border-b border-line bg-white">
+        <div className="mx-auto max-w-[1280px] px-5 py-8 md:px-16 md:py-12">
+          <h1 className="text-[28px] font-semibold tracking-[-0.02em] md:text-[40px]">¿En qué te ayudamos?</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-2 md:text-base">
+            Encuentra respuesta a lo más común o escríbenos: te respondemos por WhatsApp o por correo.
+          </p>
+          <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+            <div className="kb-card kb-card--dark flex flex-col gap-2 p-5">
+              <b className="text-lg font-semibold">Encuentra tu boleto</b>
+              <p className="text-sm text-ondark">
+                {conSesion
+                  ? "Todos tus boletos, con su QR, están en Mis boletos."
+                  : "Si compraste sin cuenta, revisa tu WhatsApp o tu correo. Con cuenta, están en Mis boletos."}
+              </p>
+              <Link href="/perfil?tab=boletos" className="kb-btn kb-btn--primary mt-auto !h-11 self-start !px-5 !text-sm">
+                Ir a Mis boletos
+              </Link>
+            </div>
+            <a href="#cambios" className="kb-card flex flex-col gap-2 p-5 transition hover:shadow-[inset_0_0_0_1.5px_#0B0D12]">
+              <b className="text-lg font-semibold">Cambios y cancelaciones</b>
+              <p className="text-sm text-muted-2">Qué puedes cancelar o cambiar y cómo hacerlo, con o sin cuenta.</p>
+              <span className="mt-auto inline-flex items-center gap-1 pt-2 text-sm font-semibold">
+                Ver respuestas
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
+            </a>
+            <div className="kb-card flex flex-col gap-2 p-5">
+              <b className="text-lg font-semibold">Escríbenos</b>
+              <p className="text-sm text-muted-2">Te atendemos por WhatsApp o con el formulario de abajo.</p>
+              <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="kb-btn mt-auto !h-11 self-start bg-[#1FAF38] !px-5 !text-sm text-white hover:brightness-95">
+                <IconoWhatsapp />
+                Escríbenos por WhatsApp
+              </a>
+            </div>
+          </div>
         </div>
-        <p className="mt-2 text-xs text-muted-2">
-          ¿Ya tienes cuenta? <Link href="/perfil?tab=boletos" className="font-semibold text-brand hover:underline">Ve a Mis boletos</Link>.
-        </p>
-      </section>
+      </div>
 
-      <section className="mt-10" aria-labelledby="ayuda-formulario">
-        <h2 id="ayuda-formulario" className="text-lg font-bold text-brand-dark">
-          ¿No encontraste lo que buscabas? Escríbenos
-        </h2>
+      <div className="mx-auto max-w-[1280px] px-5 py-8 md:px-16 md:py-10 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10">
+        <div className="min-w-0">
+          <section aria-labelledby="ayuda-frecuentes">
+            <h2 id="ayuda-frecuentes" className="text-xl font-semibold">
+              Preguntas frecuentes
+            </h2>
+            <nav aria-label="Temas" className="mt-3 flex flex-wrap gap-2">
+              {TEMAS_AYUDA.map((t) => (
+                <a key={t.id} href={`#${t.id}`} className="kb-chip inline-flex min-h-10 items-center hover:shadow-[inset_0_0_0_1.5px_#0B0D12]">
+                  {t.titulo}
+                </a>
+              ))}
+            </nav>
+            <div className="mt-6 flex flex-col gap-7">
+              {TEMAS_AYUDA.map((t) => (
+                <section key={t.id} id={t.id} aria-labelledby={`tema-${t.id}`} className="scroll-mt-24">
+                  <h3 id={`tema-${t.id}`} className="mb-2.5 text-base font-semibold">
+                    {t.titulo}
+                  </h3>
+                  <div className="kb-card divide-y divide-line overflow-hidden">
+                    {t.preguntas.map((q) => (
+                      <details key={q.p} className="group px-5 py-1">
+                        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 py-3 text-[15px] font-semibold [&::-webkit-details-marker]:hidden">
+                          {q.p}
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-muted-2 transition group-open:rotate-180">
+                            <path d="M6 9l6 6 6-6" />
+                          </svg>
+                        </summary>
+                        <p className="pb-4 text-sm leading-relaxed text-muted-2">{q.r}</p>
+                        {q.enlace && (
+                          <p className="-mt-1 pb-4">
+                            <a
+                              href={hrefRespuesta(q.enlace.href)}
+                              {...(q.enlace.href === "whatsapp" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                              className="text-sm font-semibold text-ink underline decoration-line-2 underline-offset-4 hover:decoration-ink"
+                            >
+                              {q.enlace.texto}
+                            </a>
+                          </p>
+                        )}
+                      </details>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </section>
 
+          <section className="mt-10" aria-labelledby="ayuda-formulario" id="escribenos">
+            <h2 id="ayuda-formulario" className="text-xl font-semibold">
+              ¿No encontraste lo que buscabas? Escríbenos
+            </h2>
         {referencia ? (
           <div role="status" className="mt-3 rounded-card bg-ok-bg p-6">
             <p className="text-lg font-bold text-ok">¡Recibimos tu consulta!</p>
-            <p className="mt-1 text-sm text-ok/80">
+            <p className="mt-1 text-sm text-ink">
               {cooperativaElegida
                 ? `Le escribimos directamente a ${cooperativaElegida.nombre}. `
                 : ""}
@@ -160,7 +218,7 @@ export default function AyudaPage() {
             <button
               type="button"
               onClick={() => setReferencia(null)}
-              className="mt-4 kb-btn kb-btn--outline !h-10 !px-4 !text-sm text-ok"
+              className="mt-4 kb-btn kb-btn--outline !h-11 !px-5 !text-sm"
             >
               Enviar otra consulta
             </button>
@@ -217,6 +275,12 @@ export default function AyudaPage() {
                   </option>
                 ))}
               </select>
+              {cooperativasCargadas && cooperativas.length === 0 && (
+                <p className="mt-1.5 text-xs text-muted-2">
+                  No pudimos cargar la lista de cooperativas. Puedes enviar tu consulta a Klumbus en general y la hacemos
+                  llegar.
+                </p>
+              )}
               {cooperativaElegida && (
                 <p className="mt-1 text-xs text-muted-2">
                   Tu consulta le llegará directo a {cooperativaElegida.nombre}, no a Klumbus.
@@ -260,7 +324,7 @@ export default function AyudaPage() {
                 value={mensaje}
                 onChange={(e) => setMensaje(e.target.value)}
                 placeholder="Cuéntanos qué pasó con el mayor detalle posible."
-                className={claseCampo}
+                className={`${claseCampo} !h-auto min-h-[150px] py-3`}
               />
               <p className="mt-1 text-xs text-muted-3">{mensaje.length} de 2000</p>
             </div>
@@ -278,36 +342,45 @@ export default function AyudaPage() {
             )}
 
             <div className="sm:col-span-2">
-              <button
-                type="submit"
-                disabled={enviando}
-                className="rounded-lg bg-kbyellow px-6 py-2.5 text-sm font-semibold text-brand-dark transition hover:brightness-95 disabled:opacity-50"
-              >
+              <button type="submit" disabled={enviando} className="kb-btn kb-btn--primary w-full sm:w-auto">
                 {enviando ? "Enviando..." : "Enviar consulta"}
               </button>
             </div>
           </form>
         )}
 
-        {(contacto.correo || contacto.telefono) && (
-          <p className="mt-4 text-sm text-muted-2">
-            También puedes contactarnos directamente
-            {contacto.correo && (
-              <>
-                {" "}
-                en <a href={`mailto:${contacto.correo}`} className="font-semibold text-brand hover:underline">{contacto.correo}</a>
-              </>
-            )}
-            {contacto.telefono && (
-              <>
-                {contacto.correo ? " o al " : " al "}
-                <a href={`tel:${contacto.telefono}`} className="font-semibold text-brand hover:underline">{contacto.telefono}</a>
-              </>
-            )}
-            .
-          </p>
-        )}
-      </section>
+          </section>
+        </div>
+
+        {/* Contacto (mismo formato de teléfono que el pie). */}
+        <aside className="mt-10 lg:mt-0">
+          <div className="kb-card kb-card--dark flex flex-col gap-4 p-6 lg:sticky lg:top-24">
+            <b className="text-lg font-semibold">Contacto de soporte</b>
+            <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="kb-btn w-full bg-[#1FAF38] text-white hover:brightness-95">
+              <IconoWhatsapp />
+              Escríbenos por WhatsApp
+            </a>
+            <ul className="flex flex-col gap-2.5 text-sm text-ondark">
+              {telefono && (
+                <li>
+                  <span className="block text-xs">WhatsApp y teléfono</span>
+                  <a href={`tel:${telefono.enlace}`} className="font-semibold text-white hover:underline">
+                    {telefono.texto}
+                  </a>
+                </li>
+              )}
+              {contacto.correo && (
+                <li>
+                  <span className="block text-xs">Correo</span>
+                  <a href={`mailto:${contacto.correo}`} className="break-all font-semibold text-white hover:underline">
+                    {contacto.correo}
+                  </a>
+                </li>
+              )}
+            </ul>
+          </div>
+        </aside>
+      </div>
     </main>
   );
 }
