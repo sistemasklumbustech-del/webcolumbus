@@ -464,7 +464,15 @@ function Asiento({
         className={`kb-silla kb-silla--plano ${estadoClase} ${acostado ? "mira-izquierda" : "mira-arriba"}`}
       >
         <DibujoSilla />
-        <span className="kb-silla__numero">{numero}</span>
+        <span className="kb-silla__numero">
+          {noDisponible ? (
+            <svg className="kb-silla__ocupado" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+              <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" />
+            </svg>
+          ) : (
+            numero
+          )}
+        </span>
         {esVip && !pisoVip && !noDisponible && !seleccionado && <span className="kb-silla__vip" aria-hidden="true" />}
       </button>
       <span role="tooltip" className="kb-silla__tip">
@@ -756,9 +764,9 @@ export function MapaAsientosBus(props: PropiedadesMapaBus) {
 
   return (
     <div ref={contenedor} className="flex flex-col gap-4 md:gap-5">
-      <div className="flex flex-col gap-3.5 xl:flex-row xl:items-center xl:justify-between">
+      <div className="flex flex-col gap-3.5 xl:flex-row xl:flex-wrap xl:items-center xl:justify-between">
         {total > 1 ? (
-          <div role="tablist" aria-label="Piso del bus" className="kb-tabs w-full md:w-auto">
+          <div role="tablist" aria-label="Piso del bus" className="kb-tabs w-full max-w-full md:w-auto">
             {props.pisos.map((p, i) => (
               <button
                 key={i}
@@ -768,7 +776,7 @@ export function MapaAsientosBus(props: PropiedadesMapaBus) {
                 onClick={() => setPisoActivo(i)}
                 className={`flex min-w-0 flex-1 flex-col items-center !py-2 text-center leading-tight md:flex-none ${i === indice ? "is-active" : ""}`}
               >
-                <span>
+                <span className="max-w-full whitespace-normal">
                   {p.nombre || `Piso ${i + 1}`} · {i === 0 ? "abajo" : "arriba"}
                 </span>
                 <small className={`text-[11px] font-normal ${i === indice ? "text-ondark" : "text-muted-2"}`}>

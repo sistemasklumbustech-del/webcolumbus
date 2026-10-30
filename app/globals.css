@@ -230,7 +230,7 @@ html {
 .kb-parabrisas.is-acostado{background:linear-gradient(90deg,#E3E6EB,#F6F7F9);border-bottom:0;border-right:2.5px solid #1A1D24}
 .kb-espejo{position:absolute;overflow:visible}
 .kb-pasillo{display:grid;place-items:center;align-self:stretch;justify-self:stretch;background:#F4F5F7;font-size:11px;font-weight:600;color:#9AA0AC}
-.kb-silla{position:relative;display:block;width:100%;max-width:52px;aspect-ratio:52/56;border:0;padding:0;background:transparent;cursor:pointer;color:#D6D9E0;transition:transform .15s ease}
+.kb-silla{position:relative;display:block;width:100%;max-width:52px;aspect-ratio:52/56;border:0;padding:0;background:transparent;cursor:pointer;color:#9AA0AE;transition:transform .15s ease}
 .kb-silla.is-acostada{width:var(--tam,48px);max-width:none;aspect-ratio:1}
 .kb-silla.is-acostada .kb-silla__svg{position:absolute;inset:0;margin:auto;width:calc(var(--tam,48px)*.92);height:calc(var(--tam,48px)*.92);transform:rotate(-90deg)}
 .kb-silla__svg{display:block;width:88%;height:auto;margin:0 auto}
@@ -253,9 +253,13 @@ html {
 .kb-silla.is-mujeres .kb-silla__cojin,.kb-silla.is-mujeres .kb-silla__brazo{fill:#FCE7F0}
 .kb-silla.is-mujeres .kb-silla__respaldo{fill:#FCE7F0}
 .kb-silla.is-mujeres .kb-silla__numero{color:#B8336A}
-.kb-silla.is-ocupada{cursor:not-allowed;color:#DDE0E6}
-.kb-silla.is-ocupada .kb-silla__cojin,.kb-silla.is-ocupada .kb-silla__respaldo,.kb-silla.is-ocupada .kb-silla__brazo{fill:#DDE0E6}
-.kb-silla.is-ocupada .kb-silla__numero{color:#9AA0AC}
+/* Ocupado (rediseño 30-oct): relleno gris medio con una ✕ blanca en vez del número; libre queda blanco
+   con borde gris. Se distinguen por forma y relleno, no solo por el tono. */
+.kb-silla.is-ocupada{cursor:not-allowed;color:#9AA0AE}
+.kb-silla.is-ocupada .kb-silla__cojin,.kb-silla.is-ocupada .kb-silla__respaldo,.kb-silla.is-ocupada .kb-silla__brazo{fill:#9AA0AE}
+.kb-silla.is-ocupada .kb-silla__numero{color:#fff}
+.kb-silla__ocupado{display:block;width:12px;height:12px;margin:0 auto}
+.kb-silla.is-acostada .kb-silla__ocupado{width:11px;height:11px}
 .kb-silla__vip{position:absolute;right:1px;top:1px;width:9px;height:9px;border-radius:50%;background:#FDD514;box-shadow:0 0 0 2px #0B0D12}
 .kb-silla.is-leyenda{width:20px;max-width:20px;cursor:default;pointer-events:none}
 .kb-silla__tip{pointer-events:none;position:absolute;bottom:calc(100% + 2px);left:50%;z-index:30;transform:translateX(-50%);white-space:nowrap;border-radius:8px;background:#0B0D12;padding:4px 10px;font-size:11px;font-weight:600;color:#fff;opacity:0;transition:opacity .15s}
