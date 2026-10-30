@@ -10,6 +10,8 @@ import {
   type EstadoReclamo,
 } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
+import { formatearFechaCorta } from "@/app/buscar/SinResultadosAlternativas";
+import { EstadoCargando, EstadoVacio, ICONOS_CUENTA } from "@/components/EstadoCuenta";
 
 const LIMITE_PAGINA = 10;
 
@@ -63,12 +65,12 @@ export function TabMisReclamos() {
 
   return (
     <>
-      <p className="text-sm text-muted-2">
+      <p className="text-[15px] leading-relaxed text-muted-2">
         Los reclamos que enviaste sobre tus viajes. Para reportar un problema, ve a &quot;Mis boletos&quot; y elige el
         boleto.
       </p>
 
-      <div className="mt-4 max-w-xs">
+      <div className="mt-4 md:max-w-xs">
         <label
           htmlFor="mis-reclamos-estado"
           className="kb-label"
@@ -98,24 +100,37 @@ export function TabMisReclamos() {
         </div>
       )}
 
-      {resultado === null && !error && <p className="mt-6 text-sm text-muted-2">Cargando...</p>}
+      {resultado === null && !error && (
+        <div className="mt-6">
+          <EstadoCargando />
+        </div>
+      )}
 
       {resultado !== null && resultado.total === 0 && !cargando && (
-        <p className="mt-8 text-center text-sm text-muted-2">
-          {estadoFiltro ? "No tienes reclamos con este estado." : "Todavía no has enviado ningún reclamo."}
-        </p>
+        <div className="mt-6">
+          {estadoFiltro ? (
+            <EstadoVacio icono={ICONOS_CUENTA.reclamo} titulo="Sin reclamos con este estado" texto="Prueba con otro estado o elige “Todos”." />
+          ) : (
+            <EstadoVacio
+              icono={ICONOS_CUENTA.reclamo}
+              titulo="Todavía no has enviado ningún reclamo"
+              texto="Si algo salió mal en un viaje, repórtalo desde el boleto en Mis boletos."
+              accion={{ texto: "Ir a Mis boletos", href: "/perfil?tab=boletos" }}
+            />
+          )}
+        </div>
       )}
 
       <div className="mt-6 space-y-3">
         {resultado?.filas.map((r) => (
-          <div key={r.id} className="kb-card kb-on-white p-4">
+          <article key={r.id} className="rounded-card border border-line bg-white p-4 md:p-5">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="font-bold text-brand-dark">
+                <p className="font-semibold text-ink">
                   {r.origenCiudad} → {r.destinoCiudad}
                 </p>
                 <p className="text-sm text-muted-2">
-                  {r.cooperativaNombre} · {r.fechaSalida}
+                  {r.cooperativaNombre} · {/^\d{4}-\d{2}-\d{2}$/.test(r.fechaSalida) ? formatearFechaCorta(r.fechaSalida) : r.fechaSalida}
                 </p>
               </div>
               <span className={`kb-status shrink-0 ${COLOR_ESTADO[r.estado]}`}>
@@ -123,14 +138,14 @@ export function TabMisReclamos() {
               </span>
             </div>
 
-            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-2">
-              {ETIQUETA_TIPO_RECLAMO[r.tipo]} · enviado {formatearFechaHora(r.creadoEn)}
+            <p className="mt-3 text-[13px] font-semibold text-ink">
+              {ETIQUETA_TIPO_RECLAMO[r.tipo]} <span className="font-normal text-muted-2">· enviado {formatearFechaHora(r.creadoEn)}</span>
             </p>
-            <p className="mt-1 whitespace-pre-wrap break-words text-sm text-brand-dark">{r.descripcion}</p>
+            <p className="mt-1 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-ink">{r.descripcion}</p>
 
             {r.respuesta && (
-              <div className="mt-3 kb-on-white rounded-ctrl bg-kbbg p-3 text-sm text-brand-dark">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">
+              <div className="mt-3 rounded-[14px] bg-kbbg p-3.5 text-sm text-ink">
+                <p className="text-[13px] font-semibold text-muted-2">
                   Respuesta de {r.cooperativaNombre}
                   {r.resueltoEn ? ` · ${formatearFechaHora(r.resueltoEn)}` : ""}
                 </p>
@@ -142,7 +157,7 @@ export function TabMisReclamos() {
                 )}
               </div>
             )}
-          </div>
+          </article>
         ))}
       </div>
 
@@ -155,14 +170,14 @@ export function TabMisReclamos() {
             <button
               onClick={() => setPagina((p) => Math.max(1, p - 1))}
               disabled={pagina <= 1 || cargando}
-              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
+              className="kb-btn kb-btn--outline !h-11 !px-4 !text-sm"
             >
               Anterior
             </button>
             <button
               onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
               disabled={pagina >= totalPaginas || cargando}
-              className="kb-btn kb-btn--outline !h-10 !px-4 !text-sm"
+              className="kb-btn kb-btn--outline !h-11 !px-4 !text-sm"
             >
               Siguiente
             </button>

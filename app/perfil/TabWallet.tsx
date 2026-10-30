@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { obtenerSaldoWallet, listarMovimientosWallet, type MovimientoWallet } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
+import { EstadoCargando, EstadoVacio, ICONOS_CUENTA } from "@/components/EstadoCuenta";
 import { usePaginacionLocal, ControlesPaginacion } from "@/components/Paginacion";
 
 function formatearFecha(iso: string) {
@@ -55,17 +56,17 @@ export function TabWallet() {
         <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-kbyellow/10" />
         <div className="pointer-events-none absolute -bottom-16 -left-8 h-36 w-36 rounded-full bg-white/5" />
         <div className="relative flex items-start justify-between">
-          <span className="text-sm font-bold tracking-[0.2em] text-white/70">KLUMBUS</span>
+          <span className="text-sm font-bold tracking-[0.2em] text-ondark">KLUMBUS</span>
           <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-kbyellow">
             Wallet
           </span>
         </div>
         <div className="relative mt-8">
-          <p className="text-xs font-semibold uppercase tracking-wide text-white/40">Saldo disponible</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ondark">Saldo disponible</p>
           <p className="mt-1 text-4xl font-bold text-kbyellow sm:text-5xl">
             {saldo === null ? "—" : `$${saldo.toFixed(2)}`}
           </p>
-          <p className="mt-3 text-xs text-white/40">
+          <p className="mt-3 text-[13px] leading-relaxed text-ondark">
             Gana cashback cada vez que viajas, y úsalo para pagar tu próximo pasaje.
           </p>
         </div>
@@ -78,32 +79,33 @@ export function TabWallet() {
           </div>
         )}
 
-        {movimientos === null && !error && <p className="text-sm text-muted-2">Cargando...</p>}
+        {movimientos === null && !error && <EstadoCargando />}
 
         {movimientos !== null && movimientos.length === 0 && (
-          <p className="text-center text-sm text-muted-2">
-            Todavía no tienes movimientos — aparecerán aquí cuando ganes cashback en un viaje, o cuando lo
-            uses para pagar uno.
-          </p>
+          <EstadoVacio
+            icono={ICONOS_CUENTA.saldo}
+            titulo="Todavía no tienes movimientos"
+            texto="Aparecerán aquí cuando ganes cashback en un viaje, o cuando lo uses para pagar uno."
+          />
         )}
 
         {movimientos !== null && movimientos.length > 0 && (
           <>
-            <h2 className="text-sm font-bold text-brand-dark">Historial</h2>
+            <h2 className="text-base font-semibold text-ink">Historial</h2>
             <div className="mt-2 grid gap-2 md:grid-cols-2">
               {pagMovimientos.visibles.map((m) => {
                 const etiqueta = ETIQUETAS_TIPO[m.tipo] ?? { texto: m.tipo, positivo: m.monto >= 0 };
                 return (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between rounded-ctrl bg-kbbg px-4 py-3"
+                    className="flex items-center justify-between rounded-[14px] border border-line bg-white px-4 py-3"
                   >
                     <div>
-                      <p className="font-semibold text-brand-dark">{etiqueta.texto}</p>
+                      <p className="font-semibold text-ink">{etiqueta.texto}</p>
                       <p className="text-xs text-muted-2">{formatearFecha(m.creadoEn)}</p>
                     </div>
                     <p
-                      className={`text-lg font-bold ${
+                      className={`text-lg font-bold tabular-nums ${
                         etiqueta.positivo ? "text-ok" : "text-muted-2"
                       }`}
                     >

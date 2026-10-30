@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { listarMisCreditos, type MiCredito } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
+import { EstadoCargando, EstadoVacio, ICONOS_CUENTA } from "@/components/EstadoCuenta";
 import { usePaginacionLocal, ControlesPaginacion } from "@/components/Paginacion";
 
 function formatearFecha(iso: string) {
@@ -40,9 +41,9 @@ export function TabMisCreditos() {
 
   return (
     <>
-      <p className="text-sm text-muted-2">
+      <p className="text-[15px] leading-relaxed text-muted-2">
         El saldo que te queda cuando reprogramas un boleto a un pasaje más barato. Se usa eligiéndolo
-        en el checkout de tu próxima compra con esa misma cooperativa.
+        al pagar tu próxima compra con esa misma cooperativa.
       </p>
 
       {error && (
@@ -51,29 +52,36 @@ export function TabMisCreditos() {
         </div>
       )}
 
-      {creditos === null && !error && <p className="mt-6 text-sm text-muted-2">Cargando...</p>}
+      {creditos === null && !error && (
+        <div className="mt-6">
+          <EstadoCargando />
+        </div>
+      )}
 
       {creditos !== null && creditos.length === 0 && (
-        <p className="mt-8 text-center text-sm text-muted-2">
-          Todavía no tienes ningún crédito — aparecerá aquí si reprogramas un boleto a un pasaje más
-          barato.
-        </p>
+        <div className="mt-6">
+          <EstadoVacio
+            icono={ICONOS_CUENTA.credito}
+            titulo="Todavía no tienes créditos"
+            texto="Aparecerán aquí si reprogramas un boleto a un pasaje más barato."
+          />
+        </div>
       )}
 
       {disponibles.length > 0 && (
         <div className="mt-6">
-          <h2 className="text-sm font-bold text-brand-dark">Disponibles</h2>
+          <h2 className="text-base font-semibold text-ink">Disponibles</h2>
           <div className="mt-2 space-y-2">
             {pagDisponibles.visibles.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between rounded-ctrl bg-kbyellow-soft px-4 py-3"
+                className="flex items-center justify-between rounded-[14px] border border-line bg-white px-4 py-3"
               >
                 <div>
-                  <p className="font-semibold text-brand-dark">{c.cooperativaNombre}</p>
+                  <p className="font-semibold text-ink">{c.cooperativaNombre}</p>
                   <p className="text-xs text-muted-2">Desde {formatearFecha(c.creadoEn)}</p>
                 </div>
-                <p className="text-lg font-bold text-brand-dark">${c.monto.toFixed(2)}</p>
+                <p className="text-lg font-bold tabular-nums text-ink">${c.monto.toFixed(2)}</p>
               </div>
             ))}
           </div>
@@ -90,12 +98,12 @@ export function TabMisCreditos() {
 
       {usados.length > 0 && (
         <div className="mt-6">
-          <h2 className="text-sm font-bold text-muted-2">Ya usados</h2>
+          <h2 className="text-base font-semibold text-muted-2">Ya usados</h2>
           <div className="mt-2 space-y-2">
             {pagUsados.visibles.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between rounded-ctrl bg-kbbg px-4 py-3"
+                className="flex items-center justify-between rounded-[14px] bg-kbbg px-4 py-3"
               >
                 <div>
                   <p className="font-semibold text-muted-2">{c.cooperativaNombre}</p>
@@ -103,7 +111,7 @@ export function TabMisCreditos() {
                     Usado el {formatearFecha(c.usadoEn!)}
                   </p>
                 </div>
-                <p className="text-lg font-bold text-muted-3">
+                <p className="text-lg font-bold tabular-nums text-muted-3">
                   ${c.monto.toFixed(2)}
                 </p>
               </div>

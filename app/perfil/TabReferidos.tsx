@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { listarMisReferidos, type MiReferido, type MiPerfil } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
+import { EstadoCargando, EstadoVacio, ICONOS_CUENTA } from "@/components/EstadoCuenta";
 import { usePaginacionLocal, ControlesPaginacion } from "@/components/Paginacion";
 
 function formatearFecha(iso: string) {
@@ -46,25 +47,26 @@ export function TabReferidos({ perfil }: { perfil: MiPerfil }) {
 
   return (
     <div className="lg:grid lg:grid-cols-[320px_1fr] lg:items-start lg:gap-6">
-      <div className="overflow-hidden rounded-card bg-kbyellow px-6 py-6 lg:sticky lg:top-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-2">
-          Invita a un amigo
-        </p>
-        <p className="mt-1 text-sm text-ink">
+      {/* Tarjeta negra como la de Mi saldo: el amarillo queda solo para la acción (Copiar). */}
+      <div className="relative overflow-hidden rounded-card bg-ink px-6 py-6 text-white lg:sticky lg:top-24">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-kbyellow/10" />
+        <p className="relative text-xs font-semibold uppercase tracking-wide text-kbyellow">Invita a un amigo</p>
+        <p className="relative mt-2 text-[15px] leading-relaxed text-ondark">
           Comparte tu código — tu amigo recibe un descuento en su primer viaje, y tú ganas saldo en tu
           wallet cuando él aborde.
         </p>
-        <div className="mt-4 flex items-center gap-2">
-          <p className="flex-1 rounded-ctrl bg-white px-4 py-3 text-center text-xl font-bold tracking-wide text-brand-dark">
+        <span className="relative mt-5 block text-xs text-ondark">Tu código</span>
+        <div className="relative mt-1.5 flex items-center gap-2">
+          <p className="min-w-0 flex-1 rounded-ctrl bg-white px-4 py-3 text-center text-xl font-bold tracking-[.08em] text-ink tabular-nums">
             {perfil.codigoPasajero}
           </p>
-          <button
-            onClick={copiarCodigo}
-            className="kb-btn kb-btn--dark !h-12 !px-4 !text-sm"
-          >
-            {copiado ? "¡Copiado!" : "Copiar"}
+          <button type="button" onClick={copiarCodigo} className="kb-btn kb-btn--primary !h-[52px] shrink-0 !px-5 !text-sm">
+            {copiado ? "✓ Copiado" : "Copiar"}
           </button>
         </div>
+        <span role="status" aria-live="polite" className="sr-only">
+          {copiado ? "Código copiado" : ""}
+        </span>
       </div>
 
       <div className="mt-6 lg:mt-0">
@@ -74,17 +76,19 @@ export function TabReferidos({ perfil }: { perfil: MiPerfil }) {
           </div>
         )}
 
-        {referidos === null && !error && <p className="text-sm text-muted-2">Cargando...</p>}
+        {referidos === null && !error && <EstadoCargando />}
 
         {referidos !== null && referidos.length === 0 && (
-          <p className="text-center text-sm text-muted-2">
-            Todavía no has referido a nadie — comparte tu código para empezar a ganar.
-          </p>
+          <EstadoVacio
+            icono={ICONOS_CUENTA.invitar}
+            titulo="Todavía no has referido a nadie"
+            texto="Comparte tu código para empezar a ganar."
+          />
         )}
 
         {referidos !== null && referidos.length > 0 && (
           <>
-            <h2 className="text-sm font-bold text-brand-dark">
+            <h2 className="text-base font-semibold text-ink">
               {referidos.length} {referidos.length === 1 ? "persona referida" : "personas referidas"}
               {yaAcreditados > 0 && (
                 <span className="ml-2 font-normal text-muted-2">
@@ -96,10 +100,10 @@ export function TabReferidos({ perfil }: { perfil: MiPerfil }) {
               {pagReferidos.visibles.map((r) => (
                 <div
                   key={r.id}
-                  className="flex items-center justify-between rounded-ctrl bg-kbbg px-4 py-3"
+                  className="flex items-center justify-between gap-3 rounded-[14px] border border-line bg-white px-4 py-3"
                 >
-                  <div>
-                    <p className="font-semibold text-brand-dark">{r.nombreReferido}</p>
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-ink">{r.nombreReferido}</p>
                     <p className="text-xs text-muted-2">Se unió el {formatearFecha(r.creadoEn)}</p>
                   </div>
                   <span
