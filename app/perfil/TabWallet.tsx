@@ -3,6 +3,26 @@
 import { useEffect, useState } from "react";
 import { obtenerSaldoWallet, listarMovimientosWallet, type MiPerfil, type MovimientoWallet } from "@/lib/api";
 import { LogoKlumbus } from "@/components/LogoKlumbus";
+import { MAPA_ALTO, MAPA_ANCHO, SILUETAS, proyectarMapa } from "@/lib/mapa-ecuador";
+import { COORDENADAS_CIUDADES } from "@/lib/portada-datos";
+
+/** Ciudades y tramos que se dibujan en la tarjeta (solo decoración: no es la red real de rutas). */
+const CIUDADES_TARJETA = ["quito", "guayaquil", "cuenca", "machala", "loja", "manta", "esmeraldas", "ambato", "ibarra"];
+const RUTAS_TARJETA: [string, string][] = [
+  ["ibarra", "quito"],
+  ["esmeraldas", "santo domingo"],
+  ["quito", "santo domingo"],
+  ["santo domingo", "guayaquil"],
+  ["quito", "ambato"],
+  ["ambato", "riobamba"],
+  ["riobamba", "cuenca"],
+  ["cuenca", "loja"],
+  ["manta", "portoviejo"],
+  ["portoviejo", "guayaquil"],
+  ["guayaquil", "cuenca"],
+  ["guayaquil", "machala"],
+  ["machala", "loja"],
+];
 import { tokenValido } from "@/lib/auth";
 import { EstadoCargando, EstadoVacio, ICONOS_CUENTA } from "@/components/EstadoCuenta";
 import { usePaginacionLocal, ControlesPaginacion } from "@/components/Paginacion";
@@ -49,7 +69,7 @@ export function TabWallet({ perfil }: { perfil: MiPerfil }) {
   return (
     // PC: la tarjeta a la izquierda y el historial a la derecha; celular: uno debajo del otro.
     <div className="lg:grid lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:items-start lg:gap-8">
-      {/* Tarjeta tipo metal negro con franja amarilla (modelo elegido por Adrián, hecho con ChatGPT, 30-oct-2026).
+      {/* Tarjeta tipo metal negro con el mapa de Ecuador (modelo elegido por Adrián, hecho con ChatGPT, 30-oct-2026).
           Proporción de tarjeta real (85,6 × 54 mm). Sin chip ni número: es el saldo de la app, no una tarjeta de pago. */}
       <div className="w-full max-w-[420px]">
         <div
@@ -59,27 +79,44 @@ export function TabWallet({ perfil }: { perfil: MiPerfil }) {
               "repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0px, rgba(255,255,255,.035) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px), linear-gradient(160deg, #23262E 0%, #111318 45%, #07080B 100%)",
           }}
         >
-          {/* Franja diagonal amarilla con brillo, y reflejo suave del metal. */}
-          <svg aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 400 252" preserveAspectRatio="none">
+          {/* Mapa de Ecuador con una red de rutas y ciudades que brillan (modelo 3, elegido por Adrián:
+              "le da territorio e identidad"), un reflejo suave del metal y una curva de luz amarilla. */}
+          <svg aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 400 252" preserveAspectRatio="xMidYMid slice">
             <defs>
-              <linearGradient id="kb-franja" x1="1" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#FDD514" stopOpacity=".95" />
-                <stop offset=".55" stopColor="#FDD514" stopOpacity=".35" />
-                <stop offset="1" stopColor="#FDD514" stopOpacity="0" />
-              </linearGradient>
-              <linearGradient id="kb-linea" x1="1" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#FFE866" />
-                <stop offset="1" stopColor="#FDD514" stopOpacity="0" />
-              </linearGradient>
               <linearGradient id="kb-reflejo" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0" stopColor="#fff" stopOpacity=".10" />
                 <stop offset=".35" stopColor="#fff" stopOpacity="0" />
               </linearGradient>
+              <linearGradient id="kb-curva" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0" stopColor="#FDD514" stopOpacity="0" />
+                <stop offset=".5" stopColor="#FDD514" stopOpacity=".9" />
+                <stop offset="1" stopColor="#FDD514" stopOpacity=".2" />
+              </linearGradient>
+              <radialGradient id="kb-halo">
+                <stop offset="0" stopColor="#FDD514" stopOpacity=".55" />
+                <stop offset="1" stopColor="#FDD514" stopOpacity="0" />
+              </radialGradient>
             </defs>
             <rect width="400" height="252" fill="url(#kb-reflejo)" />
-            <polygon points="318,0 400,0 400,150 250,252 205,252" fill="url(#kb-franja)" opacity=".85" />
-            <polygon points="290,0 312,0 196,252 176,252" fill="#000" opacity=".35" />
-            <line x1="402" y1="18" x2="236" y2="254" stroke="url(#kb-linea)" strokeWidth="1.6" />
+            <svg x="192" y="8" width="214" height="236" viewBox={`0 0 ${MAPA_ANCHO} ${MAPA_ALTO}`}>
+              <path d={SILUETAS.ecuador} fill="#FDD514" fillOpacity=".05" stroke="#FDD514" strokeOpacity=".45" strokeWidth="2" strokeLinejoin="round" />
+              {RUTAS_TARJETA.map(([a, b]) => {
+                const [x1, y1] = proyectarMapa(COORDENADAS_CIUDADES[a]);
+                const [x2, y2] = proyectarMapa(COORDENADAS_CIUDADES[b]);
+                return <line key={a + b} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#FDD514" strokeOpacity=".35" strokeWidth="1.6" />;
+              })}
+              {CIUDADES_TARJETA.map((c) => {
+                const [x, y] = proyectarMapa(COORDENADAS_CIUDADES[c]);
+                return (
+                  <g key={c}>
+                    <circle cx={x} cy={y} r="14" fill="url(#kb-halo)" />
+                    <circle cx={x} cy={y} r="4" fill="#FDD514" />
+                  </g>
+                );
+              })}
+            </svg>
+            <path d="M190 262 C 290 230, 350 190, 410 110" stroke="url(#kb-curva)" strokeWidth="1.6" fill="none" />
+            <path d="M232 262 C 320 236, 372 200, 410 160 L 410 262 Z" fill="#FDD514" fillOpacity=".07" />
           </svg>
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/10" />
 
