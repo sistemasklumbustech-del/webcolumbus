@@ -288,25 +288,47 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
 
         {/* PC: resumen negro a la derecha. */}
         <aside className="hidden flex-col gap-4 md:flex">
-          <div className="flex flex-col gap-3.5 rounded-card bg-ink p-6 text-white">
+          {/* Tarjeta negra (rediseño 30-oct): datos del viaje con íconos, aviso claro mientras no hay
+              asiento y botón gris (no amarillo apagado) hasta que se elige uno. */}
+          <div className="flex flex-col gap-4 rounded-card bg-ink p-6 text-white">
             <span className="text-xs font-semibold uppercase tracking-[.08em] text-kbyellow">Tu viaje</span>
-            <b className="text-[22px] font-semibold leading-tight">
+            <b className="-mt-1.5 text-[24px] font-semibold leading-tight">
               {rOrigen && rDestino ? `${rOrigen} → ${rDestino}` : (mapa.tipoVehiculoNombre ?? "Tu viaje")}
             </b>
-            {(lineaSalida || rCoop || (rOrigen && mapa.tipoVehiculoNombre)) && (
-              <span className="text-[13px] text-ondark">
-                {lineaSalida}
-                {lineaSalida && <br />}
-                {[rCoop, mapa.tipoVehiculoNombre].filter(Boolean).join(" · ")}
-              </span>
+            {(lineaSalida || rCoop || mapa.tipoVehiculoNombre) && (
+              <ul className="flex flex-col gap-2 text-[13px] text-ondark">
+                {lineaSalida && (
+                  <li className="flex items-start gap-2.5">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-px shrink-0 text-kbyellow">
+                      <rect x="3" y="5" width="18" height="16" rx="3" />
+                      <path d="M3 10h18M8 3v4M16 3v4" />
+                    </svg>
+                    <span>{lineaSalida}</span>
+                  </li>
+                )}
+                {(rCoop || mapa.tipoVehiculoNombre) && (
+                  <li className="flex items-start gap-2.5">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-px shrink-0 text-kbyellow">
+                      <rect x="4" y="3" width="16" height="15" rx="3" />
+                      <path d="M4 11h16M8 21v-3M16 21v-3" />
+                    </svg>
+                    <span>{[rCoop, mapa.tipoVehiculoNombre].filter(Boolean).join(" · ")}</span>
+                  </li>
+                )}
+              </ul>
             )}
             <hr className="h-px border-0 bg-ink-3" />
             {resumenSeleccion.length === 0 ? (
-              <div className="flex items-center gap-3.5 rounded-[18px] border border-dashed border-ink-3 px-4 py-3.5">
-                <span className="kb-silla is-mini !text-[#4A505C] [&_.kb-silla__cojin]:!fill-transparent [&_.kb-silla__respaldo]:!fill-transparent [&_.kb-silla__brazo]:!fill-transparent" aria-hidden="true">
-                  <DibujoSilla />
+              <div className="flex items-center gap-3.5 rounded-[18px] bg-ink-2 px-4 py-3.5">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-dashed border-kbyellow/60" aria-hidden="true">
+                  <span className="kb-silla is-mini !w-6 !max-w-6 !text-kbyellow [&_.kb-silla__cojin]:!fill-transparent [&_.kb-silla__respaldo]:!fill-transparent [&_.kb-silla__brazo]:!fill-transparent">
+                    <DibujoSilla />
+                  </span>
                 </span>
-                <p className="text-sm text-ondark">Toca un asiento libre en el mapa para elegirlo.</p>
+                <span className="min-w-0">
+                  <b className="block text-[15px] font-semibold">Elige tu asiento</b>
+                  <span className="block text-[13px] text-ondark">Toca un asiento libre en el mapa.</span>
+                </span>
               </div>
             ) : (
               <ul className="flex flex-col gap-2" aria-label="Asientos elegidos">
@@ -346,7 +368,7 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
               type="button"
               disabled={seleccionados.length === 0 || bloqueando}
               onClick={continuar}
-              className="kb-btn kb-btn--primary w-full"
+              className="kb-btn kb-btn--primary w-full disabled:!bg-ink-3 disabled:!text-ondark disabled:!opacity-100"
             >
               {textoBotonCompleto}
             </button>
@@ -390,7 +412,7 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
           type="button"
           disabled={seleccionados.length === 0 || bloqueando}
           onClick={continuar}
-          className="kb-btn kb-btn--primary shrink-0 px-6"
+          className="kb-btn kb-btn--primary shrink-0 px-6 disabled:!bg-line disabled:!text-muted-2 disabled:!opacity-100"
         >
           {textoBotonCorto}
         </button>

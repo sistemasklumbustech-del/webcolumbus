@@ -318,13 +318,23 @@ function BoletoCompleto({
 }) {
   const vista = vistaDeMiBoleto(boleto);
   const anden = { estadoTasa: boleto.estadoTasa, codigoTasa: boleto.codigoTasa };
+  // Con espacio (PC) y el boleto de pie, los botones van a su derecha en vez de debajo.
   return (
-    <div className="flex flex-col gap-3">
-      <BoletoTarjeta boleto={vista} anden={boleto.estadoTasa === "no_aplica" ? null : anden} alinear="inicio" />
-      <div className="flex flex-col gap-2.5 md:flex-row md:flex-wrap md:items-center">
-        <BoletoAcciones grupos={[{ clave: boleto.boletoId, tramo: null, boletos: [vista] }]} codigosAnden={{ [boleto.boletoId]: anden }} hojaImpresion={false} />
+    <div className="@container">
+      <div className="flex flex-col gap-3 @[46rem]:flex-row @[46rem]:items-start @[46rem]:gap-6">
+        <div className="min-w-0 @[46rem]:w-[440px] @[46rem]:shrink-0">
+          <BoletoTarjeta boleto={vista} anden={boleto.estadoTasa === "no_aplica" ? null : anden} alinear="inicio" />
+        </div>
+        <div className="flex min-w-0 flex-col gap-3 @[46rem]:flex-1 @[46rem]:pt-1">
+          <p className="hidden text-sm text-muted-2 @[46rem]:block">
+            Muestra el QR al subir al bus. También puedes descargarlo en PDF o compartir los datos del viaje.
+          </p>
+          <div className="flex flex-col gap-2.5 md:flex-row md:flex-wrap md:items-center">
+            <BoletoAcciones grupos={[{ clave: boleto.boletoId, tramo: null, boletos: [vista] }]} codigosAnden={{ [boleto.boletoId]: anden }} hojaImpresion={false} />
+          </div>
+          <MasOpciones boleto={boleto} conPdf={false} onExito={onExito} onError={onError} onCambio={onCambio} />
+        </div>
       </div>
-      <MasOpciones boleto={boleto} conPdf={false} onExito={onExito} onError={onError} onCambio={onCambio} />
     </div>
   );
 }
@@ -386,7 +396,14 @@ function TarjetaCorta({
             {boleto.numeroAsiento ? ` · Asiento ${boleto.numeroAsiento}` : ""}
           </p>
         </div>
-        {modo === "proximo" ? <Etiqueta {...etiqueta} /> : <EstadoBoleto estado={boleto.estado} />}
+        {modo === "proximo" ? (
+          <Etiqueta {...etiqueta} />
+        ) : boleto.estado === "vigente" && !futuro ? (
+          // Solo etiqueta en pantalla: el estado del boleto no cambia (sigue "vigente" en la base).
+          <Etiqueta texto={`Salió ${fechaBoleto(boleto.horaSalidaProgramada).split(" ").slice(1, 3).join(" ")}`} tono="salio" />
+        ) : (
+          <EstadoBoleto estado={boleto.estado} />
+        )}
       </div>
 
       {modo === "historial" && (

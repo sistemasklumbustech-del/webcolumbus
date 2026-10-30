@@ -22,10 +22,13 @@ export function BoletoTarjeta({
   const textoCodigo = boleto.codigoQr.length <= 20 ? boleto.codigoQr : null;
   const datos = datosDelBoleto(boleto);
   return (
-    <div className={`@container flex w-full ${alinear === "inicio" ? "justify-start" : "justify-center"}`}>
+    // Sin los datos del pasajero (Mis boletos, mientras la API no los mande) el boleto va siempre de
+    // pie: acostado quedaría un bloque negro alto y vacío al lado del QR. Su propio contenedor se
+    // limita a 520 px, así las variantes @[52rem] (≥ 832 px) nunca aplican.
+    <div className={`@container flex w-full ${datos.length > 0 ? "" : "max-w-[520px]"} ${alinear === "inicio" ? "justify-start" : "justify-center"}`}>
       <article
         className={`kb-ticket w-full max-w-[520px] @[52rem]:grid @[52rem]:max-w-none ${
-          datos.length > 0 ? "@[52rem]:grid-cols-[1fr_1fr_250px]" : "@[52rem]:grid-cols-[1fr_250px]"
+          "@[52rem]:grid-cols-[1fr_1fr_250px]"
         }`}
       >
         <div className="kb-ticket__top flex flex-col gap-4 @[52rem]:justify-between @[52rem]:gap-5 @[52rem]:p-[26px]">
