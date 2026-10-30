@@ -159,11 +159,11 @@ export function TabDatosPersonales({
           propósito: protege boletos ya comprados a tu nombre. */}
       <form
         onSubmit={guardarIdentidad}
-        className="space-y-4 kb-card kb-on-white p-6 xl:mb-4 xl:break-inside-avoid"
+        className="flex flex-col gap-4 rounded-card border border-line bg-white p-5 md:p-6 xl:mb-4 xl:break-inside-avoid"
       >
         <div>
-          <h2 className="text-base font-bold text-brand-dark">Identidad</h2>
-          <p className="mt-1 text-xs text-muted-2">
+          <h2 className="text-lg font-semibold text-ink">Identidad</h2>
+          <p className="mt-1 text-[13px] leading-relaxed text-muted-2">
             Nombre y cédula solo se pueden cambiar cada 90 días, para proteger boletos ya
             comprados a tu nombre.
           </p>
@@ -202,7 +202,7 @@ id="perfil-cedula"
             className="kb-input disabled:opacity-60"
           />
         </div>
-        {errorIdentidad && <p className="text-sm font-medium text-kberror">{errorIdentidad}</p>}
+        {errorIdentidad && <p className="kb-alert kb-alert--error">{errorIdentidad}</p>}
         <button
           type="submit"
           disabled={guardandoIdentidad || !perfil.puedeEditarIdentidad}
@@ -215,21 +215,17 @@ id="perfil-cedula"
       {/* Datos editables */}
       <form
         onSubmit={guardarPerfil}
-        className="space-y-4 kb-card kb-on-white p-6 xl:mb-4 xl:break-inside-avoid"
+        className="flex flex-col gap-4 rounded-card border border-line bg-white p-5 md:p-6 xl:mb-4 xl:break-inside-avoid"
       >
-        <h2 className="text-base font-bold text-brand-dark">Mis datos</h2>
+        <h2 className="text-lg font-semibold text-ink">Contacto y foto</h2>
         <div>
-          <label htmlFor="perfil-correo" className="kb-label">
-            Correo
-          </label>
-          <input
-id="perfil-correo"
-            autoComplete="email"
-            type="text"
-            value={perfil.correo}
-            disabled
-            className="kb-input disabled:opacity-60"
-          />
+          <span className="kb-label">Correo</span>
+          <div className="flex min-h-[var(--kb-control-h)] flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-ctrl bg-kbbg px-[18px] py-2">
+            <span className="min-w-0 text-sm text-ink [overflow-wrap:anywhere]">{perfil.correo}</span>
+            <a href="#perfil-cambiar-correo" className="shrink-0 text-sm font-semibold text-ink underline underline-offset-4">
+              Cambiar
+            </a>
+          </div>
         </div>
         <div>
           <label htmlFor="perfil-whatsapp" className="kb-label">
@@ -238,7 +234,7 @@ id="perfil-correo"
           <input
 id="perfil-whatsapp"
             autoComplete="tel"
-            type="text"
+            type="tel"
             inputMode="numeric"
             value={telefono}
             onChange={(e) => setTelefono(e.target.value.replace(/\D/g, "").slice(0, 10))}
@@ -247,38 +243,52 @@ id="perfil-whatsapp"
           />
         </div>
         <div>
-          <label htmlFor="perfil-foto" className="kb-label">
-            Foto de perfil
-          </label>
-          <input
-id="perfil-foto"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={async (e) => {
-              const archivo = e.target.files?.[0];
-              if (!archivo) return;
-              const token = tokenValido();
-              if (!token) return;
-              setErrorPerfil(null);
-              setSubiendoFoto(true);
-              try {
-                const url = await subirFotoPerfil(token, archivo);
-                setFotoUrl(url);
-                onActualizado({ fotoUrl: url });
-                onExito("Foto de perfil actualizada.");
-              } catch (err) {
-                setErrorPerfil(err instanceof Error ? err.message : "No se pudo subir la foto.");
-              } finally {
-                setSubiendoFoto(false);
-              }
-            }}
-            disabled={subiendoFoto}
-            className="kb-input !h-auto py-3 file:mr-3 file:rounded-xl file:border-0 file:bg-ink file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white disabled:opacity-50"
-          />
-          {subiendoFoto && <p className="mt-1 text-xs text-muted-2">Subiendo…</p>}
-          <p className="mt-1 text-xs text-muted-2">JPG, PNG o WEBP, hasta 5 MB.</p>
+          <span className="kb-label">Foto de perfil</span>
+          {/* Botón propio en español: el del navegador dice "Choose File / No file chosen". */}
+          <div className="flex items-center gap-3">
+            {fotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- foto del almacenamiento
+              <img src={fotoUrl} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-line" />
+            ) : (
+              <span aria-hidden="true" className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-ink text-lg font-bold text-kbyellow">
+                {perfil.nombreCompleto.charAt(0)}
+              </span>
+            )}
+            <label
+              htmlFor="perfil-foto"
+              className={`kb-btn kb-btn--outline !h-11 cursor-pointer !px-5 !text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink ${subiendoFoto ? "pointer-events-none opacity-50" : ""}`}
+            >
+              {subiendoFoto ? "Subiendo…" : fotoUrl ? "Cambiar foto" : "Elegir foto"}
+              <input
+                id="perfil-foto"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={async (e) => {
+                  const archivo = e.target.files?.[0];
+                  if (!archivo) return;
+                  const token = tokenValido();
+                  if (!token) return;
+                  setErrorPerfil(null);
+                  setSubiendoFoto(true);
+                  try {
+                    const url = await subirFotoPerfil(token, archivo);
+                    setFotoUrl(url);
+                    onActualizado({ fotoUrl: url });
+                    onExito("Foto de perfil actualizada.");
+                  } catch (err) {
+                    setErrorPerfil(err instanceof Error ? err.message : "No se pudo subir la foto.");
+                  } finally {
+                    setSubiendoFoto(false);
+                  }
+                }}
+                disabled={subiendoFoto}
+                className="sr-only"
+              />
+            </label>
+          </div>
+          <p className="mt-1.5 text-xs text-muted-2">JPG, PNG o WEBP, hasta 5 MB.</p>
         </div>
-        {errorPerfil && <p className="text-sm font-medium text-kberror">{errorPerfil}</p>}
+        {errorPerfil && <p className="kb-alert kb-alert--error">{errorPerfil}</p>}
         <button
           type="submit"
           disabled={guardandoPerfil}
@@ -291,9 +301,9 @@ id="perfil-foto"
       {/* Cambiar contraseña */}
       <form
         onSubmit={guardarPassword}
-        className="space-y-4 kb-card kb-on-white p-6 xl:mb-4 xl:break-inside-avoid"
+        className="flex flex-col gap-4 rounded-card border border-line bg-white p-5 md:p-6 xl:mb-4 xl:break-inside-avoid"
       >
-        <h2 className="text-base font-bold text-brand-dark">Cambiar contraseña</h2>
+        <h2 className="text-lg font-semibold text-ink">Cambiar contraseña</h2>
         <div>
           <label htmlFor="perfil-password-actual" className="kb-label">
             Contraseña actual
@@ -306,7 +316,7 @@ id="perfil-foto"
           </label>
           <CampoPassword id="perfil-password-nueva" autoComplete="new-password" value={passwordNueva} onChange={setPasswordNueva} placeholder="Mínimo 8 caracteres" />
         </div>
-        {errorPassword && <p className="text-sm font-medium text-kberror">{errorPassword}</p>}
+        {errorPassword && <p className="kb-alert kb-alert--error">{errorPassword}</p>}
         <button
           type="submit"
           disabled={cambiandoPassword || !passwordActual || !passwordNueva}
@@ -318,12 +328,13 @@ id="perfil-foto"
 
       {/* Cambiar correo — hallazgo real del usuario (29-jul-2026): si pierdes acceso a tu correo, quedarías fuera de tu cuenta sin esto. */}
       <form
+        id="perfil-cambiar-correo"
         onSubmit={solicitarCambio}
-        className="space-y-4 kb-card kb-on-white p-6 xl:mb-4 xl:break-inside-avoid"
+        className="flex flex-col gap-4 rounded-card border border-line bg-white p-5 md:p-6 xl:mb-4 xl:break-inside-avoid"
       >
-        <h2 className="text-base font-bold text-brand-dark">Cambiar correo</h2>
-        <p className="text-xs text-muted-2">
-          Correo actual: <span className="font-semibold">{perfil.correo}</span>
+        <h2 className="text-lg font-semibold text-ink">Cambiar correo</h2>
+        <p className="-mt-2 text-[13px] text-muted-2 [overflow-wrap:anywhere]">
+          Correo actual: <span className="font-semibold text-ink">{perfil.correo}</span>
         </p>
         {correoSolicitudEnviada ? (
           <p className="kb-alert kb-alert--ok">
@@ -352,7 +363,7 @@ id="perfil-correo-nuevo"
               <CampoPassword id="perfil-password-correo" autoComplete="current-password" value={passwordParaCorreo} onChange={setPasswordParaCorreo} />
             </div>
             {errorCambioCorreo && (
-              <p className="text-sm font-medium text-kberror">{errorCambioCorreo}</p>
+              <p className="kb-alert kb-alert--error">{errorCambioCorreo}</p>
             )}
             <button
               type="submit"
