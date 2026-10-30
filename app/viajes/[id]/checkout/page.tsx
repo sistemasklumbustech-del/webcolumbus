@@ -8,6 +8,7 @@ import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
 import { useCodigosAnden } from "@/components/AccesoAnden";
 import { CampoSexoAsientoMujeres, type SexoPasajero } from "@/components/CampoSexoAsientoMujeres";
 import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
+import { esAsientoVip, precioAsiento } from "@/lib/precio-asiento";
 import { leerResumenViaje } from "@/lib/resumen-viaje";
 import { BoletoAcciones } from "@/components/BoletoAcciones";
 import { vistaDeEmitido } from "@/lib/boleto";
@@ -575,21 +576,26 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
   const resumen = leerResumenViaje(searchParams);
   // Ida y vuelta: el resumen de la ida llega con el prefijo "i" (solo informativo).
   const resumenIda = esIdaYVuelta ? leerResumenViaje(searchParams, "i") : null;
-  const asientosIda = paresAsiento.filter((p) => p.tramo === "ida").map((p) => p.numeroAsiento);
-  const asientosVuelta = paresAsiento.filter((p) => p.tramo !== "ida").map((p) => p.numeroAsiento);
+  // "2B · VIP" cuando el asiento es VIP en el mapa del viaje (solo lo que se muestra).
+  const conVip = (p: (typeof paresAsiento)[number]) =>
+    esAsientoVip(mapasPorViaje[p.viajeId], p.numeroAsiento) ? `${p.numeroAsiento} · VIP` : p.numeroAsiento;
+  const asientosIda = paresAsiento.filter((p) => p.tramo === "ida").map(conVip);
+  const asientosVuelta = paresAsiento.filter((p) => p.tramo !== "ida").map(conVip);
   const tramos: { etiqueta: string | null; r: typeof resumen; asientos: string[] }[] = esIdaYVuelta
     ? [
         { etiqueta: "Ida", r: resumenIda!, asientos: asientosIda },
         { etiqueta: "Vuelta", r: resumen, asientos: asientosVuelta },
       ]
-    : [{ etiqueta: null, r: resumen, asientos: numerosAsiento }];
+    : [{ etiqueta: null, r: resumen, asientos: paresAsiento.length > 0 ? paresAsiento.map(conVip) : numerosAsiento }];
   // Tarifa de referencia (solo informativa; el total exacto lo cotiza el servidor al revisar).
-  const tarifaEstimada = esIdaYVuelta
-    ? resumenIda?.precio != null && resumen.precio !== null
-      ? resumenIda.precio * asientosIda.length + resumen.precio * asientosVuelta.length
-      : null
-    : resumen.precio !== null
-      ? resumen.precio * paresAsiento.length
+  // Por asiento: tarifa base + recargo VIP si el asiento es VIP (valores de la API llegados por la URL).
+  const preciosPorAsiento = paresAsiento.map((p) => {
+    const r = esIdaYVuelta && p.tramo === "ida" ? resumenIda : resumen;
+    return precioAsiento(r?.precio ?? null, r?.recargoVip ?? null, esAsientoVip(mapasPorViaje[p.viajeId], p.numeroAsiento));
+  });
+  const tarifaEstimada =
+    preciosPorAsiento.length > 0 && preciosPorAsiento.every((x) => x !== null)
+      ? (preciosPorAsiento as number[]).reduce((a, b) => a + b, 0)
       : null;
   const rutaTitulo = esIdaYVuelta
     ? resumenIda?.origen && resumenIda.destino
@@ -1209,7 +1215,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                   <span className="text-ondark">{esIdaYVuelta || paresAsiento.length > 1 ? "Tarifa estimada" : "Tarifa"}</span>
                   <b className="text-[26px] font-bold tabular-nums">${tarifaEstimada.toFixed(2)}</b>
                 </div>
-                <span className="-mt-2 text-xs text-ondark">El total exacto, con tasas y descuentos, lo ves al revisar.</span>
+                <span className="-mt-2 text-xs text-ondark">+ tasa de terminal y descuentos (niño, tercera edad, discapacidad) se calculan al revisar</span>
               </>
             )}
             <button type="submit" form="checkout-form" disabled={procesando} className="kb-btn kb-btn--primary w-full">

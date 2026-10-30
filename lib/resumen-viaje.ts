@@ -14,11 +14,13 @@ export interface ResumenViaje {
   cooperativa: string | null;
   /** Tarifa de referencia por asiento (adulto), solo informativa. */
   precio: number | null;
+  /** Recargo de los asientos VIP de ese viaje (de la API, vía Resultados); null si no hay. */
+  recargoVip: number | null;
   /** Ej.: "vie 16 oct · sale 07:00, llega 13:28". */
   lineaSalida: string | null;
 }
 
-const CLAVES = ["rOrigen", "rDestino", "rSalida", "rLlegada", "rCoop", "rPrecio"] as const;
+const CLAVES = ["rOrigen", "rDestino", "rSalida", "rLlegada", "rCoop", "rPrecio", "rVip"] as const;
 // Ida y vuelta: el resumen de la IDA viaja con el prefijo "i" (iOrigen, iSalida...) hasta el pago,
 // para mostrar las dos rutas. Solo informativo, igual que el resto del resumen.
 const CLAVES_IDA = CLAVES.map((c) => `i${c.slice(1)}`);
@@ -38,6 +40,8 @@ export function leerResumenViaje(sp: LectorParametros, prefijo: "r" | "i" = "r")
   const get = (c: string) => sp.get(`${prefijo}${c}`);
   const precioTexto = get("Precio");
   const precio = precioTexto && Number.isFinite(Number(precioTexto)) ? Number(precioTexto) : null;
+  const vipTexto = get("Vip");
+  const recargoVip = vipTexto && Number.isFinite(Number(vipTexto)) && Number(vipTexto) > 0 ? Number(vipTexto) : null;
   const salida = fechaValida(get("Salida"));
   const llegada = fechaValida(get("Llegada"));
   const dia = salida
@@ -48,6 +52,7 @@ export function leerResumenViaje(sp: LectorParametros, prefijo: "r" | "i" = "r")
     destino: get("Destino"),
     cooperativa: get("Coop"),
     precio,
+    recargoVip,
     lineaSalida: salida ? `${dia} · sale ${horaCorta(salida)}${llegada ? `, llega ${horaCorta(llegada)}` : ""}` : null,
   };
 }
