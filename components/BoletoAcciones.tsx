@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import QRCode from "qrcode";
-import { descargarBoletoPdf, type BoletoDeRecibo } from "@/lib/api";
+import { descargarBoletoPdf } from "@/lib/api";
 import { tokenValido } from "@/lib/auth";
-import { fechaBoleto, horaBoleto, numeroBoleto, textoParaCompartir, type GrupoBoletos } from "@/lib/boleto";
+import { datosDelBoleto, fechaBoleto, horaBoleto, numeroBoleto, textoParaCompartir, type AndenBoleto, type GrupoBoletos } from "@/lib/boleto";
 
 /**
  * Botones Descargar y Compartir del boleto confirmado (aprobado por el director, 29-oct-2026).
@@ -17,7 +17,16 @@ import { fechaBoleto, horaBoleto, numeroBoleto, textoParaCompartir, type GrupoBo
  *
  * Compartir: texto sin QR. En celular, el menú de compartir del teléfono; en PC, se copia.
  */
-export function BoletoAcciones({ grupos, codigosAnden }: { grupos: GrupoBoletos[]; codigosAnden: Record<string, BoletoDeRecibo> }) {
+export function BoletoAcciones({
+  grupos,
+  codigosAnden,
+  hojaImpresion = true,
+}: {
+  grupos: GrupoBoletos[];
+  codigosAnden: Record<string, AndenBoleto>;
+  /** Mis boletos no la necesita: ahí siempre hay sesión y se descarga el PDF real. */
+  hojaImpresion?: boolean;
+}) {
   const [descargando, setDescargando] = useState(false);
   const [errorDescarga, setErrorDescarga] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
@@ -121,7 +130,7 @@ export function BoletoAcciones({ grupos, codigosAnden }: { grupos: GrupoBoletos[
         </span>
       </div>
       {errorDescarga && <p className="kb-alert kb-alert--error w-full text-sm md:order-last md:basis-full">{errorDescarga}</p>}
-      {montado && createPortal(<HojaImpresion grupos={grupos} codigosAnden={codigosAnden} />, document.body)}
+      {montado && hojaImpresion && createPortal(<HojaImpresion grupos={grupos} codigosAnden={codigosAnden} />, document.body)}
     </>
   );
 }
@@ -142,7 +151,7 @@ function QrImpresion({ valor, className }: { valor: string; className: string })
 }
 
 /** Hoja de impresión: no se ve en pantalla; al imprimir es lo único que sale. */
-function HojaImpresion({ grupos, codigosAnden }: { grupos: GrupoBoletos[]; codigosAnden: Record<string, BoletoDeRecibo> }) {
+function HojaImpresion({ grupos, codigosAnden }: { grupos: GrupoBoletos[]; codigosAnden: Record<string, AndenBoleto> }) {
   return (
     <div className="kb-hoja-boletos" aria-hidden="true">
       {grupos.flatMap((grupo) =>
@@ -150,16 +159,7 @@ function HojaImpresion({ grupos, codigosAnden }: { grupos: GrupoBoletos[]; codig
           const anden = codigosAnden[boleto.id];
           const andenListo = anden?.estadoTasa === "lista" && anden.codigoTasa;
           const textoCodigo = boleto.codigoQr.length <= 20 ? boleto.codigoQr : null;
-          const datos: [string, string][] = [
-            ["Pasajero", boleto.compradorNombre],
-            ["Documento", boleto.compradorDocumento ?? "—"],
-            ["Asiento", `${boleto.numeroAsiento}${boleto.esVip ? " · VIP" : ""}`],
-            ["Cooperativa", boleto.cooperativaNombre],
-            ...(boleto.unidadIdentificador ? [["Disco", boleto.unidadIdentificador] as [string, string]] : []),
-            ...(boleto.unidadPlaca ? [["Placa", boleto.unidadPlaca] as [string, string]] : []),
-            ["Tarifa", `$${boleto.precioPagado.toFixed(2)}`],
-            ...(boleto.tasaTerminal > 0 ? [["Tasa de terminal", `$${boleto.tasaTerminal.toFixed(2)}`] as [string, string]] : []),
-          ];
+          const datos = datosDelBoleto(boleto, { conCooperativa: true });
           return (
             <section key={boleto.id} className="kb-hoja-boleto">
               <div className="kb-hoja-boleto__marco">
@@ -175,22 +175,22 @@ function HojaImpresion({ grupos, codigosAnden }: { grupos: GrupoBoletos[]; codig
                 <div className="kb-hoja-boleto__ruta">
                   <div>
                     <span>Origen</span>
-                    <b>{boleto.rutaOrigenCiudad}</b>
+                    <b>{boleto.origen}</b>
                   </div>
                   <i aria-hidden="true">→</i>
                   <div>
                     <span>Destino</span>
-                    <b>{boleto.rutaDestinoCiudad}</b>
+                    <b>{boleto.destino}</b>
                   </div>
                 </div>
                 <div className="kb-hoja-boleto__salida">
                   <div>
                     <span>Fecha</span>
-                    <b>{fechaBoleto(boleto.horaSalidaProgramada)}</b>
+                    <b>{fechaBoleto(boleto.salida)}</b>
                   </div>
                   <div>
                     <span>Hora de salida</span>
-                    <b>{horaBoleto(boleto.horaSalidaProgramada)}</b>
+                    <b>{horaBoleto(boleto.salida)}</b>
                   </div>
                 </div>
                 <dl className="kb-hoja-boleto__datos">

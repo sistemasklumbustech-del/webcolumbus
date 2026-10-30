@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
@@ -107,6 +107,11 @@ function MiCuenta() {
   const [saldo, setSaldo] = useState<number | null>(null);
   const [creditoDisponible, setCreditoDisponible] = useState<number | null>(null);
 
+  // Pestañas del celular: la activa queda a la vista al entrar y un degradado avisa que se puede deslizar.
+  const subnav = useRef<HTMLElement>(null);
+  const [masALaDerecha, setMasALaDerecha] = useState(false);
+  const [masALaIzquierda, setMasALaIzquierda] = useState(false);
+
   const pestanaParam = searchParams.get("tab");
   const valoresValidos = PESTANAS.map((p) => p.valor);
   const pestanaActiva: Pestana = (
@@ -141,6 +146,35 @@ function MiCuenta() {
       .then(setQrCodigoPasajero)
       .catch(() => setQrCodigoPasajero(null));
   }, [perfil]);
+
+  useEffect(() => {
+    const nav = subnav.current;
+    if (!nav) return;
+    const centrarActiva = () => {
+      const activa = nav.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!activa) return;
+      const n = nav.getBoundingClientRect();
+      const r = activa.getBoundingClientRect();
+      nav.scrollLeft += r.left + r.width / 2 - (n.left + n.width / 2);
+    };
+    centrarActiva();
+    // Con la letra ya cargada cambian los anchos: se vuelve a centrar.
+    document.fonts?.ready.then(() => {
+      centrarActiva();
+      medir();
+    });
+    const medir = () => {
+      setMasALaIzquierda(nav.scrollLeft > 4);
+      setMasALaDerecha(nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 4);
+    };
+    medir();
+    nav.addEventListener("scroll", medir, { passive: true });
+    window.addEventListener("resize", medir);
+    return () => {
+      nav.removeEventListener("scroll", medir);
+      window.removeEventListener("resize", medir);
+    };
+  }, [perfil, pestanaActiva]);
 
   async function subirFotoDesdeHeader(archivo: File) {
     const token = tokenValido();
@@ -221,8 +255,37 @@ function MiCuenta() {
             </div>
 
             {/* Identidad (rediseño final): tarjeta negra con foto, datos del viajero y el QR de pasajero. */}
-            <div className="kb-card kb-card--dark flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-7">
-              <div className="flex items-center gap-4 md:gap-5">
+            {/* En celular, fuera de "Mis datos", va la versión corta para que el contenido se vea sin bajar. */}
+            {pestanaActiva !== "datos" && (
+              <Link
+                href="/perfil?tab=datos"
+                scroll={false}
+                className="kb-card kb-card--dark flex items-center gap-3 !p-3.5 md:hidden"
+                aria-label={`${perfil.nombreCompleto}, ver mis datos`}
+              >
+                <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-kbyellow">
+                  {perfil.fotoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- URL externa dinámica
+                    <img src={perfil.fotoUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-base font-bold text-ink">{iniciales || "P"}</span>
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-semibold">{perfil.nombreCompleto}</span>
+                  <span className="kb-tag kb-tag--yellow mt-1 tracking-wide">{perfil.codigoPasajero}</span>
+                </span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-ondark">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </Link>
+            )}
+            <div
+              className={`kb-card kb-card--dark flex-col gap-5 p-5 md:p-7 xl:flex-row xl:items-center xl:justify-between ${
+                pestanaActiva !== "datos" ? "hidden md:flex" : "flex"
+              }`}
+            >
+              <div className="flex min-w-0 items-center gap-4 md:gap-5">
                 <div className="relative shrink-0">
                   <div className="relative h-20 w-20 overflow-hidden rounded-full bg-kbyellow ring-4 ring-ink-3 md:h-24 md:w-24">
                     {perfil.fotoUrl ? (
@@ -260,9 +323,11 @@ function MiCuenta() {
                 <div className="min-w-0">
                   <p className="text-xl font-semibold leading-tight md:text-2xl">{perfil.nombreCompleto}</p>
                   {subiendoFotoHeader && <p className="mt-1 text-xs text-ondark">Subiendo foto…</p>}
-                  {errorFotoHeader && <p className="mt-1 text-xs font-medium text-[#FF8A8A]">{errorFotoHeader}</p>}
+                  {errorFotoHeader && (
+                    <p className="mt-1.5 inline-block rounded-full bg-kberror-bg px-2.5 py-1 text-xs font-medium text-kberror">{errorFotoHeader}</p>
+                  )}
                   <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                    <span className="kb-tag bg-ink-2 text-ondark">
+                    <span className="kb-tag whitespace-nowrap bg-ink-2 text-ondark">
                       Viajero desde{" "}
                       {new Date(perfil.creadoEn).toLocaleDateString("es-EC", { month: "long", year: "numeric" })}
                     </span>
@@ -271,7 +336,7 @@ function MiCuenta() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 rounded-ctrl bg-ink-2 p-3.5 md:max-w-sm">
+              <div className="flex items-center gap-4 rounded-ctrl bg-ink-2 p-3.5 xl:max-w-sm xl:shrink-0">
                 {qrCodigoPasajero && (
                   // eslint-disable-next-line @next/next/no-img-element -- data URL generada en el cliente
                   <img
@@ -312,7 +377,8 @@ function MiCuenta() {
             )}
 
             {/* En celular y tablet no hay menú lateral: las secciones van como pestañas. */}
-            <nav className="kb-subnav mt-6 lg:hidden" aria-label="Secciones de mi cuenta">
+            <div className="relative mt-6 lg:hidden">
+            <nav ref={subnav} className="kb-subnav [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Secciones de mi cuenta">
               {PESTANAS.map((p) => (
                 <Link
                   key={p.valor}
@@ -325,6 +391,15 @@ function MiCuenta() {
                 </Link>
               ))}
             </nav>
+              <span
+                aria-hidden="true"
+                className={`pointer-events-none absolute bottom-px left-0 top-0 w-10 bg-gradient-to-r from-kbbg to-transparent transition-opacity ${masALaIzquierda ? "opacity-100" : "opacity-0"}`}
+              />
+              <span
+                aria-hidden="true"
+                className={`pointer-events-none absolute bottom-px right-0 top-0 w-12 bg-gradient-to-l from-kbbg to-transparent transition-opacity ${masALaDerecha ? "opacity-100" : "opacity-0"}`}
+              />
+            </div>
 
             <div className="min-w-0 lg:mt-6">
               {pestanaActiva === "datos" && (

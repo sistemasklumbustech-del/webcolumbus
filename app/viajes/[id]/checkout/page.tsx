@@ -5,14 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { crearCompra, cotizarCompra, listarMisCreditos, obtenerMapaAsientos, iniciarPagoManual, subirComprobantePago, listarMetodosPagoPorViaje, obtenerInfoPasarela, type InfoPasarela, type ResultadoCompra, type Cotizacion, type MiCredito, type MapaAsientos, type MetodoPagoDisponible, type TipoMetodoPago, type PasajeroCompraInput, type DatosFacturacionInput } from "@/lib/api";
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
-import { CodigoQr } from "@/components/CodigoQr";
-import { AccesoAnden, useCodigosAnden } from "@/components/AccesoAnden";
+import { useCodigosAnden } from "@/components/AccesoAnden";
 import { CampoSexoAsientoMujeres, type SexoPasajero } from "@/components/CampoSexoAsientoMujeres";
 import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
 import { leerResumenViaje } from "@/lib/resumen-viaje";
-import { LogoKlumbus } from "@/components/LogoKlumbus";
 import { BoletoAcciones } from "@/components/BoletoAcciones";
-import { fechaBoleto, numeroBoleto } from "@/lib/boleto";
+import { vistaDeEmitido } from "@/lib/boleto";
+import { BoletoTarjeta } from "@/components/BoletoTarjeta";
 import { useMarcarBoletoEmitido } from "@/lib/paso-compra";
 
 /**
@@ -477,7 +476,7 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
     const gruposParaAcciones = gruposConfirmados.map((g, i) => ({
       clave: g.clave,
       tramo: esIdaYVueltaConfirmada ? (i === 0 ? ("IDA" as const) : ("VUELTA" as const)) : null,
-      boletos: g.boletos,
+      boletos: g.boletos.map(vistaDeEmitido),
     }));
     const totalTarifa = resultado.boletos.reduce((suma, b) => suma + b.precioPagado, 0);
     const totalTasa = resultado.boletos.reduce((suma, b) => suma + b.tasaTerminal, 0);
@@ -508,10 +507,6 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
             temprano es la IDA y el otro la VUELTA. */}
         <div className="flex w-full flex-col items-center gap-6">
           {gruposConfirmados.map((grupo, indiceGrupo) => {
-            const viaje = grupo.boletos[0];
-            const salida = new Date(viaje.horaSalidaProgramada);
-            const diaCorto = fechaBoleto(viaje.horaSalidaProgramada);
-            const horaSalida = salida.toLocaleTimeString("es-EC", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Guayaquil" });
             return (
               <section key={grupo.clave} className="flex w-full flex-col items-center gap-4 lg:max-w-[980px]">
                 {esIdaYVueltaConfirmada && (
@@ -519,102 +514,9 @@ function FormularioCheckout({ viajeId }: { viajeId: string }) {
                     {indiceGrupo === 0 ? "IDA" : "VUELTA"}
                   </span>
                 )}
-                {grupo.boletos.map((boleto) => {
-                  const infoAnden = codigosAnden[boleto.id];
-                  const textoCodigo = boleto.codigoQr.length <= 20 ? boleto.codigoQr : null;
-                  return (
-                    <article key={boleto.codigoQr} className="kb-ticket w-full max-w-[520px] lg:max-w-none lg:grid lg:grid-cols-[1fr_1fr_250px]">
-                      <div className="kb-ticket__top flex flex-col gap-4 lg:justify-between lg:gap-5 lg:p-[26px]">
-                        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
-                          <LogoKlumbus className="h-[22px] shrink-0 lg:h-6" />
-                          <span className="min-w-0 text-right text-xs font-semibold text-kbyellow">
-                            {/* El disco de la unidad ahora va rotulado en los datos del boleto. */}
-                            {viaje.cooperativaNombre}
-                          </span>
-                        </div>
-                        <div className="kb-timeline">
-                          <div>
-                            <div className="text-[26px] font-semibold tabular-nums lg:text-[30px]">{horaSalida}</div>
-                            <div className="kb-timeline__city !text-ondark">{viaje.rutaOrigenCiudad}</div>
-                          </div>
-                          <div className="flex flex-col items-center gap-[3px] text-[11px] text-ondark lg:text-xs">
-                            <span className="whitespace-nowrap">{diaCorto}</span>
-                            <div className="kb-timeline__line w-full [&::after]:!border-[#4A4F5C] [&::before]:!border-[#4A4F5C]">
-                              <span className="kb-timeline__bus shrink-0 !bg-kbyellow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B0D12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                  <rect x="4" y="3" width="16" height="15" rx="3" />
-                                  <path d="M4 11h16M8 21v-3M16 21v-3" />
-                                  <circle cx="8" cy="14.5" r=".6" />
-                                  <circle cx="16" cy="14.5" r=".6" />
-                                </svg>
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-semibold leading-tight lg:text-[22px]">{viaje.rutaDestinoCiudad}</div>
-                            <div className="kb-timeline__city !text-ondark">Destino</div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <dl className="grid grid-cols-2 gap-x-3.5 gap-y-3.5 p-5 lg:content-center lg:gap-y-4 lg:p-[26px]">
-                        <div className="col-span-2 min-w-0">
-                          <dt className="text-[11px] text-muted-3">Pasajero</dt>
-                          <dd className="text-sm font-semibold lg:text-[15px]">{boleto.compradorNombre}</dd>
-                        </div>
-                        <div className="min-w-0">
-                          <dt className="text-[11px] text-muted-3">Documento</dt>
-                          <dd className="break-words text-sm font-semibold tabular-nums lg:text-[15px]">{boleto.compradorDocumento ?? "—"}</dd>
-                        </div>
-                        <div className="min-w-0">
-                          <dt className="text-[11px] text-muted-3">Asiento</dt>
-                          <dd className="text-sm font-semibold lg:text-[15px]">
-                            {boleto.numeroAsiento}
-                            {boleto.esVip && <span className="kb-tag kb-tag--yellow ml-1.5 align-middle">VIP</span>}
-                          </dd>
-                        </div>
-                        {viaje.unidadIdentificador && (
-                          <div className="min-w-0">
-                            <dt className="text-[11px] text-muted-3">Disco</dt>
-                            <dd className="break-words text-sm font-semibold lg:text-[15px]">{viaje.unidadIdentificador}</dd>
-                          </div>
-                        )}
-                        {viaje.unidadPlaca && (
-                          <div className="min-w-0">
-                            <dt className="text-[11px] text-muted-3">Placa</dt>
-                            <dd className="break-words text-sm font-semibold uppercase lg:text-[15px]">{viaje.unidadPlaca}</dd>
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <dt className="text-[11px] text-muted-3">Tarifa</dt>
-                          <dd className="text-sm font-semibold tabular-nums lg:text-[15px]">${boleto.precioPagado.toFixed(2)}</dd>
-                        </div>
-                        {boleto.tasaTerminal > 0 && (
-                          <div className="min-w-0">
-                            <dt className="text-[11px] text-muted-3">Tasa de terminal</dt>
-                            <dd className="text-sm font-semibold tabular-nums lg:text-[15px]">${boleto.tasaTerminal.toFixed(2)}</dd>
-                          </div>
-                        )}
-                      </dl>
-
-                      <div className="kb-ticket__cut lg:hidden" />
-                      <div className="relative flex flex-col items-center gap-2 px-5 pb-5 pt-1 lg:justify-center lg:gap-2.5 lg:border-l-2 lg:border-dashed lg:border-line-2 lg:p-[22px]">
-                        <span className="absolute -left-[13px] -top-3 hidden h-6 w-6 rounded-full bg-kbbg lg:block" aria-hidden="true" />
-                        <span className="absolute -bottom-3 -left-[13px] hidden h-6 w-6 rounded-full bg-kbbg lg:block" aria-hidden="true" />
-                        <CodigoQr valor={boleto.codigoQr} />
-                        <span className="text-[13px] font-semibold tracking-[.14em] tabular-nums">
-                          <span className="sr-only">Boleto número </span>
-                          {numeroBoleto(boleto.id)}
-                        </span>
-                        {textoCodigo && <span className="text-xs tracking-[.12em] text-muted-2">{textoCodigo}</span>}
-                        <span className="text-xs text-muted-2">
-                          {infoAnden && infoAnden.estadoTasa !== "no_aplica" ? "Tu boleto · se valida al abordar" : "Muéstralo al subir"}
-                        </span>
-                        {infoAnden && <AccesoAnden estado={infoAnden.estadoTasa} codigo={infoAnden.codigoTasa} />}
-                      </div>
-                    </article>
-                  );
-                })}
+                {grupo.boletos.map((boleto) => (
+                  <BoletoTarjeta key={boleto.codigoQr} boleto={vistaDeEmitido(boleto)} anden={codigosAnden[boleto.id]} />
+                ))}
               </section>
             );
           })}

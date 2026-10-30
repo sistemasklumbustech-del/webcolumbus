@@ -31,7 +31,7 @@ export function SolicitarFactura({ boletoId }: { boletoId: string }) {
     return (
       <button
         onClick={() => setAbierto(true)}
-        className="mt-2 text-xs font-semibold text-brand underline decoration-dotted underline-offset-2 hover:text-brand-dark"
+        className="min-h-11 text-left text-sm font-semibold text-ink underline decoration-line-2 underline-offset-4 hover:decoration-ink"
       >
         Solicitar factura
       </button>
