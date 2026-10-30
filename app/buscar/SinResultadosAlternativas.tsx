@@ -3,12 +3,14 @@ import type { AlternativasBusqueda } from "@/lib/api";
 
 const MAX_HORAS_VISIBLES = 6;
 
+/** "Vie 6 nov" (formato aprobado, 30-oct-2026): día con mayúscula, mes en minúscula, sin coma ni puntos. */
 export function formatearFechaCorta(fecha: string): string {
-  return new Date(`${fecha}T12:00:00`).toLocaleDateString("es-EC", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
+  const partes = new Intl.DateTimeFormat("es-EC", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).formatToParts(
+    new Date(`${fecha}T12:00:00Z`),
+  );
+  const parte = (tipo: Intl.DateTimeFormatPartTypes) => (partes.find((p) => p.type === tipo)?.value ?? "").replace(/\./g, "").trim();
+  const dia = parte("weekday");
+  return `${dia.charAt(0).toUpperCase()}${dia.slice(1)} ${parte("day")} ${parte("month").toLowerCase()}`;
 }
 
 function formatearListaCooperativas(nombres: string[]): string {
@@ -27,7 +29,7 @@ export function ChipsHoras({ horas }: { horas?: string[] }) {
   return (
     <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Horas de salida">
       {visibles.map((h) => (
-        <span key={h} className="rounded-md bg-kbbg px-2 py-0.5 text-xs font-semibold text-brand-dark">
+        <span key={h} className="rounded-md bg-kbbg px-2 py-0.5 text-xs font-semibold text-ink">
           {h}
         </span>
       ))}
@@ -84,7 +86,7 @@ export function SinResultadosAlternativas({
                 href={hrefFecha(f.fecha)}
                 className="rounded-ctrl border border-line bg-white p-3 transition hover:bg-kbbg"
               >
-                <p className="font-semibold capitalize text-brand-dark">{formatearFechaCorta(f.fecha)}</p>
+                <p className="font-semibold text-ink">{formatearFechaCorta(f.fecha)}</p>
                 <p className="text-sm text-muted-2">
                   {textoViajes(f.cantidadViajes)} · desde ${f.precioDesde.toFixed(2)}
                 </p>
