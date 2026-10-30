@@ -51,12 +51,10 @@ const RAZONES: { titulo: string; texto: string; icono: React.ReactNode }[] = [
 
 type Campo = "empresa" | "correo";
 
-/** Mensaje claro en español para lo que responda la API (sin cambiarla). */
-function mensajeDeError(err: unknown): string {
+/** ¿El error de la API habla del correo? (la API responde en inglés; no se cambia). */
+function errorDeCorreo(err: unknown): boolean {
   const texto = err instanceof Error ? err.message.toLowerCase() : "";
-  if (texto.includes("correo") || texto.includes("email")) return "Revisa el correo: parece que falta algo.";
-  if (texto.includes("empresa")) return "Revisa el nombre de tu empresa: debe tener al menos 2 letras.";
-  return "No pudimos enviar tu solicitud. Inténtalo de nuevo en un momento.";
+  return texto.includes("correo") || texto.includes("email");
 }
 
 function Icono({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -121,7 +119,15 @@ export default function AnunciarPage() {
       setEnviado(true);
       window.scrollTo({ top: 0 });
     } catch (err) {
-      setError(mensajeDeError(err));
+      if (errorDeCorreo(err)) {
+        // El correo va marcado en rojo con el mensaje debajo, y la pantalla sube hasta él.
+        setErrores({ correo: "Revisa el correo: parece que falta algo." });
+        const campo = document.getElementById("lead-correo");
+        campo?.scrollIntoView({ behavior: "smooth", block: "center" });
+        campo?.focus({ preventScroll: true });
+      } else {
+        setError("No pudimos enviar tu solicitud. Revisa los datos e inténtalo de nuevo.");
+      }
     } finally {
       setEnviando(false);
     }
@@ -183,10 +189,13 @@ export default function AnunciarPage() {
                 id="lead-empresa"
                 autoComplete="organization"
                 value={nombreEmpresa}
-                onChange={(e) => setNombreEmpresa(e.target.value)}
+                onChange={(e) => {
+                  setNombreEmpresa(e.target.value);
+                  if (errores.empresa) setErrores((x) => ({ ...x, empresa: undefined }));
+                }}
                 aria-invalid={errores.empresa ? true : undefined}
                 aria-describedby={errores.empresa ? "lead-empresa-error" : undefined}
-                className="kb-input"
+                className={`kb-input ${errores.empresa ? "!border-kberror !bg-kberror-bg" : ""}`}
               />
               {errores.empresa && (
                 <span id="lead-empresa-error" className={claseError}>
@@ -216,10 +225,13 @@ export default function AnunciarPage() {
                 autoComplete="email"
                 inputMode="email"
                 value={contactoCorreo}
-                onChange={(e) => setContactoCorreo(e.target.value)}
+                onChange={(e) => {
+                  setContactoCorreo(e.target.value);
+                  if (errores.correo) setErrores((x) => ({ ...x, correo: undefined }));
+                }}
                 aria-invalid={errores.correo ? true : undefined}
                 aria-describedby={errores.correo ? "lead-correo-error" : undefined}
-                className="kb-input"
+                className={`kb-input ${errores.correo ? "!border-kberror !bg-kberror-bg" : ""}`}
               />
               {errores.correo && (
                 <span id="lead-correo-error" className={claseError}>
