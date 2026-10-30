@@ -3,12 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Bienvenida (diseño final, oct-2026): solo en celular y solo la primera vez. Miles de
- * partículas forman el logo, aparece el lema y a los 4 segundos entra sola al Inicio. Se
- * guarda en el navegador que ya se vio para no repetirla. Se puede saltar tocando la pantalla.
+ * Bienvenida: miles de partículas forman el logo, aparece el lema y a los 4 segundos entra sola
+ * al Inicio. Se puede saltar tocando la pantalla, con "Saltar" o con Esc.
  * Con "reducir movimiento" activado se muestra el logo ya formado, sin animación.
+ *
+ * Cambio pedido por Adrián (30-oct-2026): antes salía solo en celular y solo la primera vez en ese
+ * navegador. Ahora sale en celular y en PC CADA VEZ que alguien entra a la web (una vez por visita:
+ * si recarga o vuelve al Inicio dentro de la misma pestaña, no se repite). Mejoras: brillo que
+ * recorre el logo cuando termina de formarse y las partículas salen disparadas al entrar.
  */
-const CLAVE_VISTA = "klumbus-bienvenida-vista";
+const CLAVE_VISTA = "klumbus-bienvenida-sesion";
 const DURACION_MS = 4000;
 const LOGO = "/img/klumbus-logo-fondo-oscuro.svg";
 
@@ -26,7 +30,7 @@ interface Particula {
 
 function yaVista(): boolean {
   try {
-    return window.localStorage.getItem(CLAVE_VISTA) === "1";
+    return window.sessionStorage.getItem(CLAVE_VISTA) === "1";
   } catch {
     return false;
   }
@@ -34,31 +38,46 @@ function yaVista(): boolean {
 
 function marcarVista() {
   try {
-    window.localStorage.setItem(CLAVE_VISTA, "1");
+    window.sessionStorage.setItem(CLAVE_VISTA, "1");
   } catch {
     /* sin almacenamiento: simplemente se mostrará de nuevo */
   }
 }
 
+/**
+ * Cubierta negra que llega ya en el HTML: evita que el Inicio se vea un instante antes de la
+ * bienvenida. Si en esta visita ya se vio, un script la oculta antes de pintar. Si algo fallara con
+ * JavaScript, se quita sola a los 6 segundos (animación CSS), así nunca deja la página tapada.
+ */
+const SCRIPT_CUBIERTA = `try{if(sessionStorage.getItem("${CLAVE_VISTA}")==="1"){var e=document.createElement("style");e.textContent="#kb-bienvenida-cubierta{display:none!important}";document.head.appendChild(e)}}catch(_){}`;
+
 export function BienvenidaMovil() {
-  const [visible, setVisible] = useState(false);
+  // "pendiente" mientras React decide (se ve la cubierta negra), luego "visible" u "oculto".
+  const [estado, setEstado] = useState<"pendiente" | "visible" | "oculto">("pendiente");
+  const visible = estado === "visible";
   const [saliendo, setSaliendo] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const lemaRef = useRef<HTMLDivElement>(null);
   const barraRef = useRef<HTMLElement>(null);
+  // Al entrar, las partículas salen disparadas hacia afuera mientras la pantalla se desvanece.
+  const explotarRef = useRef(false);
 
-  // Decide si se muestra: celular (menos de 768 px) y primera visita.
+  // Se muestra una vez por visita (celular y PC).
   useEffect(() => {
-    if (window.matchMedia("(min-width: 768px)").matches) return;
-    if (yaVista()) return;
-    setVisible(true);
+    if (yaVista()) {
+      setEstado("oculto");
+      return;
+    }
+    marcarVista();
+    setEstado("visible");
   }, []);
 
   function entrar() {
-    marcarVista();
+    if (explotarRef.current) return;
+    explotarRef.current = true;
     setSaliendo(true);
-    window.setTimeout(() => setVisible(false), 450);
+    window.setTimeout(() => setEstado("oculto"), 600);
   }
 
   // Entrada automática a los 4 segundos.
@@ -67,8 +86,13 @@ export function BienvenidaMovil() {
     const temporizador = window.setTimeout(entrar, DURACION_MS);
     const bloqueoAnterior = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const alTeclear = (e: KeyboardEvent) => {
+      if (e.key === "Escape") entrar();
+    };
+    window.addEventListener("keydown", alTeclear);
     return () => {
       window.clearTimeout(temporizador);
+      window.removeEventListener("keydown", alTeclear);
       document.body.style.overflow = bloqueoAnterior;
     };
   }, [visible]);
@@ -96,6 +120,10 @@ export function BienvenidaMovil() {
     let mx = -9999;
     let my = -9999;
     let cancelado = false;
+    // Caja del logo (para el brillo que lo recorre).
+    let logoX = 0;
+    let logoY = 0;
+    let logoW = 0;
 
     const img = new Image();
     img.src = LOGO;
@@ -107,10 +135,14 @@ export function BienvenidaMovil() {
       if (!W || !H) return;
       cv!.width = W;
       cv!.height = H;
-      const lw = Math.round(W * 0.84);
+      // En PC el logo no pasa de ~760 px de ancho (antes ocupaba el 84 % de la pantalla).
+      const lw = Math.round(Math.min(W * 0.84, 760 * dpr));
       const lh = Math.round((lw * 570) / 2357);
       const ox = Math.round((W - lw) / 2);
       const oy = Math.round(H * 0.4 - lh / 2);
+      logoX = ox;
+      logoY = oy;
+      logoW = lw;
       const off = document.createElement("canvas");
       off.width = W;
       off.height = H;
@@ -188,6 +220,7 @@ export function BienvenidaMovil() {
       }
       ctx.globalAlpha = 1;
       const fase = t < 2300 ? "in" : "hold";
+      const explotar = explotarRef.current;
       lema!.classList.toggle("is-on", t > 1600);
       barra!.style.width = `${Math.min(100, (t / DURACION_MS) * 100)}%`;
       // La física avanza por tiempo, no por cuadro: en equipos lentos (pocos cuadros por segundo) el logo se forma igual de rápido.
@@ -195,6 +228,14 @@ export function BienvenidaMovil() {
       ultimoCuadro = ahora;
       for (let paso = 0; paso < pasos; paso++) {
         for (const p of pts) {
+          if (explotar) {
+            // Salida: cada partícula se aleja del centro, más rápido cuanto más lejos está.
+            p.vx = p.vx * 0.96 + (p.x - W / 2) * 0.012 + (Math.random() - 0.5) * dpr;
+            p.vy = p.vy * 0.96 + (p.y - H * 0.4) * 0.012 + (Math.random() - 0.5) * dpr;
+            p.x += p.vx;
+            p.y += p.vy;
+            continue;
+          }
           const k = fase === "in" ? Math.max(0, Math.min(1, (t / 2300 - p.d) / 0.5)) : 1;
           const sp = 0.04 + 0.1 * k;
           p.vx = (p.vx + (p.tx - p.x) * sp) * 0.72;
@@ -217,9 +258,18 @@ export function BienvenidaMovil() {
           p.y += p.vy;
         }
       }
+      // Brillo: una franja de luz cruza el logo en diagonal justo después de formarse.
+      const brillo = !reducir && !explotar && t > 2250 && t < 3250;
+      const frente = logoX - 120 * dpr + ((t - 2250) / 1000) * (logoW + 240 * dpr);
+      const ancho = 34 * dpr;
       for (const p of pts) {
-        ctx.fillStyle = p.c;
-        ctx.fillRect(p.x, p.y, p.s, p.s);
+        if (brillo && Math.abs(p.tx + (p.ty - logoY) * 0.45 - frente) < ancho) {
+          ctx.fillStyle = "#FFF8D6";
+          ctx.fillRect(p.x - 0.4 * dpr, p.y - 0.4 * dpr, p.s + 0.8 * dpr, p.s + 0.8 * dpr);
+        } else {
+          ctx.fillStyle = p.c;
+          ctx.fillRect(p.x, p.y, p.s, p.s);
+        }
       }
     }
 
@@ -258,7 +308,18 @@ export function BienvenidaMovil() {
     };
   }, [visible]);
 
-  if (!visible) return null;
+  if (estado === "oculto") return null;
+  if (estado === "pendiente") {
+    return (
+      <div
+        id="kb-bienvenida-cubierta"
+        aria-hidden="true"
+        className="fixed inset-0 z-[200] bg-[radial-gradient(120%_70%_at_50%_42%,#171A22_0%,#0B0D12_60%)] [animation:kb-cubierta-fuera_.3s_6s_forwards]"
+      >
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_CUBIERTA }} />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -266,19 +327,29 @@ export function BienvenidaMovil() {
       role="dialog"
       aria-label="Bienvenida a Klumbus"
       onClick={entrar}
-      className={`fixed inset-0 z-[200] overflow-hidden bg-[radial-gradient(120%_70%_at_50%_42%,#171A22_0%,#0B0D12_60%)] text-white transition-opacity duration-[450ms] md:hidden ${
+      className={`fixed inset-0 z-[200] overflow-hidden bg-[radial-gradient(120%_70%_at_50%_42%,#171A22_0%,#0B0D12_60%)] text-white transition-opacity duration-[600ms] ${
         saliendo ? "opacity-0" : "opacity-100"
       }`}
     >
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          entrar();
+        }}
+        className="absolute right-4 top-4 z-[3] inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-ondark transition hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kbyellow md:right-8 md:top-6"
+      >
+        Saltar
+      </button>
       <canvas ref={canvasRef} aria-label="Logo de Klumbus formado por partículas" role="img" className="absolute inset-0 block h-full w-full" />
       <div
         ref={lemaRef}
         className="absolute inset-x-6 top-[56%] z-[2] flex translate-y-3 flex-col gap-2 text-center opacity-0 transition-[opacity,transform] duration-[900ms] ease-out [&.is-on]:translate-y-0 [&.is-on]:opacity-100"
       >
-        <b className="text-2xl font-semibold leading-tight tracking-[-0.01em]">
+        <b className="text-2xl font-semibold leading-tight tracking-[-0.01em] md:text-4xl">
           Todo Ecuador, <span className="text-kbyellow">a un boleto</span> de distancia.
         </b>
-        <span className="text-sm text-ondark">Sin filas. Sin papeleo.</span>
+        <span className="text-sm text-ondark md:text-base">Sin filas. Sin papeleo.</span>
       </div>
       <div className="absolute inset-x-6 bottom-11 z-[2] flex flex-col items-center gap-3">
         <div className="h-1 w-[120px] overflow-hidden rounded-full bg-ink-3">
