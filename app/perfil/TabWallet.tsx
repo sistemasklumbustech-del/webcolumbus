@@ -49,49 +49,58 @@ export function TabWallet({ perfil }: { perfil: MiPerfil }) {
   return (
     // PC: la tarjeta a la izquierda y el historial a la derecha; celular: uno debajo del otro.
     <div className="lg:grid lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:items-start lg:gap-8">
-      {/* Tarjeta con forma y proporción de tarjeta real (85,6 × 54 mm), pedido de Adrián (30-oct-2026):
-          logo, saldo grande, titular y código, sobre negro con un brillo sutil. */}
+      {/* Tarjeta tipo metal negro con franja amarilla (modelo elegido por Adrián, hecho con ChatGPT, 30-oct-2026).
+          Proporción de tarjeta real (85,6 × 54 mm). Sin chip ni número: es el saldo de la app, no una tarjeta de pago. */}
       <div className="w-full max-w-[420px]">
         <div
-          className="relative aspect-[1.586] w-full overflow-hidden rounded-[22px] p-5 text-white shadow-[0_18px_40px_-18px_rgba(11,13,18,.55)] sm:p-6"
+          className="relative aspect-[1.586] w-full overflow-hidden rounded-[22px] p-5 text-white shadow-[0_22px_44px_-20px_rgba(11,13,18,.7)] sm:p-6"
           style={{
             background:
-              "radial-gradient(120% 90% at 100% 0%, rgba(253,213,20,.22) 0%, rgba(253,213,20,0) 55%), linear-gradient(135deg, #1B1F29 0%, #0B0D12 60%, #05070B 100%)",
+              "repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0px, rgba(255,255,255,.035) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px), linear-gradient(160deg, #23262E 0%, #111318 45%, #07080B 100%)",
           }}
         >
-          {/* Líneas finas de fondo y borde de luz: dan el acabado de tarjeta física. */}
-          <svg aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full opacity-[.07]" viewBox="0 0 400 252" preserveAspectRatio="none">
-            {Array.from({ length: 9 }, (_, n) => (
-              <path key={n} d={`M${-60 + n * 40} 252 C ${60 + n * 40} 150, ${120 + n * 40} 120, ${300 + n * 40} 0`} stroke="#fff" strokeWidth="1" fill="none" />
-            ))}
+          {/* Franja diagonal amarilla con brillo, y reflejo suave del metal. */}
+          <svg aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 400 252" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="kb-franja" x1="1" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#FDD514" stopOpacity=".95" />
+                <stop offset=".55" stopColor="#FDD514" stopOpacity=".35" />
+                <stop offset="1" stopColor="#FDD514" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="kb-linea" x1="1" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#FFE866" />
+                <stop offset="1" stopColor="#FDD514" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="kb-reflejo" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#fff" stopOpacity=".10" />
+                <stop offset=".35" stopColor="#fff" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <rect width="400" height="252" fill="url(#kb-reflejo)" />
+            <polygon points="318,0 400,0 400,150 250,252 205,252" fill="url(#kb-franja)" opacity=".85" />
+            <polygon points="290,0 312,0 196,252 176,252" fill="#000" opacity=".35" />
+            <line x1="402" y1="18" x2="236" y2="254" stroke="url(#kb-linea)" strokeWidth="1.6" />
           </svg>
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/10" />
 
           <div className="relative flex h-full flex-col">
-            <div className="flex items-start justify-between gap-3">
-              <LogoKlumbus className="h-[22px] sm:h-6" />
-              {/* Chip decorativo */}
-              <span aria-hidden="true" className="grid h-8 w-11 grid-cols-3 gap-px overflow-hidden rounded-md bg-gradient-to-br from-[#F6E27A] via-[#E5C44A] to-[#B8962A] p-[3px] opacity-90">
-                {Array.from({ length: 6 }, (_, n) => (
-                  <span key={n} className="rounded-[2px] bg-black/15" />
-                ))}
-              </span>
-            </div>
+            <LogoKlumbus className="h-[22px] self-start sm:h-[26px]" />
+            <span aria-hidden="true" className="mt-3 block h-px w-24 bg-gradient-to-r from-kbyellow to-transparent" />
 
             <div className="mt-auto">
-              <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-ondark">Saldo disponible</p>
-              <p className="mt-1 text-[38px] font-bold leading-none tabular-nums text-kbyellow sm:text-[44px]">
+              <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-ondark">Saldo disponible</p>
+              <p className="mt-1 text-[40px] font-bold leading-none tabular-nums text-kbyellow [text-shadow:0_2px_14px_rgba(253,213,20,.25)] sm:text-[46px]">
                 {saldo === null ? "—" : `$${saldo.toFixed(2)}`}
               </p>
             </div>
 
             <div className="mt-4 flex items-end justify-between gap-3 sm:mt-5">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[.14em] text-white/55">Titular</p>
+                <p className="text-[10px] uppercase tracking-[.16em] text-white/55">Titular</p>
                 <p className="truncate text-[13px] font-semibold uppercase tracking-[.08em] sm:text-sm">{perfil.nombreCompleto}</p>
               </div>
-              <div className="shrink-0 text-right">
-                <p className="text-[10px] uppercase tracking-[.14em] text-white/55">Código</p>
+              <div className="shrink-0 text-right [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">
+                <p className="text-[10px] uppercase tracking-[.16em] text-white/70">Código</p>
                 <p className="text-[13px] font-semibold tracking-[.12em] tabular-nums sm:text-sm">{perfil.codigoPasajero}</p>
               </div>
             </div>
