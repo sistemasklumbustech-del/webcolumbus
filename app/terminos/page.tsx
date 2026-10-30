@@ -1,4 +1,6 @@
-import { obtenerTerminosVigente } from "@/lib/api";
+import { obtenerTerminosVigente, type VersionTerminos } from "@/lib/api";
+import { BotonReintentar } from "@/components/BotonReintentar";
+import { DocumentoLegal, DocumentoLegalError, idDeSeccion, type SeccionLegal } from "@/components/DocumentoLegal";
 
 export const metadata = {
   title: "Términos de Servicio | Klumbus",
@@ -15,30 +17,28 @@ export const metadata = {
  * de administración que todavía no existe (RF-024 solo cubre
  * versionado y aceptación, no un editor de contenido).
  */
-function renderizarContenido(contenido: string) {
+function seccionesDe(contenido: string): SeccionLegal[] {
   const bloques = contenido.trim().split(/\n\n+/);
   return bloques.map((bloque, i) => {
     const [titulo, ...resto] = bloque.split("\n").filter(Boolean);
     const esLista = resto.length > 0 && resto.every((l) => l.trim().startsWith("- "));
-    return (
-      <div key={i}>
-        <h2>{titulo}</h2>
-        {esLista ? (
-          <ul>
-            {resto.map((l, j) => (
-              <li key={j}>{l.replace(/^-\s*/, "")}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>{resto.join(" ")}</p>
-        )}
-      </div>
-    );
+    return {
+      id: idDeSeccion(titulo, i),
+      titulo,
+      bloques: esLista
+        ? [{ tipo: "lista", items: resto.map((l) => l.replace(/^-\s*/, "")) }]
+        : [{ tipo: "parrafo", texto: resto.join(" ") }],
+    };
   });
 }
 
 export default async function TerminosPage() {
-  const version = await obtenerTerminosVigente();
+  let version: VersionTerminos;
+  try {
+    version = await obtenerTerminosVigente();
+  } catch {
+    return <DocumentoLegalError titulo="Términos de Servicio" accion={<BotonReintentar />} />;
+  }
   const fechaVigencia = new Date(version.vigenteDesde).toLocaleDateString("es-EC", {
     timeZone: "America/Guayaquil",
     month: "long",
@@ -46,20 +46,16 @@ export default async function TerminosPage() {
   });
 
   return (
-    <main className="kb-on-white mx-auto max-w-2xl flex-1 px-4 py-12">
-      <h1 className="text-2xl font-bold text-brand-dark">Términos de Servicio</h1>
-      <p className="mt-1 text-sm text-muted-2">
-        Versión {version.version} — vigente desde {fechaVigencia}
-      </p>
-
-      <div className="prose prose-sm mt-8 max-w-none text-ink [&>div>h2]:mt-8 [&>div>h2]:[&>div>h2]:text-lg [&>div>h2]:font-bold [&>div>h2]:text-brand-dark [&>div>p]:mt-3 [&>div>p]:leading-relaxed [&>div>ul]:mt-3 [&>div>ul]:list-disc [&>div>ul]:pl-5">
-        {renderizarContenido(version.contenido)}
-      </div>
-
-      <p className="mt-10 rounded-lg bg-kbbg px-4 py-3 text-xs text-muted-2">
-        Este documento es un borrador redactado de buena fe según cómo opera la plataforma hoy.
-        No sustituye una revisión legal formal.
-      </p>
-    </main>
+    <DocumentoLegal
+      titulo="Términos de Servicio"
+      subtitulo={`Versión ${version.version} · vigente desde ${fechaVigencia}`}
+      secciones={seccionesDe(version.contenido)}
+      pie={
+        <>
+          Este documento es un borrador redactado de buena fe según cómo opera la plataforma hoy.
+          No sustituye una revisión legal formal.
+        </>
+      }
+    />
   );
 }
