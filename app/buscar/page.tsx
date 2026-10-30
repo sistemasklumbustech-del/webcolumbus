@@ -254,6 +254,8 @@ export default async function ResultadosBusquedaPage({
       rPrecio: String(r.precioBase),
     });
     if (r.horaLlegadaEstimada) p.set("rLlegada", r.horaLlegadaEstimada);
+    // Recargo VIP (lo manda la API en la búsqueda): para mostrar el precio real del asiento VIP desde Asientos.
+    if (Number(r.recargoVip) > 0) p.set("rVip", String(r.recargoVip));
     return p;
   }
 

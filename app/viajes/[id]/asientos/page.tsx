@@ -12,6 +12,7 @@ import {
 import { tokenValido, obtenerOCrearSesionInvitado } from "@/lib/auth";
 import { DibujoSilla, MapaAsientosBus, ubicacionDeAsiento } from "@/components/MapaAsientosBus";
 import { esAsientoSoloMujeres } from "@/lib/asientos-mujeres";
+import { esAsientoVip, precioAsiento } from "@/lib/precio-asiento";
 import { leerResumenViaje, parametrosDeResumen, parametrosDeResumenComoIda } from "@/lib/resumen-viaje";
 
 /**
@@ -218,8 +219,17 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
       ubicacion: u ? `${u.posicion}${pisos.length > 1 ? ` · piso ${u.piso}` : ""}` : "",
       detalle: [u?.posicion, fila ? `Fila ${fila}` : null, u && pisos.length > 1 ? `Piso ${u.piso}` : null].filter(Boolean).join(" · "),
       mujeres: esAsientoSoloMujeres(mapa, n),
+      vip: esAsientoVip(mapa, n),
     };
   });
+  // Precio que se muestra (decisión del director, 30-oct-2026): base + recargo VIP del asiento, con los
+  // valores de la API que llegan desde Resultados. Lo que se cobra lo calcula la API al cotizar.
+  const preciosElegidos = resumenSeleccion.map((r) => precioAsiento(rPrecio, resumen.recargoVip, r.vip));
+  const totalElegido =
+    preciosElegidos.length > 0 && preciosElegidos.every((x) => x !== null)
+      ? (preciosElegidos as number[]).reduce((a, b) => a + b, 0)
+      : null;
+  const precioMostrado = totalElegido ?? rPrecio;
   const hayMujeres = seleccionados.some((n) => esAsientoSoloMujeres(mapa, n));
 
   return (
@@ -341,6 +351,7 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
                       <b className="block text-lg font-semibold leading-tight">Asiento {r.numero}</b>
                       <span className="block text-xs text-ondark">
                         {r.detalle}
+                        {r.vip ? " · VIP" : ""}
                         {r.mujeres ? " · Solo mujeres" : ""}
                       </span>
                     </span>
@@ -358,10 +369,15 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
                 ))}
               </ul>
             )}
-            {rPrecio !== null && (
+            {precioMostrado !== null && (
               <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-ondark">Tarifa{seleccionados.length > 1 ? " por asiento" : ""}</span>
-                <b className="text-[26px] font-bold tabular-nums">${rPrecio.toFixed(2)}</b>
+                <span className="text-ondark">
+                  Tarifa{seleccionados.length > 1 ? ` · ${seleccionados.length} asientos` : ""}
+                  {resumenSeleccion.some((r) => r.vip) && resumen.recargoVip ? (
+                    <small className="block text-xs">Incluye recargo VIP de ${resumen.recargoVip.toFixed(2)}</small>
+                  ) : null}
+                </span>
+                <b className="text-[26px] font-bold tabular-nums">${precioMostrado.toFixed(2)}</b>
               </div>
             )}
             <button
@@ -398,13 +414,13 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
             {resumenSeleccion.length === 0
               ? "Ningún asiento elegido"
               : resumenSeleccion.length === 1
-                ? `Asiento ${resumenSeleccion[0].numero}${resumenSeleccion[0].ubicacion ? ` · ${resumenSeleccion[0].ubicacion.toLowerCase()}` : ""}`
+                ? `Asiento ${resumenSeleccion[0].numero}${resumenSeleccion[0].vip ? " · VIP" : ""}${resumenSeleccion[0].ubicacion ? ` · ${resumenSeleccion[0].ubicacion.toLowerCase()}` : ""}`
                 : `Asientos ${resumenSeleccion.map((r) => r.numero).join(", ")}`}
           </span>
-          {rPrecio !== null && (
+          {precioMostrado !== null && (
             <b className="text-[22px] font-bold tabular-nums">
-              ${rPrecio.toFixed(2)}
-              {seleccionados.length > 1 && <small className="ml-1 text-xs font-normal text-muted-2">por asiento</small>}
+              ${precioMostrado.toFixed(2)}
+              {seleccionados.length > 1 && <small className="ml-1 text-xs font-normal text-muted-2">{seleccionados.length} asientos</small>}
             </b>
           )}
         </div>
