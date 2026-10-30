@@ -2980,6 +2980,16 @@ export interface MiBoleto {
   /** Código de acceso al andén (20 dígitos) y en qué va. */
   codigoTasa: string | null;
   estadoTasa: EstadoTasaBoleto;
+  // Pedidos a la API (bloque API, solo lectura): los mismos datos que ya lleva el PDF. Mientras no
+  // lleguen, el boleto simplemente no muestra esas filas.
+  numeroAsiento?: string | null;
+  esVip?: boolean;
+  compradorNombre?: string | null;
+  compradorDocumento?: string | null;
+  unidadIdentificador?: string | null;
+  unidadPlaca?: string | null;
+  precioPagado?: number | null;
+  tasaTerminal?: number | null;
 }
 
 /** Filtros y paginación de "Mis boletos" (24-sep-2026). Fechas YYYY-MM-DD sobre la fecha de salida. */
