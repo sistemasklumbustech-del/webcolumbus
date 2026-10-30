@@ -3,6 +3,7 @@
 import { useEffect, useState, use as usePromise } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { PantallaAviso } from "@/components/PantallaAviso";
 import {
   obtenerMapaAsientos,
   bloquearAsiento,
@@ -100,12 +101,11 @@ export default function SeleccionAsientosPage({ params }: { params: Promise<{ id
 
   if (error) {
     return (
-      <main className="mx-auto max-w-2xl flex-1 px-4 py-16 text-center">
-        <p className="kb-alert kb-alert--error justify-center">{error}</p>
-        <Link href="/" className="mt-4 inline-block font-semibold text-ink underline">
-          Volver al inicio
+      <PantallaAviso icono="bus" titulo="No pudimos abrir este viaje" texto={error}>
+        <Link href="/" className="kb-btn kb-btn--primary">
+          Buscar otro viaje
         </Link>
-      </main>
+      </PantallaAviso>
     );
   }
 
