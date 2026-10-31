@@ -2,7 +2,6 @@ import { Hero } from "@/components/Hero";
 import { FOTOS, srcHorizontal, srcVertical } from "@/lib/hero-fotos";
 import { ComoFunciona } from "@/components/ComoFunciona";
 import { RutasDisponibles } from "@/components/RutasDisponibles";
-import { BienvenidaMovil } from "@/components/BienvenidaMovil";
 import { ComparativaTaquilla } from "@/components/ComparativaTaquilla";
 import { AppProximamente } from "@/components/AppProximamente";
 import dynamic from "next/dynamic";
@@ -40,7 +39,6 @@ export default function InicioPage() {
         imageSizes="(min-width: 1280px) 560px, 36vw"
         fetchPriority="high"
       />
-      <BienvenidaMovil />
       <Hero />
 
       <FranjaBannersPortada />

@@ -35,7 +35,7 @@ export function CalendarioFecha({
                   "flex h-8 w-8 items-center justify-center rounded-ctrl text-muted-2 hover:bg-kbbg hover:text-ink disabled:opacity-30",
                 chevron: "fill-current",
                 weekdays: "flex",
-                weekday: "w-9 text-center text-[11px] font-semibold uppercase text-muted-3",
+                weekday: "w-9 text-center text-[11px] font-semibold uppercase text-muted-2",
                 week: "flex",
                 day: "p-0.5",
                 day_button:

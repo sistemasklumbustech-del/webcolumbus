@@ -396,11 +396,3 @@ html {
 .kb-dark .kb-alert--error a {
   color: #fff;
 }
-
-/* Bienvenida: si algo fallara con JavaScript, la cubierta negra inicial se quita sola. */
-@keyframes kb-cubierta-fuera {
-  to {
-    opacity: 0;
-    visibility: hidden;
-  }
-}

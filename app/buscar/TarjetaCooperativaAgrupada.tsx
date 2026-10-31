@@ -134,6 +134,8 @@ export function TarjetaCooperativaAgrupada({
               <img
                 src={activo.cooperativaLogoUrl}
                 alt={activo.cooperativaNombre}
+                width={46}
+                height={46}
                 className="h-10 w-10 shrink-0 rounded-xl object-contain md:h-[46px] md:w-[46px] md:rounded-[14px]"
               />
             ) : (
