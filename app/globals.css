@@ -3,14 +3,12 @@
 /* Rediseño final (oct-2026): Poppins autoalojada (sin Google Fonts: la CSP solo permite
    font-src 'self') y hoja oficial de estilos en la capa "components", para que las clases
    de Tailwind sigan ganándole donde ya se usan. Fuente de verdad: /diseno/klumbus-estilos.css */
-@import "@fontsource/poppins/latin-400.css";
-@import "@fontsource/poppins/latin-500.css";
-@import "@fontsource/poppins/latin-600.css";
-@import "@fontsource/poppins/latin-700.css";
-@import "@fontsource/poppins/latin-ext-400.css";
-@import "@fontsource/poppins/latin-ext-500.css";
-@import "@fontsource/poppins/latin-ext-600.css";
-@import "@fontsource/poppins/latin-ext-700.css";
+/* portada-velocidad (30-oct-2026): hojas con "unicode-range": el navegador baja solo el trozo de
+   letras que la página usa (latino básico); antes bajaba latino y latino extendido siempre. Misma fuente. */
+@import "@fontsource/poppins/400.css";
+@import "@fontsource/poppins/500.css";
+@import "@fontsource/poppins/600.css";
+@import "@fontsource/poppins/700.css";
 @import "../diseno/klumbus-estilos.css" layer(components);
 
 :root {

@@ -39,6 +39,8 @@ const cabecerasSeguridad = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // portada-velocidad (30-oct-2026): las fotos de <Image> salen en AVIF/WebP (mismas fotos, más livianas).
+  images: { formats: ["image/avif", "image/webp"] },
   async headers() {
     return [{ source: "/:path*", headers: cabecerasSeguridad }];
   },
