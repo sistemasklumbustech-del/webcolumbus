@@ -39,8 +39,9 @@ const cabecerasSeguridad = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  // portada-velocidad (30-oct-2026): las fotos de <Image> salen en AVIF/WebP (mismas fotos, más livianas).
-  images: { formats: ["image/avif", "image/webp"] },
+  // navegacion-rapida (30-oct-2026): se quita AVIF del optimizador de <Image>. Convertir a AVIF al vuelo
+  // tardaba 1,7–4 s por foto la primera vez y ocupaba el procesador del servidor (WebP: 0,13–0,27 s).
+  // Las fotos del Hero ya van en AVIF hechas de antemano (public/img/hero), así que no se pierde nada.
   async headers() {
     return [{ source: "/:path*", headers: cabecerasSeguridad }];
   },

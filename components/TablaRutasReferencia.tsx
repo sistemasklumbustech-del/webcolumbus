@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { REFERENCIA, type RegionRuta } from "@/lib/portada-datos";
 
@@ -91,12 +92,12 @@ export function TablaRutasReferencia() {
         ))}
       </ul>
       {filas.length > EN_CELULAR && (
-        <a href="/rutas" className="kb-btn mt-3 flex w-full items-center justify-center gap-2 bg-white text-[15px] font-semibold text-ink shadow-[inset_0_0_0_1.5px_#E9EBF0] md:hidden">
+        <Link href="/rutas" className="kb-btn mt-3 flex w-full items-center justify-center gap-2 bg-white text-[15px] font-semibold text-ink shadow-[inset_0_0_0_1.5px_#E9EBF0] md:hidden">
           Ver todas las rutas ({filas.length})
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 12h14M13 6l6 6-6 6" />
           </svg>
-        </a>
+        </Link>
       )}
     </>
   );

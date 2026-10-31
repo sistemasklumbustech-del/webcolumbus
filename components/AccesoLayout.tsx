@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { LogoKlumbus } from "./LogoKlumbus";
 
@@ -13,9 +12,10 @@ import { LogoKlumbus } from "./LogoKlumbus";
  * Las pestañas son enlaces a /ingresar y /registro (mismas rutas de siempre) y conservan "volverA".
  */
 const FOTO = {
-  src: "/img/acceso-pasajera.jpg",
   alt: "Pasajera mostrando su boleto digital de Klumbus junto al bus",
 };
+const srcFoto = (ext: string) =>
+  [480, 800, 1200].map((w) => `/img/acceso/acceso-pasajera-${w}.${ext} ${w}w`).join(", ");
 
 function Volver() {
   return (
@@ -54,14 +54,20 @@ export function AccesoLayout({
     <main className="flex-1 bg-ink text-white md:grid md:min-h-screen md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
       {/* Foto: franja arriba en celular; a todo lo alto y fija en PC. */}
       <div className="relative h-[260px] overflow-hidden md:sticky md:top-0 md:h-screen">
-        <Image
-          src={FOTO.src}
-          alt={FOTO.alt}
-          fill
-          priority
-          sizes="(min-width: 768px) 55vw, 100vw"
-          className="object-cover object-[30%_42%] md:object-[35%_50%]"
-        />
+        {/* Foto en tamaños hechos de antemano (navegacion-rapida): no espera a que el servidor la convierta. */}
+        <picture>
+          <source type="image/avif" srcSet={srcFoto("avif")} sizes="(min-width: 768px) 55vw, 100vw" />
+          <img
+            src="/img/acceso/acceso-pasajera-800.webp"
+            srcSet={srcFoto("webp")}
+            sizes="(min-width: 768px) 55vw, 100vw"
+            alt={FOTO.alt}
+            width={800}
+            height={1067}
+            fetchPriority="high"
+            className="absolute inset-0 h-full w-full object-cover object-[30%_42%] md:object-[35%_50%]"
+          />
+        </picture>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,13,18,.55)_0%,rgba(11,13,18,0)_30%,rgba(11,13,18,0)_50%,rgba(11,13,18,.92)_100%)]" />
         <Link href="/" className="absolute left-5 top-5 md:left-10 md:top-9" aria-label="Klumbus, ir al inicio">
           <LogoKlumbus className="h-6 md:h-8" />

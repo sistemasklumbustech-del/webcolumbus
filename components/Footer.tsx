@@ -141,25 +141,25 @@ export function Footer() {
           <Columna abierta={abiertas.has("explora")} alAlternar={alternar} id="explora" titulo="Explora">
             <ul className="space-y-2.5 text-[13px] md:text-sm">
               <li><Link href="/#destinos" className="hover:text-white">Destinos</Link></li>
-              <li><a href="/rutas" className="hover:text-white">Rutas y horarios</a></li>
-              <li><a href="/cooperativas" className="hover:text-white">Cooperativas</a></li>
+              <li><Link href="/rutas" className="hover:text-white">Rutas y horarios</Link></li>
+              <li><Link href="/cooperativas" className="hover:text-white">Cooperativas</Link></li>
               <li><Link href="/#como" className="hover:text-white">Cómo funciona</Link></li>
             </ul>
           </Columna>
 
           <Columna abierta={abiertas.has("compania")} alAlternar={alternar} id="compania" titulo="Compañía">
             <ul className="space-y-2.5 text-[13px] md:text-sm">
-              <li><a href="/ayuda" className="hover:text-white">Ayuda</a></li>
-              <li><a href="/anunciar" className="hover:text-white">Anuncia con nosotros</a></li>
-              <li><a href="/ingresar" className="hover:text-white">Iniciar sesión</a></li>
-              <li><a href="/registro" className="hover:text-white">Crear cuenta</a></li>
+              <li><Link href="/ayuda" className="hover:text-white">Ayuda</Link></li>
+              <li><Link href="/anunciar" className="hover:text-white">Anuncia con nosotros</Link></li>
+              <li><Link href="/ingresar" className="hover:text-white">Iniciar sesión</Link></li>
+              <li><Link href="/registro" className="hover:text-white">Crear cuenta</Link></li>
             </ul>
           </Columna>
 
           <Columna abierta={abiertas.has("legal")} alAlternar={alternar} id="legal" titulo="Legal">
             <ul className="space-y-2.5 text-[13px] md:text-sm">
-              <li><a href="/terminos" className="hover:text-white">Términos de Servicio</a></li>
-              <li><a href="/privacidad" className="hover:text-white">Política de Privacidad</a></li>
+              <li><Link href="/terminos" className="hover:text-white">Términos de Servicio</Link></li>
+              <li><Link href="/privacidad" className="hover:text-white">Política de Privacidad</Link></li>
             </ul>
           </Columna>
         </div>

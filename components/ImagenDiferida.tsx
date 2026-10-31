@@ -4,7 +4,7 @@ import Image, { type ImageProps } from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Foto que se pide recién cuando su tarjeta está por entrar en pantalla (a ~600 px).
+ * Foto que se pide recién cuando su tarjeta está por entrar en pantalla (a ~250 px).
  * Para las fotos de Destinos de la portada (portada-velocidad, 30-oct-2026): el "lazy" del navegador
  * las pedía al cargar, compitiendo con la foto principal. Mientras tanto queda el fondo de la tarjeta.
  */
@@ -26,7 +26,7 @@ export function ImagenDiferida(props: ImageProps) {
           observador.disconnect();
         }
       },
-      { rootMargin: "600px" },
+      { rootMargin: "250px" },
     );
     observador.observe(el);
     return () => observador.disconnect();

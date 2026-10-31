@@ -1,9 +1,13 @@
 import { ImagenDiferida } from "./ImagenDiferida";
 import { listarRutasDisponibles, type RutaDisponible } from "@/lib/api";
+
 import { claveCiudad, REFERENCIA, rutasReales } from "@/lib/portada-datos";
 import { IlustracionDestino, type ClaveIlustracion } from "./IlustracionDestino";
 import { PublicidadNativa } from "./PublicidadNativa";
 import { CarruselDestinos } from "./CarruselDestinos";
+
+// Datos de la portada guardados 60 s (decisión del director, 30-oct-2026); el precio real lo calcula la API al pagar.
+const PORTADA = { revalidar: 60 };
 
 /** Celular: 68% del ancho. PC: caben 4 completas y se asoma parte de la quinta (4,3 por pantalla). */
 const ANCHO_TARJETA = "w-[68%] md:w-[calc((100%-3rem)/4.3)]";
@@ -51,7 +55,7 @@ function preciosReales(rutas: RutaDisponible[]): Map<string, number> {
 }
 
 export async function DestinosPopulares() {
-  const rutas = rutasReales(await listarRutasDisponibles());
+  const rutas = rutasReales(await listarRutasDisponibles(PORTADA));
   const modoReferencia = rutas.length === 0;
   const reales = preciosReales(rutas);
 
