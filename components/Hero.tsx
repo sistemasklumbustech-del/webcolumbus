@@ -8,7 +8,7 @@ import { listarTerminalesAliadas } from "@/lib/api";
 import { REFERENCIA, terminalesReales } from "@/lib/portada-datos";
 import { BotonBuscarFlotante } from "./BotonBuscarFlotante";
 import { MenuSitio } from "./MenuSitio";
-import { FOTOS, srcHorizontal, srcVertical } from "@/lib/hero-fotos";
+import { HeroFotos } from "./HeroFotos";
 
 
 /**
@@ -21,37 +21,10 @@ import { FOTOS, srcHorizontal, srcVertical } from "@/lib/hero-fotos";
  * menú móvil y buscador).
  */
 export function Hero() {
-  const [indiceActivo, setIndiceActivo] = useState(0);
-  // La segunda foto se pide recién cuando la página terminó de cargar: así no le quita ancho de banda
-  // a la primera (que es lo más grande que se pinta al entrar). El cambio de foto sigue a los 6 s.
-  const [segundaLista, setSegundaLista] = useState(false);
-
-  useEffect(() => {
-    let temporizador: ReturnType<typeof setTimeout>;
-    const preparar = () => {
-      temporizador = setTimeout(() => setSegundaLista(true), 1500);
-    };
-    if (document.readyState === "complete") preparar();
-    else window.addEventListener("load", preparar, { once: true });
-    return () => {
-      clearTimeout(temporizador);
-      window.removeEventListener("load", preparar);
-    };
-  }, []);
   // El encabezado queda fijo arriba y se vuelve de vidrio oscuro al bajar la página.
   const [conFondo, setConFondo] = useState(false);
   // Nombre real de la terminal aliada (Machala primero), para la insignia del hero.
   const [terminal, setTerminal] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Con "reducir movimiento" activado la foto no cambia sola.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (!segundaLista) return;
-    const temporizador = setInterval(() => {
-      setIndiceActivo((i) => (i + 1) % FOTOS.length);
-    }, 6000);
-    return () => clearInterval(temporizador);
-  }, [segundaLista]);
 
   useEffect(() => {
     function alDesplazar() {
@@ -79,60 +52,7 @@ export function Hero() {
         <div className="relative mx-auto h-full max-w-[1280px]">
           {/* Foto: a sangre en celular, enmarcada a la derecha en PC. */}
           <div className="absolute inset-0 overflow-hidden md:inset-auto md:right-16 md:top-[100px] md:h-[290px] md:w-[36%] xl:w-[560px] md:rounded-[32px] md:shadow-[0_30px_60px_rgba(0,0,0,.45)]">
-            {FOTOS.map((foto, i) => (
-              <div
-                key={foto.vertical}
-                className={`absolute inset-0 transition-opacity duration-[1200ms] ${
-                  i === indiceActivo ? "opacity-100" : "opacity-0"
-                }`}
-                aria-hidden={i !== indiceActivo}
-              >
-                {/* Celular: foto vertical; PC: horizontal. Solo se descarga una de las dos, del tamaño justo. */}
-                {(i === 0 || segundaLista) && (
-                  <picture>
-                    <source
-                      media="(min-width: 768px)"
-                      type="image/avif"
-                      srcSet={srcHorizontal(foto.horizontal, "avif")}
-                      sizes="(min-width: 1280px) 560px, 36vw"
-                    />
-                    <source
-                      media="(min-width: 768px)"
-                      srcSet={srcHorizontal(foto.horizontal)}
-                      sizes="(min-width: 1280px) 560px, 36vw"
-                    />
-                    <source type="image/avif" srcSet={srcVertical(foto.vertical, "avif")} sizes="100vw" />
-                    <img
-                      src={`${foto.vertical}-720.webp`}
-                      srcSet={srcVertical(foto.vertical)}
-                      sizes="100vw"
-                      width={720}
-                      height={1066}
-                      alt={foto.alt}
-                      fetchPriority={i === 0 ? "high" : "low"}
-                      loading={i === 0 ? "eager" : "lazy"}
-                      decoding={i === 0 ? "sync" : "async"}
-                      className="h-full w-full object-cover object-[50%_0%] md:object-center"
-                    />
-                  </picture>
-                )}
-              </div>
-            ))}
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,13,18,.8)_0%,rgba(11,13,18,.15)_30%,rgba(11,13,18,.35)_55%,#0B0D12_92%)] md:hidden" />
-            <div className="absolute inset-0 hidden bg-[linear-gradient(180deg,rgba(11,13,18,0)_60%,rgba(11,13,18,.55))] md:block" />
-
-            {/* Indicadores del slider -- confirman que hay más de una foto,
-                sin depender de flechas de navegación manual. */}
-            <div className="absolute right-5 top-[76px] z-10 flex gap-1.5 md:bottom-4 md:right-4 md:top-auto">
-              {FOTOS.map((foto, i) => (
-                <span
-                  key={foto.vertical}
-                  className={`h-[3px] w-6 rounded-full transition-colors ${
-                    i === indiceActivo ? "bg-kbyellow" : "bg-white/35"
-                  }`}
-                />
-              ))}
-            </div>
+            <HeroFotos />
           </div>
 
           <header

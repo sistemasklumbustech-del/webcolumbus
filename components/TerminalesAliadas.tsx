@@ -3,9 +3,13 @@ import {
   listarTerminalesAliadas,
   obtenerEstadisticasPublicas,
 } from "@/lib/api";
+
 import { claveCiudad, REFERENCIA, rutasReales, terminalesReales } from "@/lib/portada-datos";
 import { MapaSalidas } from "./MapaSalidas";
 import { hayMapaSalidas, type DestinoMapa } from "@/lib/mapa-salidas";
+
+// Datos de la portada guardados 60 s (decisión del director, 30-oct-2026); el precio real lo calcula la API al pagar.
+const PORTADA = { revalidar: 60 };
 
 /**
  * Terminal aliada -- portada nueva (oct-2026): mapa de salidas, nombre de la terminal, tres cifras y
@@ -19,9 +23,9 @@ import { hayMapaSalidas, type DestinoMapa } from "@/lib/mapa-salidas";
  */
 export async function TerminalesAliadas() {
   const [listaTerminales, listaRutas, estadisticas] = await Promise.all([
-    listarTerminalesAliadas(),
-    listarRutasDisponibles(),
-    obtenerEstadisticasPublicas(),
+    listarTerminalesAliadas(PORTADA),
+    listarRutasDisponibles(PORTADA),
+    obtenerEstadisticasPublicas(PORTADA),
   ]);
 
   const terminales = terminalesReales(listaTerminales).sort((a, b) => {

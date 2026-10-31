@@ -14,6 +14,9 @@ const FranjaBannersPortada = dynamic(() => import("@/components/SeccionesPortada
 const DestinosPopulares = dynamic(() => import("@/components/DestinosPopulares").then((m) => m.DestinosPopulares));
 const TerminalesAliadas = dynamic(() => import("@/components/TerminalesAliadas").then((m) => m.TerminalesAliadas));
 
+// La portada se guarda 60 s en el servidor (navegacion-rapida): abre al instante sin esperar a la API.
+export const revalidate = 60;
+
 export default function InicioPage() {
   return (
     <main className="flex-1">

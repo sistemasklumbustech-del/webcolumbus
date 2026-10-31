@@ -73,10 +73,24 @@ export interface TerminalAliada {
   ciudad: string;
 }
 
-export async function listarTerminalesAliadas(): Promise<TerminalAliada[]> {
-  const res = await fetch(`${API_URL}/puntos-operacion/aliadas`, { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
+/**
+ * Datos públicos de la portada (navegacion-rapida, 30-oct-2026): con `revalidar` la respuesta se
+ * guarda esos segundos en el servidor y la portada abre sin esperar a la API en cada visita.
+ * Sin `revalidar`, como antes (sin guardar). Si la API no responde, se devuelve vacío en vez de
+ * romper la página.
+ */
+type OpcionesPublicas = { revalidar?: number };
+const opcionesFetch = (o?: OpcionesPublicas): RequestInit =>
+  o?.revalidar ? { next: { revalidate: o.revalidar } } : { cache: "no-store" };
+
+export async function listarTerminalesAliadas(opciones?: OpcionesPublicas): Promise<TerminalAliada[]> {
+  try {
+    const res = await fetch(`${API_URL}/puntos-operacion/aliadas`, opcionesFetch(opciones));
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -94,10 +108,14 @@ export interface RutaDisponible {
   precioReferencia: string;
 }
 
-export async function listarRutasDisponibles(): Promise<RutaDisponible[]> {
-  const res = await fetch(`${API_URL}/rutas-disponibles`, { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
+export async function listarRutasDisponibles(opciones?: OpcionesPublicas): Promise<RutaDisponible[]> {
+  try {
+    const res = await fetch(`${API_URL}/rutas-disponibles`, opcionesFetch(opciones));
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -110,10 +128,14 @@ export interface EstadisticasPublicas {
   rutasDisponibles: number;
 }
 
-export async function obtenerEstadisticasPublicas(): Promise<EstadisticasPublicas | null> {
-  const res = await fetch(`${API_URL}/estadisticas-publicas`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
+export async function obtenerEstadisticasPublicas(opciones?: OpcionesPublicas): Promise<EstadisticasPublicas | null> {
+  try {
+    const res = await fetch(`${API_URL}/estadisticas-publicas`, opcionesFetch(opciones));
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
 }
 
 /**
