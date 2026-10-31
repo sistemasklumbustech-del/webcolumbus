@@ -266,7 +266,7 @@ function MiCuenta() {
                 <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-kbyellow">
                   {perfil.fotoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element -- URL externa dinámica
-                    <img src={perfil.fotoUrl} alt="" className="h-full w-full object-cover" />
+                    <img src={perfil.fotoUrl} alt="" width={96} height={96} className="h-full w-full object-cover" />
                   ) : (
                     <span className="flex h-full w-full items-center justify-center text-base font-bold text-ink">{iniciales || "P"}</span>
                   )}
@@ -290,7 +290,7 @@ function MiCuenta() {
                   <div className="relative h-20 w-20 overflow-hidden rounded-full bg-kbyellow ring-4 ring-ink-3 md:h-24 md:w-24">
                     {perfil.fotoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element -- URL externa dinámica (almacenamiento configurable), no un asset local
-                      <img src={perfil.fotoUrl} alt={perfil.nombreCompleto} className="h-full w-full object-cover" />
+                      <img src={perfil.fotoUrl} alt={perfil.nombreCompleto} width={96} height={96} className="h-full w-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-ink md:text-3xl">
                         {iniciales || "P"}
@@ -342,6 +342,8 @@ function MiCuenta() {
                   <img
                     src={qrCodigoPasajero}
                     alt={`Código de pasajero ${perfil.codigoPasajero}`}
+                    width={64}
+                    height={64}
                     className="h-16 w-16 shrink-0 rounded-xl bg-white p-1"
                   />
                 )}

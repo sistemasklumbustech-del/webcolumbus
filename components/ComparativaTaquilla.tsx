@@ -88,7 +88,7 @@ export function ComparativaTaquilla() {
             {COMPARACION.map((c) => (
               <li key={c.tema} className="grid grid-cols-2">
                 <div className="border-t border-line px-4 py-3.5 md:px-6 md:py-4">
-                  <span className="block text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted-3">{c.tema}</span>
+                  <span className="block text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted-2">{c.tema}</span>
                   <span className="mt-0.5 block text-[13px] text-muted-2 md:text-sm">{c.taquilla}</span>
                 </div>
                 <div className="border-t border-ink-3 bg-ink px-4 py-3.5 md:px-6 md:py-4">

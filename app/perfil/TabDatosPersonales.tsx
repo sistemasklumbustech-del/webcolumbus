@@ -248,7 +248,7 @@ id="perfil-whatsapp"
           <div className="flex items-center gap-3">
             {fotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- foto del almacenamiento
-              <img src={fotoUrl} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-line" />
+              <img src={fotoUrl} alt="" width={56} height={56} className="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-line" />
             ) : (
               <span aria-hidden="true" className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-ink text-lg font-bold text-kbyellow">
                 {perfil.nombreCompleto.charAt(0)}

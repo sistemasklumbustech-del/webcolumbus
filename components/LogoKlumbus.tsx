@@ -5,6 +5,6 @@
 export function LogoKlumbus({ className = "h-6 md:h-8" }: { className?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src="/img/klumbus-logo-fondo-oscuro.svg" alt="Klumbus" className={`w-auto ${className}`} />
+    <img src="/img/klumbus-logo-fondo-oscuro.svg" alt="Klumbus" width={132} height={32} className={`w-auto ${className}`} />
   );
 }

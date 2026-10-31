@@ -52,6 +52,8 @@ export function SelectorImagen({
           <img
             src={valor}
             alt="Vista previa"
+            width={64}
+            height={64}
             className={`h-16 w-16 shrink-0 object-cover ring-1 ring-black/10 ${redonda ? "rounded-full" : "rounded-lg"}`}
           />
         ) : (

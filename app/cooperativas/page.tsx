@@ -28,7 +28,7 @@ function TarjetaCooperativa({ c }: { c: CooperativaPublica }) {
         <div className="flex min-w-0 items-center gap-3">
           {c.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- logo dinámico del almacenamiento
-            <img src={c.logoUrl} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-line" />
+            <img src={c.logoUrl} alt="" width={48} height={48} className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-line" />
           ) : (
             <span aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-ink text-lg font-bold text-kbyellow">
               {c.nombre.charAt(0)}

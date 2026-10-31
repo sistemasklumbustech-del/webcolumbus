@@ -165,7 +165,7 @@ function HojaImpresion({ grupos, codigosAnden }: { grupos: GrupoBoletos[]; codig
               <div className="kb-hoja-boleto__marco">
                 <header className="kb-hoja-boleto__cabecera">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/img/klumbus-logo-fondo-claro.svg" alt="Klumbus" className="kb-hoja-boleto__logo" />
+                  <img src="/img/klumbus-logo-fondo-claro.svg" alt="Klumbus" width={132} height={32} className="kb-hoja-boleto__logo" />
                   <div className="kb-hoja-boleto__numero">
                     <span>Boleto electrónico · N.º</span>
                     <b>{numeroBoleto(boleto.id)}</b>

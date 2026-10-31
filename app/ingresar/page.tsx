@@ -167,7 +167,7 @@ function FormularioIngreso() {
         <div className="mt-6 flex justify-center rounded-ctrl bg-white p-4">
           {qrDataUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- imagen generada como data URL, no un asset local
-            <img src={qrDataUrl} alt="Código QR de configuración" className="h-44 w-44" />
+            <img src={qrDataUrl} alt="Código QR de configuración" width={176} height={176} className="h-44 w-44" />
           ) : (
             <div className="flex h-44 w-44 items-center justify-center text-sm text-muted-3">Generando...</div>
           )}

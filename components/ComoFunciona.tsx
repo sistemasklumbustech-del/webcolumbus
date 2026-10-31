@@ -76,7 +76,7 @@ export function ComoFunciona() {
                     {p.icono}
                   </svg>
                 </span>
-                <span className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-3">
+                <span className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-2">
                   {i + 1} · {p.etiqueta}
                 </span>
               </div>

@@ -95,7 +95,7 @@ function TarjetaPar({ par }: { par: ParRutasCatalogo }) {
                 <div className="flex min-w-0 items-start gap-3">
                   {o.cooperativaLogoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element -- logo dinámico del almacenamiento
-                    <img src={o.cooperativaLogoUrl} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-line" />
+                    <img src={o.cooperativaLogoUrl} alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-line" />
                   ) : (
                     <span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-sm font-bold text-kbyellow">
                       {o.cooperativaNombre.charAt(0)}

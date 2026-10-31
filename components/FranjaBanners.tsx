@@ -132,6 +132,8 @@ export function FranjaBanners() {
               <img
                 src={b.imagenUrl}
                 alt={b.titulo}
+                width={1200}
+                height={200}
                 className="h-20 w-full object-contain sm:h-24"
               />
             </a>
@@ -150,6 +152,8 @@ export function FranjaBanners() {
                 <img
                   src={b.imagenUrl}
                   alt={b.titulo}
+                width={1200}
+                height={200}
                   className="h-20 w-full object-contain sm:h-24"
                 />
               </a>

@@ -53,7 +53,7 @@ export function TablaRutasReferencia() {
               className="kb-card group flex h-full items-center gap-3.5 !p-4 transition-shadow hover:shadow-float sm:flex-col sm:items-stretch sm:gap-4 md:!p-5"
             >
               <div className="min-w-0 flex-1">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-3">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-2">
                   {REFERENCIA.terminal.ciudad} →
                 </span>
                 <b className="mt-0.5 block truncate text-lg font-semibold leading-tight tracking-[-0.01em]">{d.ciudad}</b>
